@@ -341,4 +341,47 @@ change voiced to unvoiced s if previous is not voiced."
    (utt.relation.items utt 'Segment))
   utt)
 
+(define (postlex_the_vs_thee utt) ; probably generalised by the rule below.
+"(postlex_the_vs_thee utt)
+Unnreduce the schwa in \"the\" when a vowel follows."
+(let ((replacement (cadr (car (caar (cdr (cdar (lex.lookup_all 'thee)))))))
+      schwa)
+  (mapcar
+   (lambda (word)
+     (if (string-equal "the" (downcase (item.feat word "name")))
+         (begin
+           (set! schwa (item.relation (item.daughtern (item.relation.daughtern word 'SylStructure)) 'Segment))
+           (if (string-equal "+" (item.feat (item.next schwa) 'ph_vc))
+               (item.set_feat schwa 'name replacement)))))
+   (utt.relation.items utt 'Word)))
+utt)
+
+(define (postlex_unilex_vowel_reduction utt)
+"(postlex_unilex_vowel_reduction utt)
+Perform vowel reduction based on unilex specification of what can be reduced."
+(let ()
+  (mapcar
+   (lambda (seg)
+     (if (and (eq? (parse-number (item.feat seg "reducable")) 1)
+	      (not (> (parse-number (item.feat seg "R:SylStructure.parent.stress")) 0)))
+	 (if (not (and (seg_word_final seg)
+		       (string-equal (item.feat (item.next seg) 'ph_vc) "+")))
+	     (item.set_feat seg "name" (item.feat seg "reducedform")))))
+   (utt.relation.items utt 'Segment)))
+utt)
+
+(define (seg_word_final seg)
+"(seg_word_final seg)
+Is this segment word final?"
+  (let ((this_seg_word (item.parent (item.relation.parent  seg 'SylStructure)))
+	(silence (car (cadr (car (PhoneSet.description '(silences))))))
+	next_seg_word)
+    (if (item.next seg)
+	(set! next_seg_word (item.parent (item.relation.parent (item.next seg) 'SylStructure))))
+    (if (or (equal? this_seg_word next_seg_word)
+	     (string-equal (item.feat seg "name") silence))
+	nil
+	t)))
+
+
 (provide 'postlex)

@@ -50,4 +50,9 @@
 (unwind-protect
  (tts (string-append libdir "/../examples/ex1.email") nil))
 
+(voice_kal_diphone)
+(format t "\n\nA singing mode\n")
+(unwind-protect
+ (tts (string-append libdir "/../examples/songs/doremi.xml") 'singing))
+
 

@@ -64,14 +64,26 @@ float dur_get_stretch_at_seg(EST_Item *s)
 {
     float global_stretch = dur_get_stretch();
     EST_Item *nn = parent(parent(parent(s,"SylStructure")),"Token");
+    EST_Item *syl = parent(s,"SylStructure");  
     float local_stretch = 0.0;
+    float syl_stretch = 0.0;  
+    float seg_stretch = 0.0;  
+    float stretch = 1.0;      
 
     if (nn)
-	local_stretch = ffeature(nn,"dur_stretch").Float();
+      local_stretch = ffeature(nn,"dur_stretch").Float();
+    if (syl)
+      syl_stretch = ffeature(syl,"dur_stretch").Float(); 
+    seg_stretch = ffeature(s,"dur_stretch").Float();    
     if (local_stretch != 0.0)
-	return global_stretch*local_stretch;
-    else
-	return global_stretch;
+      stretch *= local_stretch; 
+    if (syl_stretch != 0.0)
+      stretch *= syl_stretch;
+    if (seg_stretch != 0.0)
+      stretch *= seg_stretch;
+
+    return stretch*global_stretch;
+
 }
 
 void festival_Duration_init(void)

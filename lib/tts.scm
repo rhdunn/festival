@@ -200,7 +200,8 @@ a single waveform at the end."
     utt))
 
 (define (combine_waves)
-  "Join all the waves together into the desired output file
+  "(combine_waves)
+Join all the waves together into the desired output file
 and delete the intermediate ones."
   (let ((wholeutt (Utterance Text "")))
     (mapcar

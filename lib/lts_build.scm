@@ -111,7 +111,9 @@ Find all feasible alignments."
 (define (findallaligns phones letters)
   (let ((a (find-aligns phones letters)))
     (if (null a)
-	(format t "failed: %l %l\n" letters phones))
+	(begin
+	  (set! failedaligns (+ 1 failedaligns))
+	  (format t "failed: %l %l\n" letters phones)))
     a))
 
 (define (cummulate phone letter)
@@ -161,6 +163,8 @@ Give score for this particular phone letter pair."
 (define (cummulate-pairs trainfile)
   "(cummulate-pairs trainfile)
 Build cummulatation table from allowable alignments in trainfile."
+  (set! failedaligns 0)
+  (set! allaligns 0)
   (if (not pl-table)
       (set! pl-table
 	    (mapcar
@@ -179,9 +183,12 @@ Build cummulatation table from allowable alignments in trainfile."
 	   (cummulate-aligns
 	    (findallaligns 
 	     (enworden (car (cdr (cdr entry))))
-	     (enworden (symbolexplode (car entry)))))
+	     (enworden (wordexplode (car entry)))))
+	   (set! allaligns (+ 1 allaligns))
 	   (set! c (+ 1 c)))
-    (fclose fd)))
+    (fclose fd)
+    (format t "failedaligns %d/%d\n" failedaligns allaligns)
+    ))
 
 (define (find_best_alignment phones letters)
   "(find_best_alignment phones letters)
@@ -256,7 +263,7 @@ Aligns all possible ways for these strings."
 	(c 1)
 	(entry))
     (while (not (equal? (set! entry (readfp fd)) (eof-val)))
-	   (set! lets (enworden (symbolexplode (car entry))))
+	   (set! lets (enworden (wordexplode (car entry))))
 	   (set! bp (find_best_alignment
 		     (enworden (car (cdr (cdr entry))))
 		     lets))
@@ -270,17 +277,22 @@ Aligns all possible ways for these strings."
 (define (enworden lets)
   (cons '# (reverse (cons '# (reverse lets)))))
 
+(define (wordexplode lets)
+  (if (consp lets)
+      lets
+      (symbolexplode lets)))
+
 (define (save_info pos bp ofd)
   "(save_info pos bp ofd)
 Cut out one expensive step and 50M of diskspace and just save it
 in a simpler format."
-  (format ofd "( ")
+  (format ofd "( ( ")
   (mapcar
    (lambda (l) 
      (if (not (string-equal "#" (cdr l)))
-	 (format ofd "%s" (cdr l))))
+	 (format ofd "%s " (cdr l))))
    bp)
-  (format ofd " %s" pos)
+  (format ofd ") %s" pos)
   (mapcar
    (lambda (l)
      (if (not (string-equal "#" (car l)))
@@ -321,7 +333,7 @@ file contain predicted phone, and letter with 3 preceding and
 	(pn)
 	(sylpos 1))
     (while (not (equal? (set! entry (readfp fd)) (eof-val)))
-	   (set! lets (append '(0 0 0 0 #) (symbolexplode (car entry))
+	   (set! lets (append '(0 0 0 0 #) (wordexplode (car entry))
 			      '(# 0 0 0 0)))
 	   (set! phones (cdr (cdr entry)))
 	   (set! pn 5)
@@ -350,7 +362,7 @@ file contain predicted phone, and letter with 3 preceding and
     (fclose ofd))
 )
 
-(define (merge_models name filename)
+(define (merge_models name filename allowables)
 "(merge_models name filename)
 Merge the models into a single list of cart trees as a variable
 named by name, in filename."
@@ -363,8 +375,7 @@ named by name, in filename."
 	     (set! tree (car (load (format nil "lts.%s.tree" l) t)))
 	     (set! tree (cart_simplify_tree tree nil))
 	     (list l tree))
-	   '(a b c d e f g h i j k l m n o p q r s t u v w x y z )
-	   ))
+	   (remove '# (mapcar car allowables))))
     (set! fd (fopen filename "w"))
     (format fd ";; LTS rules \n")
     (format fd "(set! %s '\n" name)
@@ -386,7 +397,7 @@ the structure as saved by merge_models."
 	(phonecount 0)
 	(correctphones 0))
     (while (not (equal? (set! entry (readfp fd)) (eof-val)))
-	   (let ((letters (enworden (symbolexplode (car entry))))
+	   (let ((letters (enworden (wordexplode (car entry))))
 		 (phones (enworden (cdr (cdr entry))))
 		 (pphones))
 	     (set! wordcount (+ 1 wordcount))
@@ -396,7 +407,7 @@ the structure as saved by merge_models."
 	     (if (equal? (ph-normalize pphones) (ph-normalize phones))
 		 (set! correctwords (+ 1 correctwords))
 		 (or nil
-		     (format t "failed %s %l %l\n" (car entry) phones pphones)))
+		     (format t "failed %l %l %l\n" (car entry) phones pphones)))
 	     (count_correct_letters   ;; exclude #, cause they're always right
 	      (cdr letters)
 	      (cdr phones)
@@ -457,7 +468,7 @@ is a per letter table."
      (if (not letinfo)
 	 (set! correct_letter_table
 	       (append correct_letter_table
-		       (set! letinfo (list (list (car lets) 0 0))))))
+		       (list (set! letinfo (list (car lets) 0 0))))))
      (set-car! (cdr letinfo) (+ 1 (car (cdr letinfo)))) ;; total
      (if (equal? (car phs) (car pphs))                  ;; correct 
 	 (set-car! (cdr (cdr letinfo)) (+ 1 (car (cdr (cdr letinfo))))))
@@ -560,6 +571,35 @@ model, if appropriate)."
     (format t "words %d correct %d (%2.2f)\n"
 	    wordcount correctwords (/ (* correctwords 100) wordcount))
     ))
+
+(define (dump-flat-entries infile outfile)
+  (let ((ifd (fopen infile "r"))
+        (ofd (fopen outfile "w"))
+        entry)
+    (readfp ifd) ;; skip "MNCL"
+    (while (not (equal? (set! entry (readfp ifd)) (eof-val)))
+     (if (string-matches (car entry) "...*")
+         (begin
+           (format ofd
+                   "( \"%s\" %s ("
+                   (car entry)
+                   (cadr entry))
+           (mapcar
+            (lambda (syl)
+              (mapcar
+               (lambda (seg)
+                 (cond
+;                 ((string-equal seg "ax")
+;                    (format ofd "%s " seg))
+                  ((string-matches seg "[aeiouAEIOU@].*")
+                     (format ofd "%s " (string-append seg (cadr syl))))
+                  (t
+                   (format ofd "%s " seg))))
+               (car syl)))
+            (car (cddr entry)))
+           (format ofd "))\n"))))
+    (fclose ifd)
+    (fclose ofd)))
 
 (provide 'lts_build)
 

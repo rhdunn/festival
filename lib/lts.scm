@@ -104,11 +104,22 @@ Predict phones using CART."
        (if (not tree)
 	   (format t "failed to find tree for %s\n" (item.name lsi))
 	   (let ((p (wagon_predict lsi tree)))
-	     (if (string-matches p ".*-.*");; a double one
-		 (begin
-		   (add_new_phone utt lsi (string-before p "-"))
-		   (add_new_phone utt lsi (string-after p "-")))
-		 (add_new_phone utt lsi p))))))
+;	     (format t "predict %s %s\n" (item.name lsi) p)
+	     (cond
+	      ((string-matches p ".*-.*-.*-.*") ; a quad one
+	       (add_new_phone utt lsi (string-before p "-"))
+	       (add_new_phone utt lsi (string-before (string-after p "-") "-"))
+	       (add_new_phone utt lsi (string-before (string-after (string-after p "-") "-") "-"))
+	       (add_new_phone utt lsi (string-after (string-after (string-after p "-") "-") "-")))
+	      ((string-matches p ".*-.*-.*") ; a triple one
+	       (add_new_phone utt lsi (string-before p "-"))
+	       (add_new_phone utt lsi (string-before (string-after p "-") "-"))
+	       (add_new_phone utt lsi (string-after (string-after p "-") "-")))
+	      ((string-matches p ".*-.*");; a double one
+	       (add_new_phone utt lsi (string-before p "-"))
+	       (add_new_phone utt lsi (string-after p "-")))
+	      (t
+	       (add_new_phone utt lsi p)))))))
    (reverse (cdr (reverse (cdr (utt.relation.items utt 'LETTER))))))
   (add_new_phone utt (utt.relation.last utt 'LETTER) '#)
   utt)

@@ -87,7 +87,7 @@ static void festival_client_main(int argc, char **argv)
         "festival_client <options> <file0> <file1> ...\n"+
 	"Access to festival server process\n"+
 	"--server <string>   hostname (or IP number) of server\n"+
-	"--port <int> {1314} port number of server proces (1314)\n"+
+	"--port <int> {1314} port number of server process (1314)\n"+
 	"--output <string>   file to save output waveform to\n"+
 	"--otype <string> {riff}\n"
         "                    output type for waveform\n"+
@@ -95,7 +95,7 @@ static void festival_client_main(int argc, char **argv)
 	"--prolog <string>   filename containing commands to be sent\n"+
         "                    to the server before standard commands\n"+
         "                    (useful when using --ttw)\n"+
-	"--async             Asychronous mode, server may send back\n"+
+	"--async             Asynchronous mode, server may send back\n"+
         "                    multiple waveforms per text file\n"+
 	"--ttw               Text to waveform: take text from first\n"+
         "                    arg or stdin get server to return\n"+

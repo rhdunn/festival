@@ -52,6 +52,9 @@ void us_tdpsola_synthesis(EST_Utterance &utt,
 			  const EST_String &ola_method);
 #endif
 
+
+void us_linear_smooth_amplitude( EST_Utterance *utt );
+
 /**@name Functions for Concatenating Units
 
 */ 
@@ -91,12 +94,19 @@ void us_tdpsola_synthesis(EST_Utterance &utt,
     the type of window used. "hanning" is standard but any window type
     available from the signal processing library can be used.
 
+    @param window_symmetric: if this is set to true, then symmetric
+    analysis windows are used centred at each pitch mark, with size
+    determined by the time difference between current and previous 
+    pitchmarks.
+    
     @param no_waveform: if this is set to true, only the coefficients
     are copied into SourceCoef - no waveform analysis is performed.
 */
 
 void us_unit_concat(EST_Utterance &utt, float window_factor, 
-		    const EST_String &window_name, bool no_waveform=false);
+		    const EST_String &window_name, 
+		    bool no_waveform=false,
+		    bool window_symmetric=true);
 
 
 /** This function provides the setup for copy resynthesis. In copy
@@ -198,8 +208,8 @@ represent periods, their reciprocal represents the source and target
 F0 contours.
 </para><para>
 
-The mapping is a integer array with one element for every pitchmark in
-the TargetCoef track. Therefore every target pitchmark has a mapping
+The mapping is an integer array with one element for every pitchmark in
+the TargetCoef track. Therefore, every target pitchmark has a mapping
 element, and the value of that element is the frame number in the
 SourceCoef track which should be used to generate the frame of speech
 for that target pitchmark. Depending on the mapping, source frames can
@@ -297,6 +307,7 @@ void td_synthesis(EST_WaveVector &frames,
 		  EST_Track &target_pm, EST_Wave &target_sig,
 		  EST_IVector &map);
 
+
 /** Variant of td_synthesis, where each frame is re-windowed according to the 
 size of the local synthesis pitch period.
 </para>
@@ -313,6 +324,13 @@ void td_synthesis2(EST_WaveVector &frames,
 		   EST_IVector &map);
 
 //@}
+
+
+void asymmetric_window_td_synthesis(EST_WaveVector &frames,
+				    EST_Track &target_pm, 
+				    EST_Wave &target_sig,
+				    EST_IVector &map,
+				    EST_IVector &frame_pm_indices);
 
 
 /**@name Pitchmark Functions

@@ -36,7 +36,7 @@ TOP=../..
 DIRNAME=testsuite/correct
 
 OUTFILES = fest_script.out text_script.out voice_script.out modes_script.out \
-           parse_script.out scherr_script.out
+           parse_script.out scherr_script.out htsvox_script.out
 FILES= Makefile $(OUTFILES)
 
 include $(TOP)/config/common_make_rules

@@ -154,7 +154,11 @@ Extract the features and write them to the file descriptor."
    (lambda (si)
      (mapcar 
       (lambda (f) 
-	(format outfd "%s " (item.feat si f)))
+	(set! fval (unwind-protect (item.feat si f) "0"))
+	(if (or (string-equal "" fval)
+		(string-equal " " fval))
+	    (format outfd "%l " fval)
+	    (format outfd "%s " fval)))
       feats)
      (format outfd "\n"))
    (utt.relation.items utt relname)))

@@ -169,7 +169,7 @@ void tts_file_raw(LISP filename)
     lutt = tts_chunk_stream(ts,tts_raw_token,tts_raw_utt,eou_tree,0);
     
     // The last one is returned because the chunker doesn't know if this
-    // is truely the end of an utterance or not, but here we do know.
+    // is truly the end of an utterance or not, but here we do know.
     tts_raw_utt(lutt);
 
     ts.close();
@@ -211,7 +211,7 @@ static void tts_raw_utt(LISP utt)
 
 LISP new_token_utt(void)
 {
-    // An emtpy utterance ready to take Tokens
+    // An empty utterance ready to take Tokens
     EST_Utterance *u = new EST_Utterance;
     u->f.set("type","Tokens");
     u->create_relation("Token");
@@ -293,7 +293,7 @@ void festival_Text_init(void)
 #endif
     init_subr_3("extract_tokens",extract_tokens,
     "(extract_tokens FILE TOKENS OUTFILE)\n\
-  Find all occurences of TOKENS in FILE and output specified context around\n\
+  Find all occurrences of TOKENS in FILE and output specified context around\n\
   the token.  Results are appended to OUTFILE, if OUTFILE is nil, output\n\
   goes to stdout.");
 }

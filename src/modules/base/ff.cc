@@ -800,7 +800,7 @@ void festival_ff_init(void)
     "Word.word_duration\n\
   The duration of the given stream item.  This is defined as the end of\n\
   last segment in the last syllable (via the SylStructure relation) minus\n\
-  the segment immediate preceeding the first segment in the first syllable.");
+  the segment immediate preceding the first segment in the first syllable.");
     festival_def_nff("segment_start","Segment",ff_seg_start,
     "Segement.segment_start\n\
   The start time of the given segment.");

@@ -61,6 +61,18 @@ const EST_String utt_type(EST_Utterance &utt)
     return utt.f("type").string();
 }
 
+
+static LISP utt_flat_repr( LISP l_utt )
+{
+  EST_String flat_repr;
+  EST_Utterance *utt = get_c_utt( l_utt );
+  
+  utt_2_flat_repr( *utt, flat_repr ); 
+ 
+  return strcons(flat_repr.length(), flat_repr.str());
+}
+
+
 static LISP utt_feat(LISP lutt, LISP feat)
 {
     EST_Utterance *u = utterance(lutt);
@@ -786,6 +798,10 @@ void festival_utterance_init(void)
     init_subr_3("utt.set_feat",utt_set_feat,
  "(utt.set_feat UTT FEATNAME VALUE)\n\
   Set feature FEATNAME with VALUE in UTT.");
+    init_subr_1("utt.flat_repr", utt_flat_repr,
+  "(utt.flat_repr UTT)\n\
+   Returns a flat, string representation of the linguistic information\n\
+   contained in fully formed utterance structure UTT." );
     init_subr_3("utt.relation.load",utt_relation_load,
  "(utt.relation.load UTT RELATIONNAME FILENAME)\n\
   Loads (and creates) RELATIONNAME from FILENAME into UTT.  FILENAME\n\
@@ -890,7 +906,7 @@ void festival_utterance_init(void)
   Return the item below ITEM, or nil if there is none.");
     init_subr_3("item.insert",item_insert,
  "(item.insert ITEM1 ITEM2 DIRECTION)\n\
-  Insert ITEM2 in ITEM1's relation with repsect to DIRECTION.  If DIRECTION\n\
+  Insert ITEM2 in ITEM1's relation with respect to DIRECTION.  If DIRECTION\n\
   is unspecified, after, is assumed.  Valid DIRECTIONS as before, after,\n\
   above and below.  Use the functions item.insert_parent and\n\
   item.append_daughter for specific tree adjoining.  If ITEM2 is of\n\
@@ -989,13 +1005,13 @@ void festival_utterance_init(void)
   through.");
     init_subr_2("item.move_tree",item_move_tree,
  "(item.move_tree FROM TO)\n\
-  Move contents, and descendents of FROM to TO. Old daughters of TO are\n\
+  Move contents, and descendants of FROM to TO. Old daughters of TO are\n\
   deleted.  FROM will be deleted too if it is being viewed as the same\n\
   same relation as TO.  FROM will be deleted from its current place in\n\
   TO's relation. Returns t if successful, returns nil if TO is within FROM.");
     init_subr_2("item.exchange_trees",item_exchange_tree,
  "(item.exchange_tree FROM TO)\n\
-  Exchanged contents of FROM and TO, and descendents of FROM and TO.\n\
+  Exchanged contents of FROM and TO, and descendants of FROM and TO.\n\
   Returns t if successful, or nil if FROM or TO contain each other.");
     init_subr_2("item.merge",item_merge_item,
  "(item.merge FROM TO)\n\
@@ -1007,7 +1023,7 @@ void festival_utterance_init(void)
     init_subr_1("sub_utt",item_sub_utt,
   "(sub_utt ITEM)\n\
   Return a new utterance that contains a copy of this item and all its\n\
-  descendents and related descendents.");
+  descendants and related descendants.");
     
     init_subr_1("audio_mode",l_audio_mode,
  "(audio_mode MODE)\n\

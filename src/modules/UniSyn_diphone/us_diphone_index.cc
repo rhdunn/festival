@@ -106,9 +106,9 @@ static EST_String get_diphone_name(EST_Item *item,const EST_String dir)
 
     if (!item)
 	return "";
-    else if ((d1 = item->f(dname+"_"+dir,def)) != "0")
+    else if ((d1 = (EST_String)item->f(dname+"_"+dir,def)) != "0")
 	return d1;
-    else if ((d1 = item->f(dname,def)) != "0")
+    else if ((d1 = (EST_String)item->f(dname,def)) != "0")
 	return d1;
     else
 	return item->f("name","0").string();
@@ -164,6 +164,15 @@ void us_get_diphones(EST_Utterance &utt)
 			    *(utt.relation("Segment", 1)));
 }
 
+LISP us_check_diphone_presence(LISP name)
+{
+    /* requested by "Nicholas Volk" <nvolk@bitlips.fi> */
+    int x = find_diphone_index_simple(get_c_string(name),*diph_index);
+    if ( x < 0 ) 
+	return NIL;
+    else
+	return name;
+}
 
 LISP us_make_group_file(LISP lname, LISP params)
 {
@@ -382,10 +391,10 @@ void get_diphone(EST_Item &d)
 	    load_grouped_diphone(unit);
 	else
 	{
-	    if (US_full_coefs)
-		load_full_diphone(unit);
-	    else
-	load_separate_diphone(unit, false, "all");
+	  if (US_full_coefs)
+	    load_full_diphone(unit);
+	  else
+	    load_separate_diphone(unit, false, "all");
 	}
 	diph_index->diphone[unit].set("count", d.I("count", 0) + 1);
     }

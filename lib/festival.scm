@@ -113,7 +113,28 @@ l may be a single atom or list of atoms.  Each item in l must appear in
 Resynthesize an utterance from a label file and F0 file (in any format
 supported by the Speech Tool Library).   This loads, synthesizes and
 plays the utterance."
-   (utt.play (utt.synth (utt.load.segf0 labfile f0file))))
+  (let (u f0 f0_item)
+    (set! u (Utterance SegF0)) ; need some u to start with
+    (utt.relation.load u 'Segment labfile)
+    (utt.relation.create u 'f0)
+    (set! f0 (track.load f0file))
+    (set! f0_item (utt.relation.append u 'f0))
+    (item.set_feat f0_item "name" "f0")
+    (item.set_feat f0_item "f0" f0)
+
+    ;; emulabel may have flipped pau to H#
+    (mapcar
+     (lambda (s)
+       (cond
+	((string-matches (item.name s) "[hH]#")
+	 (item.set_feat s "name" "pau"))
+	((string-matches (item.name s) "#.*")
+	 (item.set_feat s "name" (string-after (item.name s) "#")))))
+     (utt.relation.items u 'Segment))
+
+    (Wave_Synth u)
+    (utt.play u)
+    u))
 
 (define (utt.relation.present utt relation)
 "(utt.relation.present UTT RELATIONNAME)
@@ -495,7 +516,7 @@ Doing stuff
 "
                 Centre for Speech Technology Research                  
                      University of Edinburgh, UK                       
-                       Copyright (c) 1996-2002
+                       Copyright (c) 1996-2004
                         All Rights Reserved.                           
                                                                        
   Permission is hereby granted, free of charge, to use and distribute  
@@ -599,17 +620,5 @@ Compile all the scheme files in the library directory."
      "mrpa_durs.scm" "klatt_durs.scm" "gswdurtreeZ.scm"
      "tobi.scm" "f2bf0lr.scm"))
   t)
-
-(define (register_unisyn_features ddd)
-  (format t "********************\n")
-  (format t "\n")
-  (format t "The Scheme `register_unisyn_features' is no longer required\n")
-  (format t "its function is absorbed into the initialization process\n")
-  (format t "delete you call to this function now as this will cause\n")
-  (format t "an error in the future\n")
-  (format t "\n")
-  (system "sleep 3")
-  (format t "********************\n")
-)  
 
 (provide 'festival)

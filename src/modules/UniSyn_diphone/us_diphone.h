@@ -90,6 +90,7 @@ void us_get_diphones(EST_Utterance &utt);
 
 void us_full_cut(EST_Relation &unit);
 
+LISP us_check_diphone_presence(LISP name);
 
 
 #endif // __US_DIPHONE_H__

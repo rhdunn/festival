@@ -138,7 +138,7 @@ application we have included, bin/jsapi_example. The following steps
 are necessary for any use of festival via JSAPI.
 
 In order to use JSAPI and festival you need to register the festival
-synthesizer. See the JSAPI documentation for details, but basicly
+synthesizer. See the JSAPI documentation for details, but basically
 there are two methods:
 
 	One is to put a file listing available synthesizers in either

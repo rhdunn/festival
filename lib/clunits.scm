@@ -94,7 +94,7 @@ Join the preselected and gotten units into a waveform."
       (us_generate_wave utt (Parameter.get 'us_sigpr)
 			'analysis_period))
      ((string-equal join_method 'smoothed_lpc)
-      (format t "smoothed_lpc\n")
+;      (format t "smoothed_lpc\n")
       (defvar UniSyn_module_hooks nil)
       (Param.def "unisyn.window_name" "hanning")
       (Param.def "unisyn.window_factor" 1.0)
@@ -241,6 +241,49 @@ scratch/wav/ and scratch/lab/."
 ;     (apply_hooks cluster_synth_post_hooks utt)
 ;     utt)
 ; )
+
+(define (clunits::join_parameters utt)
+  "(clunits::join_parameters utt)
+Join selected paremeters (rather than the signal), used in F0 and
+Articulatory selection."
+  (let ((params nil)
+	(num_channels 0)
+	(num_frames 0 ))
+
+    (mapcar
+     (lambda (unit)
+       (set! num_frames 
+	     (+ num_frames
+		(track.num_frames (item.feat unit "coefs"))))
+       (set! num_channels (track.num_channels (item.feat unit "coefs")))
+       (format t "coounting %d %d\n" num_frames num_channels)
+       )
+     (utt.relation.items utt 'Unit))
+    
+    (set! params (track.resize nil 0 num_channels))
+    
+    (mapcar
+     (lambda (unit)
+       (set! frames 0)
+       (format t "inserting \n")
+       (format t "%l %l %l %l %l\n"
+	       params (track.num_frames params)
+	       (item.feat unit "coefs") 0
+	       (track.num_frames (item.feat unit "coefs")))
+       (track.insert
+	params (track.num_frames params)
+	(item.feat unit "coefs") 0
+	(track.num_frames (item.feat unit "coefs")))
+       )
+     (utt.relation.items utt 'Unit))
+
+    (utt.relation.create utt "AllCoefs")
+    (set! coefs_item (utt.relation.append utt "AllCoefs"))
+    (item.set_feat coefs_item "name" "AllCoefs")
+    (item.set_feat coefs_item "AllCoefs" params)
+  
+    utt
+))
 
 
 (provide 'clunits)

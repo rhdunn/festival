@@ -40,9 +40,9 @@
 
 PROJECT_NAME = Festival Speech Synthesis System
 PROJECT_PREFIX = FESTIVAL
-PROJECT_VERSION = 1.4.3
-PROJECT_DATE = Jan 2003
-PROJECT_STATE = release
+PROJECT_VERSION = 1.95
+PROJECT_DATE = July 2004
+PROJECT_STATE = beta
 
 # config files of projects we depend on
 

@@ -93,7 +93,7 @@ void tts_file_xxml(LISP filename)
 	    cerr << "xxml parse error: unexpected end of file \n";
 	    festival_error();
 	}
-	line = ts.get_upto_eoln();
+	line = (EST_String)ts.get_upto_eoln();
 	type = line.at(0,1);
 	remainder = line.after(0);
 	if (type == "-")
@@ -159,7 +159,7 @@ static LISP xxml_get_attribute(const EST_String &remainder)
     EST_Token t;
 
     ts.open_string(remainder);
-    name = ts.get();
+    name = (EST_String)ts.get();
     if ((t=ts.get()) == "IMPLIED")
 	att = cons(rintern(name),cons(NIL,NIL));
     else if (t == "TOKEN")

@@ -86,25 +86,25 @@ void add_end_silences(EST_Relation &segment, EST_Relation &target)
 
 void add_end_silences(EST_Relation &segment)
 {
-    EST_Item *t, *n;
-
-    t = segment.head();
-    if (!ph_is_silence(t->S("name")))
+  EST_Item *t, *n;
+  
+  t = segment.head();
+  if (!ph_is_silence(t->S("name")))
     {
-	n = t->insert_before();
-	n->set("name", ph_silence());
+      n = t->insert_before();
+      n->set("name", ph_silence());
     }
-
-    t = segment.tail();
-    if (!ph_is_silence(t->S("name")))
+  
+  t = segment.tail();
+  if (!ph_is_silence(t->S("name")))
     {
-	n = t->insert_after();
-	n->set("name", ph_silence());
+      n = t->insert_after();
+      n->set("name", ph_silence());
     }
 }
 
 void parse_diphone_times(EST_Relation &diphone_stream, 
-				EST_Relation &source_lab)
+			 EST_Relation &source_lab)
 {
     EST_Item *s, *u;
     EST_Track *pm;
@@ -139,7 +139,7 @@ void parse_diphone_times(EST_Relation &diphone_stream,
 void load_separate_diphone(int unit, bool keep_full, 
 			   const EST_String &cut_type)
 {
-    // Load in the coefficents and signame for this diphone
+    // Load in the coefficients and signame for this diphone
     // It caches the results in the diphone index entry, though
     // someone else may clear them.  Note the full file is loaded
     // each time which isn't optimal if there are multiple diphones
@@ -172,7 +172,7 @@ void load_separate_diphone(int unit, bool keep_full,
     
     // find time of mid-point, i.e. boundary between phones
     full_coefs.sub_track(dcoefs, pm_start, pm_end - pm_start + 1, 0, EST_ALL);
-    // Copy coefficents so the full coeffs can be safely deleted
+    // Copy coefficients so the full coeffs can be safely deleted
     coefs = new EST_Track(dcoefs);
     for (int j = 0; j < dcoefs.num_frames(); ++j)
 	coefs->t(j) = dcoefs.t(j) - full_coefs.t(Gof((pm_start - 1), 0));
@@ -233,7 +233,7 @@ void load_separate_diphone(int unit, bool keep_full,
 
 void load_full_diphone(int unit)
 {
-    // Load in the coefficents and signame for this diphone
+    // Load in the coefficients and signame for this diphone
     // It caches the results in the diphone index entry, though
     // someone else may clear them.  Note the full file is loaded
     // each time which isn't optimal if there are multiple diphones

@@ -54,6 +54,8 @@ SYSTEMS =					\
 	ix86_CYGWIN1.0.mak			\
 	ix86_CYGWIN1.1.mak			\
 	ix86_CYGWIN1.3.mak			\
+	ix86_CYGWIN1.4.mak			\
+	ix86_CYGWIN1.5.mak			\
 	ix86_CYGWIN20.1.mak			\
 	ix86_CYGWIN32.mak			\
 	ix86_CYGWIN324.0.mak			\

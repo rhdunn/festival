@@ -1,10 +1,21 @@
+Festival is currently actively developed by:
+
+	Alan W Black   (Carnegie Mellon University)
+	Rob Clark      (Edinburgh University)
+        Korin Richmond (Edinburgh University)
+	Heiga Zen      (Nagoya Institute of Technology)
+
 
 The following people and organisations have contributed to the
 development of Festival in various ways.  It is their work that makes
 it all possible.
 
-Alan W Black    overall design, most of the front end and software control
-Paul Taylor     overall design, most of the back end
+Alan W Black    Overall design, most of the front end and software control
+Paul Taylor     Overall design, most of the back end
+Rob Clark       Intonation, multisyn voice building, general developement and
+                maintenance.
+Korin Richmond  Multisyn engine, swig wrappers and general developement.
+Heiga Zen       HTS engine
 Richard Caley   for doing lots of difficult and boring bits
 Kevin Lenzo     for speaking a bunch of different nonsense words,
                 design and improvements to the clunits module,

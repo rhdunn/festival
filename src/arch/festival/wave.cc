@@ -245,9 +245,110 @@ static LISP track_load(LISP fname,LISP ftype,LISP ishift)
     return siod(t);
 }
 
+static LISP track_index_below(LISP ltrack, LISP ltime)
+{
+  EST_Track *t = track(ltrack);
+  int index = -1;
+  
+  if(ltime)
+    {
+      index = t->index_below(get_c_float(ltime));
+      return flocons(index); 
+    }
+  
+  return NIL;
+}
+
+static LISP track_resize(LISP ltrack,LISP lframes, LISP lchannels)
+{
+    EST_Track *t;
+
+    if (ltrack)
+	t = track(ltrack);
+    else
+	t = new EST_Track;
+
+    t->resize(get_c_int(lframes),get_c_int(lchannels));
+    
+    return siod(t);
+}
+
+static LISP track_set(LISP ltrack,LISP lx, LISP ly, LISP lv)
+{
+    EST_Track *t = track(ltrack);
+
+    t->a(get_c_int(lx),get_c_int(ly)) = get_c_float(lv);
+    return lv;
+}
+
+static LISP track_set_time(LISP ltrack,LISP lx, LISP lt)
+{
+    EST_Track *t = track(ltrack);
+
+    t->t(get_c_int(lx)) = get_c_float(lt);
+    return lt;
+}
+
+static LISP track_get(LISP ltrack,LISP lx, LISP ly)
+{
+    EST_Track *t = track(ltrack);
+
+    return flocons(t->a(get_c_int(lx),get_c_int(ly)));
+}
+
+static LISP track_get_time(LISP ltrack,LISP lx)
+{
+    EST_Track *t = track(ltrack);
+
+    return flocons(t->t(get_c_int(lx)));
+}
+
+static LISP track_frames(LISP ltrack)
+{
+    return flocons((float)track(ltrack)->num_frames());
+}
+
+static LISP track_channels(LISP ltrack)
+{
+    return flocons((float)track(ltrack)->num_channels());
+}
+
 static LISP track_copy(LISP t)
 {
     return siod(new EST_Track(*track(t)));
+}
+
+static LISP track_insert(LISP argv, LISP env)
+{
+    int i,j;
+    /* TRACK1 X1 TRACK2 X2 COUNT */
+    EST_Track *t1 = track(leval(siod_nth(0,argv),env));
+    int x1 = get_c_int(leval(siod_nth(1,argv),env));
+    EST_Track *t2 = track(leval(siod_nth(2,argv),env));
+    int x2 = get_c_int(leval(siod_nth(3,argv),env));
+    int count = get_c_int(leval(siod_nth(4,argv),env));
+
+    if (t1->num_channels() != t2->num_channels())
+    {
+	cerr << "track.insert: different number of channels" << 
+	    t1->num_channels() << " != " << t2->num_channels() << endl;
+	festival_error();
+    }
+
+    if (x1 + count >= t1->num_frames())
+	t1->resize(x1+count,t1->num_channels());
+    
+    for (i=0; i<count; i++)
+    {
+	for (j=0; j<t1->num_channels(); j++)
+	    t1->a(x1+i,j) = t2->a(x2+i,j);
+	/* not sure this is right */
+	t1->t(x1+i) = 
+	    (x1+i > 0 ? t1->t(x1+i-1) : 0) +
+	    t2->t(x2+i) - (x2+i > 0 ? t2->t(x2+i-1) : 0);
+    }
+
+    return siod_nth(1,argv);
 }
 
 static LISP utt_save_f0(LISP utt, LISP fname)
@@ -280,7 +381,7 @@ static LISP utt_save_f0(LISP utt, LISP fname)
 static void utt_save_f0_from_targets(EST_Utterance *u,EST_String &filename)
 {
     // Modifications by Gregor Moehler to do proper target tracing (GM)
-    EST_Item *s;
+  EST_Item *s;
     EST_Track f0;
     float p = 0.0;
     float length = u->relation("Segment")->last()->f("end");
@@ -294,13 +395,13 @@ static void utt_save_f0_from_targets(EST_Utterance *u,EST_String &filename)
     {
 	if (i >= frames)
 	    break;  // may hit here one before end
-	if (tval != 0 && p > (float)ffeature(tval,"pos"))
-	{
-	    ptval = tval;
-	    tval = next_leaf(tval);
-	}
 	for ( ; p < s->F("end",0); p+=0.010,i++)
 	{
+	    if (tval != 0 && p > (float)ffeature(tval,"pos"))
+	    {
+		ptval = tval;
+		tval = next_leaf(tval);
+	    }
 	    if (i >= frames)
 		break;  // may hit here one before end
 	    if ((ffeature(s,"ph_vc") == "+") ||
@@ -460,7 +561,36 @@ void festival_wave_init(void)
     init_subr_1("track.copy",track_copy,
   "(track.copy TRACK)\n\
   Return a copy of TRACK.");
-
+    init_subr_2("track.index_below",track_index_below,
+ "(track.index_below TRACK TIME)\n\
+ Returns the first frame index before this time.");
+    init_subr_3("track.resize",track_resize,
+ "(track.resize TRACK NEWFRAMES NEWCHANNELS)\n\
+ Resize TRACK to have NEWFRAMES number of frames and NEWCHANNELS\n\
+ number of channels.  If TRACK is nil a new track is made of the\n\
+ requested size.");
+    init_subr_1("track.num_frames",track_frames,
+  "(track.num_frames TRACK)\n\
+  Returns number of frames in TRACK.");
+    init_subr_1("track.num_channels",track_channels,
+  "(track.num_channels TRACK)\n\
+  Returns number of channels in TRACK.");
+    init_subr_4("track.set",track_set,
+ "(track.set TRACK X Y V)\n\
+ Set position X Y to V in TRACK.");
+    init_subr_3("track.get",track_get,
+ "(track.get TRACK X Y)\n\
+ Get value of X Y in TRACK.");
+    init_subr_3("track.set_time",track_set_time,
+ "(track.set_time TRACK X TIME)\n\
+ Set time at X to TIME in TRACK.");
+    init_subr_2("track.get_time",track_get_time,
+ "(track.get_time TRACK X)\n\
+ Get time of X in TRACK.");
+    init_fsubr("track.insert",track_insert,
+ "(track.insert TRACK1 X1 TRACK2 X2 COUNT)\n\
+ Insert TRACK2 from X2 to X2+COUNT into TRACK1 at X1.  TRACK1 is resized\n\
+ as required.");
     init_subr_1("utt.send.wave.client",utt_send_wave_client,
  "(utt.send.wave.client UTT)\n\
   Sends wave in UTT to client.  If not in server mode gives an error\n\

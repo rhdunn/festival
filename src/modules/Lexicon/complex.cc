@@ -165,13 +165,13 @@ static LISP check_and_fix(LISP entry)
 	cerr << "has non-atomic head word\n";
 	festival_error();
     }
-    else if (CONSP(car(cdr(entry))))
-    {
-	cerr << "Lexicon compile: entry: ";
-	lprint(entry);
-	cerr << "has non-atomic pos field\n";
-	festival_error();
-    }
+    // else if (CONSP(car(cdr(entry))))    // The lookup code allows for this so why not allow it here.
+    // {
+    //  cerr << "Lexicon compile: entry: ";
+    //  lprint(entry);
+    //  cerr << "has non-atomic pos field\n";
+    //  festival_error();
+    // }
 
     if ((lex_syllabification == NIL) &&
 	(siod_atomic_list(car(cdr(cdr(entry))))))

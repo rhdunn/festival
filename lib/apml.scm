@@ -38,6 +38,14 @@
 ;;
 ;;
 
+(require 'apml_f2bf0lr)
+(require 'apml_kaldurtreeZ)
+
+;; Default pitch settings (if unspecified in current voice.)
+
+(defvar apml_default_pitch_mean 170 )
+(defvar apml_default_pitch_standard_deviation 34 )
+
 ;; apml sythesis wrappers.
 
 (define (apml_client_synth apml)
@@ -77,7 +85,8 @@ Synthesis an apml file."
 
 ;; phrasing CART.
 ;
-; This is a first attempt to do something sensible and  will probably change.
+; It has been decided that by default, only punctuation should affect
+; phrasing (and subsequently pauses)
 ;
 (set! apml_phrase_tree
       '
@@ -85,23 +94,72 @@ Synthesis an apml file."
        ((BB))
        ((lisp_apml_punc in ("'" "\"" "," ";"))   ; else little punctuation
 	((B))
-	((lisp_apml_is_boundary > 0)             ; else boundary
-	 ((B))
-	 ((lisp_apml_is_break > 0)               ; else misc. break information
-	  ((B))
-	  ((NB)))))))                            ; else nothing.
+	((lisp_apml_last_word is 1)
+	 ((BB))                                  ; need a BB at the end!
+	 ((NB))))))                              ; else nothing
 
 ;; feature functions for phrasing
 (define (apml_punc word)
   (item.feat word 'punc))
 
-(define (apml_is_break word)
-  0)
+(define (apml_last_word word)
+  (if (item.next word)
+      "0" "1"))
 
-(define (apml_is_boundary word)
-  (if (item.relation word 'Boundary)
-      1
+
+;;;
+;;; Pauses
+;;;
+
+;; feature functions for pauses
+(define (apml_is_pause word)
+  (if (item.relation word 'Pause)
+      t
+      nil))
+
+(define (apml_pause word)
+  (if (item.relation word 'Pause)
+	(item.feat (item.relation.parent word 'Pause) "sec")
       0))
+
+(define (Apml_Pauses utt)
+  "(Pauses UTT)
+Predict pause insertion for apml."
+  (let ((words (utt.relation.items utt 'Word)) lastword tpname)
+    (if words
+        (begin
+          (insert_initial_pause utt)   ;; always have a start pause
+          (set! lastword (car (last words)))
+          (mapcar
+           (lambda (w)
+             (let ((pbreak (item.feat w "pbreak"))
+                   (emph (item.feat w "R:Token.parent.EMPH")))
+               (cond
+		((apml_is_pause w)
+		 (insert_pause utt w))
+                ((or (string-equal "B" pbreak)
+                     (string-equal "BB" pbreak))
+                 (insert_pause utt w))
+                ((equal? w lastword)
+                 (insert_pause utt w)))))
+           words)
+          ;; The embarassing bit.  Remove any words labelled as punc or fpunc
+          (mapcar
+           (lambda (w)
+             (let ((pos (item.feat w "pos")))
+               (if (or (string-equal "punc" pos)
+                       (string-equal "fpunc" pos))
+                   (let ((pbreak (item.feat w "pbreak"))
+                         (wp (item.relation w 'Phrase)))
+                     (if (and (string-matches pbreak "BB?")
+                              (item.relation.prev w 'Word))
+                         (item.set_feat 
+                          (item.relation.prev w 'Word) "pbreak" pbreak))
+                     (item.relation.remove w 'Word)
+                     ;; can't refer to w as we've just deleted it
+                     (item.relation.remove wp 'Phrase)))))
+           words)))
+  utt))
 
 
 
@@ -109,7 +167,9 @@ Synthesis an apml file."
 ;;; Intonation.
 ;;;
 
-;; accent prediction (well transfer really).
+;; Accent prediction (well transfer really).
+;; 
+;; We treat L+H* L-H% on a single syllable as a special case.
 
 (set! apml_accent_cart
       '
@@ -117,23 +177,27 @@ Synthesis an apml file."
        ((H*))
        ((lisp_apml_accent is "Lstar")
 	((L*))
-	((lisp_apml_accent is "LplusHstar")
-	 ((L+H*))
-	 ((lisp_apml_accent is "LstarplusH")
-	  ((L*+H))
-	  ((NONE)))))))
+	((lisp_apml_LHLH is "LHLH")
+	 ((L+H*L-H%))
+	 ((lisp_apml_accent is "LplusHstar")
+	  ((L+H*))
+	  ((lisp_apml_accent is "LstarplusH")
+	   ((L*+H))
+	   ((NONE))))))))
 
 (set! apml_boundary_cart
       '
       ((lisp_apml_boundary is "LL")
        ((L-L%))
-       ((lisp_apml_boundary is "LH")
-	((L-H%))
-	((lisp_apml_boundary is "HH")
-	 ((H-H%))
-	 ((lisp_apml_boundary is "HL")
-	  ((H-L%))
-	  ((NONE)))))))
+       ((lisp_apml_LHLH is "LHLH")
+	((NONE))                      ; this is dealt with by the accent feature
+	((lisp_apml_boundary is "LH")
+	 ((L-H%))
+	 ((lisp_apml_boundary is "HH")
+	  ((H-H%))
+	  ((lisp_apml_boundary is "HL")
+	   ((H-L%))
+	   ((NONE))))))))
 
 ;; feature functions.
 (define (apml_accent syl)
@@ -150,8 +214,21 @@ Synthesis an apml file."
 	(item.feat (item.relation.parent word 'Boundary) 'type)
 	0)))
 
-;; f0 generation.
-(require 'apml_f2bf0lr)
+(define (apml_LHLH syl)
+  (let ((accent (apml_accent syl))
+	(boundary (apml_boundary syl)))
+    (if (and (string-equal accent "LplusHstar")
+	     (string-equal boundary "LH"))
+	"LHLH"
+	0)))
+
+
+(define (apml_seg_is_LHLH_vowel seg)
+  (if (and (string-equal (apml_LHLH (item.relation.parent seg 'SylStructure))
+			 "LHLH")
+	   (string-equal (item.feat seg 'ph_vc) "+"))
+      "LHLH"
+      0))
 
 
 ;;;; feature functions:
@@ -200,9 +277,11 @@ Number of boundaries in this performative to the right of this word."
 (define (apml_same_p w1 w2)
 "(apml_same_p w1 w2)
  Are these two words in the same performative?"
-(let ((p1 (item.parent (item.relation.parent w1 'SemStructure)))
-      (p2 (item.parent (item.relation.parent w1 'SemStructure))))
-(equal? p1 p2)))
+(let ((p1 (item.relation.parent w1 'SemStructure))
+      (p2 (item.relation.parent w1 'SemStructure)))
+  (if (and (item.parent p1) (item.parent p2))  ; not true if theme/rheme omitted.
+      (equal? (item.parent p1) (item.parent p2))
+      (equal? p1 p2))))
 
 ;;;
 ;;; segment timings
@@ -217,6 +296,66 @@ Output the segment timings for an apml utterance."
        (format t "%s %s\n" (item.name x) (item.feat x 'end)))
      segs)
     t))
+
+;;;
+;;; Additional functions for f0model.
+;;;
+
+
+(define (find_hstar_left syl)
+"(find_hstar_left syl)
+If the closest accent or boundary to the left is H* return how many syllables away it is. Returns 0 if nearest accent is not H*"
+(let ((count 0))
+  ;; if this syllable has a pitch event
+  (if (or (not (string-equal (item.feat syl 'tobi_accent) "NONE"))
+	  (not (string-equal (item.feat syl 'tobi_endtone) "NONE")))
+      0)
+  (while (and syl
+	      (string-equal (item.feat syl 'tobi_accent) "NONE")
+	      (string-equal (item.feat syl 'tobi_endtone) "NONE"))
+	 (set! count (+ count 1))
+	 (set! syl (item.prev syl)))
+  (cond
+   ;; run out of syllables before finding accent
+   ((null syl)
+    0)
+   ((string-equal (item.feat syl 'tobi_accent) "H*")
+    count)
+   (t 0))))
+
+(define (find_ll_right syl)
+"(find_ll_right syl)
+If the closest accent or boundary to the right is L-L% return how many syllables away it is. Returns 0 if nearest is not L-L%."
+(let ((count 0))
+  ;; if this syllable has a pitch event
+  (if (or (not (string-equal (item.feat syl 'tobi_accent) "NONE"))
+	  (not (string-equal (item.feat syl 'tobi_endtone) "NONE")))
+      0)
+  (while (and syl
+	      (string-equal (item.feat syl 'tobi_accent) "NONE")
+	      (string-equal (item.feat syl 'tobi_endtone) "NONE"))
+	 (set! count (+ count 1))
+	 (set! syl (item.next syl)))
+  (cond
+   ;; run out of syllables before finding boundary
+   ((null syl)
+    0)
+   ((string-equal (item.feat syl 'tobi_endtone) "L-L%")
+    count)
+   (t 0))))
+
+(define (l_spread syl)
+"(l_spread syl)
+Proportion of pitch lowering required due to L- spreading backwards."
+(let ((l (find_hstar_left syl))
+      (r (find_ll_right syl)))
+  (cond
+   ((or (eq l 0)
+	(eq r 0))
+    0)
+   (t
+    (/ r (- (+ l r) 1))))))
+
 
 ;;;
 ;;; Debuging and other useful stuff.
@@ -258,6 +397,7 @@ Pretty print APML semantic structure."
      (format t "%s (" (item.name x))
      (apml_pww_accent x)
      (apml_pww_boundary x)
+     (apml_pww_pause x)
      (format t ")\n"))
    (utt.relation.items utt 'Word))
   t)
@@ -268,6 +408,10 @@ Pretty print APML semantic structure."
 
 (define (apml_pww_boundary item)
   (let ((p (item.relation.parent item 'Boundary)))
+    (if p (apml_ppw_list (item.features p)))))
+
+(define (apml_pww_pause item)
+  (let ((p (item.relation.parent item 'Pause)))
     (if p (apml_ppw_list (item.features p)))))
 
 (define (apml_ppw_list l)
@@ -316,56 +460,85 @@ Pretty print APML syllable structure."
 
 
 (define (apml_get_lr_params)
-  (let ((m (car (cdr (car int_lr_params))))
-        (s (car (cdr (car (cdr int_lr_params))))))
-    (if (not (> m 0))
-        (set! m 100))
-    (if (not (> s 0))
-        (set! m 20))
+  (let ((m 0)
+	(s 0))
+    (if (or (equal? (Parameter.get 'Int_Target_Method) Int_Targets_LR)
+	    (equal? (Parameter.get 'Int_Target_Method) Int_Targets_5_LR))
+	(begin
+	  (set! m (car (cdr (car int_lr_params))))
+	  (set! s (car (cdr (car (cdr int_lr_params))))))
+	(begin
+        (set! m apml_default_pitch_mean)
+        (set! s apml_default_pitch_standard_deviation)))
     (list m s)))
+
 
 
 
 (define (apml_initialise)
   "(apml_initialise)
 Set up the current voice for apml use."
-  ;; set up phrasing
-  (Parameter.set 'Phrase_Method 'cart_tree)
-  (set! phrase_cart_tree apml_phrase_tree)
-  ;; Lexicon
-  (if (not (member_string "apmlcmu" (lex.list)))
-      (load (path-append lexdir "apmlcmu/apmlcmulex.scm")))
-  (lex.select "apmlcmu")
-  ;; Add other lex entries here:
-  (lex.add.entry '("dont" v (((d ow n t) 1))))
-  (lex.add.entry '("pectoris" nil (((p eh k) 2) ((t ao r) 1) ((ih s) 0))))
-  (lex.add.entry '("sideeffects" nil (((s ay d) 1) ((ax f) 0) ((eh k t s) 2))))
-
-  ;; Intonation
-  (set! int_accent_cart_tree apml_accent_cart)
-  (set! int_tone_cart_tree   apml_boundary_cart)
-  (Parameter.set 'Int_Method Intonation_Tree)
-  (set! f0_lr_start apml_f2b_f0_lr_start)
-  (set! f0_lr_mid apml_f2b_f0_lr_mid)
-  (set! f0_lr_end apml_f2b_f0_lr_end)
-;  (set! int_lr_params
-;	'((target_f0_mean 100) (target_f0_std 20)
-;	  (model_f0_mean 170) (model_f0_std 34)))
-  (set! int_lr_params
-	(list (list 'target_f0_mean (car (apml_get_lr_params)))
-	      (list 'target_f0_std (car (cdr (apml_get_lr_params))))
-	      (list 'model_f0_mean 170)
-	      (list 'model_f0_std 34)))
-  (Parameter.set 'Int_Target_Method Int_Targets_LR)
-t
-)
-
-
+  (cond
+   ((or (string-equal (Parameter.get 'Language) "americanenglish")
+	(string-equal (Parameter.get 'Language) "britishenglish"))
+    (begin
+      (format t "Initialising APML for English.\n")
+      ;; Phrasing.
+      (Parameter.set 'Phrase_Method 'cart_tree)
+      (set! phrase_cart_tree apml_phrase_tree)
+      ;; Pauses.
+      (set! duration_cart_tree apml_kal_duration_cart_tree)
+      (set! duration_ph_info apml_kal_durs)
+      (Parameter.set 'Pause_Method Apml_Pauses)
+      ;; Lexicon.
+      (if (not (member_string "apmlcmu" (lex.list)))
+	  (load (path-append lexdir "apmlcmu/apmlcmulex.scm")))
+      (lex.select "apmlcmu")
+      ;; Add other lex entries here:
+      (lex.add.entry '("minerals" nil (((m ih n) 1) ((er) 0) ((ax l z) 0))))
+      (lex.add.entry '("fibre" nil (((f ay b) 1) ((er) 0))))
+      (lex.add.entry '("dont" v (((d ow n t) 1))))
+      (lex.add.entry '("pectoris" nil (((p eh k) 2) ((t ao r) 1) ((ih s) 0))))
+      (lex.add.entry '("sideeffects" nil (((s ay d) 1) ((ax f) 0) ((eh k t s) 2))))
+      
+      ;; Intonation events.
+      (set! int_accent_cart_tree apml_accent_cart)
+      (set! int_tone_cart_tree   apml_boundary_cart)
+      (Parameter.set 'Int_Method Intonation_Tree)
+      ;; Intonation f0 contour.
+      (set! f0_lr_start apml_f2b_f0_lr_start)
+      (set! f0_lr_left apml_f2b_f0_lr_left)
+      (set! f0_lr_mid apml_f2b_f0_lr_mid)
+      (set! f0_lr_right apml_f2b_f0_lr_right)
+      (set! f0_lr_end apml_f2b_f0_lr_end)
+      (set! int_lr_params
+	    (list (list 'target_f0_mean (car (apml_get_lr_params)))
+		  (list 'target_f0_std (car (cdr (apml_get_lr_params))))
+		  (list 'model_f0_mean 170)
+		  (list 'model_f0_std 40)))
+      (Parameter.set 'Int_Target_Method Int_Targets_5_LR)
+      nil))
+   ((string-equal (Parameter.get 'Language) "italian")
+    (begin
+      (format t "Initialising APML for Italian.\n")
+      ;; Phrasing.
+      (Parameter.set 'Phrase_Method 'cart_tree)
+      (set! phrase_cart_tree apml_phrase_tree)
+      ;; Intonation events.
+      (set! int_accent_cart_tree apml_accent_cart)
+      (set! int_tone_cart_tree   apml_boundary_cart)
+      (Parameter.set 'Int_Method Intonation_Tree)
+      ;; Intonation f0 contour.
+      (set! f0_lr_start apml_f2b_f0_lr_start)
+      (set! f0_lr_mid apml_f2b_f0_lr_mid)
+      (set! f0_lr_end apml_f2b_f0_lr_end)
+      (set! int_lr_params
+	    (list (list 'target_f0_mean (car (apml_get_lr_params)))
+		  (list 'target_f0_std (car (cdr (apml_get_lr_params))))
+		  (list 'model_f0_mean 170)
+		  (list 'model_f0_std 34)))
+      (Parameter.set 'Int_Target_Method Int_Targets_LR)
+      nil))
+   (t nil)))
 
 (provide 'apml)
-  
-  
- 
-
-
-

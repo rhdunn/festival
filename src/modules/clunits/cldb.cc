@@ -326,7 +326,7 @@ void CLDB::load_coefs_sig(EST_Item *unit)
 	sig->sub_wave(*unit_sig,samp_start, samp_end-samp_start);
     unit->set("samp_start",real_samp_start-samp_start);
     unit->set("samp_end",real_samp_end-samp_start);
-    /* Need to preserve where the phone boundary is  (whcih may actually */
+    /* Need to preserve where the phone boundary is  (which may actually */
     /* be past the end of this unit                                      */
     unit->set("samp_seg_start",
 	      (int)(unit->F("seg_start") * 

@@ -46,6 +46,8 @@
 VAL_REGISTER_TYPE(ivector,EST_IVector)
 VAL_REGISTER_TYPE(wavevector,EST_WaveVector);
 
+SIOD_REGISTER_TYPE(wavevector, EST_WaveVector);
+
 void map_to_relation(EST_IVector &map, EST_Relation &r, 
 		     const EST_Track &source_pm, 
 		     const EST_Track &target_pm);
@@ -61,20 +63,43 @@ EST_Features *scheme_param(const EST_String& param, const EST_String &path)
     return p;
 }
 
+
+LISP FT_us_linear_smooth_amplitude( LISP lutt )
+{
+  EST_Utterance *utt = get_c_utt( lutt );
+
+  us_linear_smooth_amplitude( utt );
+
+  return lutt;
+}
+
+
+static LISP FT_wavevector_get_wave( LISP l_wavevector, LISP l_framenum )
+{
+  EST_WaveVector *wv = wavevector( l_wavevector );
+  int i = get_c_int( l_framenum );
+
+  if( i<0 || i>wv->length() )
+    EST_error( "index out of bounds" );
+
+  return siod( &((*wv)[i]) );
+}
+
+
 LISP FT_us_unit_concat(LISP lutt)
 {
     EST_String window_name;
     float window_factor;
+    bool window_symmetric;
 
     EST_Features *f = scheme_param("Param", "unisyn");
 
     window_name = f->S("window_name");
     window_factor = f->F("window_factor");
 
-//    window_name = get_c_string(siod_get_lval("us_window_name",
-//					     "UniSyn: no window_name"));
+    window_symmetric = (f->I("window_symmetric",1) == 0) ? false : true;
 
-    us_unit_concat(*get_c_utt(lutt), window_factor, window_name, false);
+    us_unit_concat(*get_c_utt(lutt), window_factor, window_name, false, window_symmetric);
     return lutt;
 }
 
@@ -100,6 +125,10 @@ LISP FT_us_generate_wave(LISP lutt, LISP l_f_method, LISP l_o_method)
     EST_String ola_method = get_c_string(l_o_method);
     EST_Utterance *utt = get_c_utt(lutt);
 
+    EST_Features *f = scheme_param("Param", "unisyn");
+    if(f->I("window_symmetric",1) == 0){
+      ola_method = "asymmetric_window";
+    }
     us_generate_wave(*utt, filter_method, ola_method);
 
     return lutt;
@@ -204,6 +233,14 @@ void festival_UniSyn_init(void)
     proclaim_module("UniSyn");
 
     register_unisyn_features();
+
+    init_subr_2( "wavevector.getwave", FT_wavevector_get_wave,
+    "(wavevector.getwave WAVEVECTOR FRAMENUM)\n\
+    retrieves an EST_Wave frame (int FRAMENUM) from a wavevector."); 
+
+    init_subr_1("us_linear_smooth_amplitude", FT_us_linear_smooth_amplitude,
+    "(us_linear_smooth_amplitude UTT)\n\
+     Perform linear amplitute smoothing on diphone joins.");
 
     init_subr_1("us_unit_raw_concat", FT_us_unit_raw_concat,
     "(us_init_raw_concat UTT).");
