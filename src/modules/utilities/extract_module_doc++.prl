@@ -1,0 +1,238 @@
+#!/usr/local/bin/perl
+
+$state='outside';
+
+while(<>)
+  {
+  if ($state eq 'outside' && /ModuleDescription\s+[a-zA-Z]+\s*=/)
+      {
+      $state = 'start';
+      next;
+      }
+  elsif ($state eq 'outside')
+      {
+      next;
+      }
+  elsif ($state eq 'start' && /\{/)
+      {
+      process_description();
+
+      print_description(\%d);
+      exit(0)
+	  if eof();
+      $state = 'outside';
+      }
+  }
+
+exit(0);
+
+sub next_token
+{
+    my ($t);
+    while (1)
+	{
+	if ($current_line =~ /^[ \t\n,]*((\"[^\"]*\")|([a-z0-9A-Z_.]+)|([{};]))/)
+	    {
+	    $t=$1;
+	    $current_line=$';
+	    $t =~ s/^\"(.*)\"$/$1/;
+	    last;
+	    }
+
+	$current_line = <>;
+
+	return undef
+	    unless $current_line;
+	chop($current_line);
+	}
+
+    return $t;
+}
+
+sub process_description
+{
+    my ($t);
+    $current_line = '';
+
+    %d = ();
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    $d{name}=$t;
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    $d{version}=$t;
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    $d{who}=$t;
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    $d{author}=$t;
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    die "unexpected $t"
+	unless $t eq '{';
+
+    $d{description} = process_text();
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    die "unexpected $t"
+	unless $t eq '{';
+
+    $d{input} = process_streams();
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    die "unexpected $t"
+	unless $t eq '{';
+
+    $d{optional} = process_streams();
+
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    die "unexpected $t"
+	unless $t eq '{';
+
+    $d{output} = process_streams();
+
+    
+    die "unexpected end of file"
+	unless defined($t = next_token());
+
+    die "unexpected $t"
+	unless $t eq '{';
+
+    $d{parameters} = process_parameters();
+
+#    while(defined($t = next_token()))
+#	{
+#	last
+#	    if $token eq '}';
+#	}
+    print "exit\n";
+}
+
+sub process_streams
+{
+    my ($streams) = [];
+    my($t);
+
+    while(defined($t = next_token()) && $t eq '{')
+	{
+	my ($s, $d);
+	$s = next_token();
+	$d = next_token();
+	push(@$streams, [ $s, $d ])
+	    unless $s eq 'NULL';
+	die "unexpected $t"
+	    unless ($t = next_token()) eq '}';
+	}
+
+    die "unexpected $t"
+	unless $t eq '}';
+
+    return $streams;
+}
+
+sub process_parameters
+{
+    my ($streams) = [];
+    my($t);
+
+    while(defined($t = next_token()) && $t eq '{')
+	{
+	my ($p, $t, $def, $d);
+	$p = next_token();
+	$t = next_token();
+	$def = next_token();
+	$d = next_token();
+	push(@$streams, [ $p, $t, $def, $d ])
+	    unless $p eq 'NULL';
+	die "unexpected $t"
+	    unless ($t = next_token()) eq '}';
+	}
+
+    die "unexpected $t"
+	unless $t eq '}';
+
+    return $streams;
+}
+
+sub process_text
+
+{
+    my ($t, $d);
+
+    $d='';
+    while (1)
+	{
+	$t = next_token();
+	last unless ($t && $t ne '}');
+
+	$d .= "\n" .$t
+	    unless $t eq 'NULL';
+	}
+    return $d;
+}
+
+
+sub print_description
+{
+    my ($d) = @_;
+
+    print "/**\@name Module_$$d{name}\n";
+    my ($x) =     $$d{description};
+    $x =~ s/\n/\n  * /g;
+    print "  * $x\n";
+
+    print "  *\\begin{description}\n";
+    foreach $type ('Input', 'Optional', 'Output')
+	{
+	my ($tag) = lc $type;
+	if (($x = $$d{$tag}) && $#$x >=0 )
+	    {
+	    print "  *\\item[{\\bf $type Streams}]\n";
+	    print "  *\\begin{description}\n";
+	    foreach $s (@$x)
+		{
+		print "  *     \\item[{\\tt $$s[0]}] $$s[1]\n";
+		}
+	    print "  *\\end{description}\n";
+	    print "  *\n";
+	    }
+	}
+    if (($x = $$d{parameters}) && $#$x >=0 )
+	{
+	print "  *\\item[{\\bf Parameters}]\n";
+	print "  *\\begin{description}\n";
+	foreach $s (@$x)
+	    {
+	    print "  *     \\item[{\\tt $$s[0]}] $$s[3]\\\\\n";
+	    print "  *          {\\bf type}={\\tt $$s[1]} {\\bf default}={\\it $$s[2]} \n";
+	    }
+	print "  *\\end{description}\n";
+	print "  *\n";
+	}
+    print "  *\\end{description}\n";
+    print "  *\n";
+    print "  * \@author $$d{author}\n";
+    print "  * \@author $$d{who}\n";
+    print "  * \@version $$d{version}\n";
+    print "  *\n";
+    print "  */\n";
+    print "//\@{\n";
+    print "//\@}\n";
+}
