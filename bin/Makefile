@@ -45,7 +45,7 @@
 
 TOP=..
 DIRNAME=bin
-FILES= Makefile
+FILES= Makefile VCLocalRules
 
 ALL = .remove_links .link_main .process_scripts text2wave
 

@@ -112,7 +112,7 @@ Set up language parameters for Castillian Spanish."
    ((equal? language 'klingon)
     (language_klingon))
    (t
-    (print "Unspoorted language, using English")
+    (print "Unsupported language, using English")
     (language_british_english))))
 
 (defvar language_default language_british_english)

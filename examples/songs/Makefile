@@ -30,43 +30,15 @@
 ##  THIS SOFTWARE.                                                       ##
 ##                                                                       ##
 ###########################################################################
-TOP=..
-DIRNAME=examples
+TOP=../..
+DIRNAME=examples/songs
 BUILD_DIRS=
-ALL_DIRS=$(BUILD_DIRS) songs
+ALL_DIRS=$(BUILD_DIRS)
 
-EXTEXTS = intro.text spintro.text benchmark.text
-EXAMPLES = webdemo.scm ex1.email ex1.ogi example.sable example2.sable \
-           tobi.stml example.th example.apml
-SCRIPTS = saytime.sh text2pos.sh latest.sh \
-           scfg_parse_text.sh text2wave.sh make_utts.sh dumpfeats.sh \
-           durmeanstd.sh
-SHELL_SCRIPTS = benchmark festival_client.pl
-SCMS = toksearch.scm th-mode.scm addr-mode.scm
-SAMPLEC = festival_client.c festival_client.h
-OTHERS = apml.dtd
-FILES=Makefile $(EXAMPLES) $(EXTEXTS) $(SCRIPTS) $(SHELL_SCRIPTS) $(SCMS) $(SAMPLEC) $(OTHERS) speech_pm_1.0.tar
-
-ALL = $(SCRIPTS:.sh=)
-LOCAL_CLEAN = $(SCRIPTS:.sh=)
+SONGS = america1.xml america2.xml america3.xml america4.xml \
+        daisy.xml doremi.xml lochlomond.xml \
+        spice1.xml spice2.xml spice3.xml spice4.xml
+FILES=Makefile $(SONGS)
 
 include $(TOP)/config/common_make_rules
 
-$(ALL) : % : %.sh
-	rm -f $@
-	@echo "#!/bin/sh" >$@
-	@echo "\"true\" ; exec "$(FESTIVAL_HOME)/bin/festival --script '$$0 $$*' >>$@
-	cat $< >>$@
-	chmod +x $@
-
-festival_client: festival_client.o festival_client.h
-	$(LINK_COMMAND) -o festival_client festival_client.o $(LIBS)
-
-festival_client.o: festival_client.c festival_client.h
-	$(CC_COMMAND) -DSTANDALONE festival_client.c -o festival_client.o
-
-# Do this manually to make sure Festival.tar (perl module) is up to date.
-
-speech_pm_1.0.tar: $(wildcard speech_pm_1.0/*) $(wildcard  speech_pm_1.0/*/*) $(wildcard  speech_pm_1.0/*/*/*)
-	-chmod +w speech_pm_1.0.tar
-	tar cvf speech_pm_1.0.tar `cat speech_pm_1.0/MANIFEST|sed -e 's/^/speech_pm_1.0\//'`

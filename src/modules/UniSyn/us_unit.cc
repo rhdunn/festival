@@ -320,6 +320,7 @@ void concatenate_unit_coefs(EST_Relation &unit_stream, EST_Track &source_lpc)
 
 	prev_time = source_lpc.t(i - 1);
 	u->set("end", prev_time);
+	u->set("num_frames", coefs->num_frames());
     }
 
     // adjust pitchmarks

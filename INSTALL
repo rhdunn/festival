@@ -10,7 +10,6 @@ location and customize that installation.
 * Configuration::       Setting up compilation
 * Site initialization:: Settings for your particular site
 * Checking an installation::  But does it work ...
-* Y2K::                 Comment on Festival and year 2000
 
 Requirements
 ============
@@ -18,10 +17,10 @@ Requirements
    In order to compile Festival you first need the following source
 packages
 
-`festival-1.4.2.tar.gz'
+`festival-1.4.3-release.tar.gz'
      Festival Speech Synthesis System source
 
-`speech_tools-1.2.2.tar.gz'
+`speech_tools-1.2.3-release.tar.gz'
      The Edinburgh Speech Tools Library
 
 `festlex_NAME.tar.gz'
@@ -38,7 +37,7 @@ packages
      varying distribution policies).  Each voice may have other
      dependencies such as requiring particular lexicons
 
-`festdoc_1.4.2.tar.gz'
+`festdoc_1.4.3.tar.gz'
      Full postscript, info and html documentation for Festival and the
      Speech Tools.  The source of the documentation is available in the
      standard distributions but for your conveniences it has been
@@ -49,7 +48,7 @@ packages
 _A UNIX machine_
      Currently we have compiled and tested the system under Solaris
      (2.5(.1), 2.6, 2.7 and 2.8), SunOS (4.1.3), FreeBSD 3.x, 4.x Linux
-     (Redhat 4.1, 5.0, 5.1, 5.2, 6.[012], 7.[01] and other Linux
+     (Redhat 4.1, 5.0, 5.1, 5.2, 6.[012], 7.[01], 8.0 and other Linux
      distributions), and it should work under OSF (Dec Alphas) SGI
      (Irix), HPs (HPUX).  But any standard UNIX machine should be
      acceptable.  We have now successfully ported this version to
@@ -62,16 +61,14 @@ _A C++ compiler_
      hard to make the system portable, we know it is very unlikely to
      compile without change except with compilers that have already
      been tested.  The currently tested systems are
-        * Sun Sparc Solaris 2.5, 2.5.1, 2.6, 2.7: GCC 2.7.2, egcs
-          1.1.1, egcs 1.1.2, GCC 2.95.1
-
-        * Sun Sparc SunOS 4.1.3: GCC 2.7.2
+        * Sun Sparc Solaris 2.5, 2.5.1, 2.6, 2.7, 2.9: GCC 2.95.1, GCC
+          3.2
 
         * FreeBSD for Intel 3.x and 4.x GCC 2.95.1, GCC 3.0
 
-        * Linux for Intel (RedHat 4.1/5.0/5.1/5.2/6.0): GCC 2.7.2, GCC
-          2.7.2/egcs-1.0.2, egcs 1.1.1, egcs-1.1.2, GCC 2.95.[123], GCC
-          "2.96", GCC 3.0
+        * Linux for Intel (RedHat 4.1/5.0/5.1/5.2/6.0/7.x/8.0): GCC
+          2.7.2, GCC 2.7.2/egcs-1.0.2, egcs 1.1.1, egcs-1.1.2, GCC
+          2.95.[123], GCC "2.96", GCC 3.0, GCC 3.0.1 GCC 3.2 GCC 3.2.1
 
         * Windows NT 4.0: GCC 2.7.2 plus egcs (from Cygnus GNU win32
           b19), Visual C++ PRO v5.0, Visual C++ v6.0
@@ -132,9 +129,6 @@ anyone has used your C++ installation before.
 then contain two subdirectories
      speech_tools/
      festival/
-
-
-File: festival.info,  Node: Configuration,  Next: Site initialization,  Prev: Requirements,  Up: Installation
 
 Configuration
 =============
@@ -280,9 +274,6 @@ make the festival binary smaller and (potentially) start up faster but
 don't expect too much.  You can delete these by changing the
 `BASE_DIRS' variable in `src/modules/Makefile'.
 
-
-File: festival.info,  Node: Site initialization,  Next: Checking an installation,  Prev: Configuration,  Up: Installation
-
 Site initialization
 ===================
 
@@ -385,9 +376,6 @@ for local installation, Festival loads the file `.festivalrc' from the
 user's home directory (if it exists).  This file may contain arbitrary
 Festival commands.
 
-
-File: festival.info,  Node: Checking an installation,  Next: Y2K,  Prev: Site initialization,  Up: Installation
-
 Checking an installation
 ========================
 
@@ -396,8 +384,8 @@ see if Festival can speak or not.
 
    Start the system
      $ bin/festival
-     Festival Speech Synthesis System 1.4.2:release July 2001
-     Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
+     Festival Speech Synthesis System 1.4.3:release Jan 2003
+     Copyright (C) University of Edinburgh, 1996-2003. All rights reserved.
      For details type `(festival_warranty)'
      festival> ^D
    If errors occur at this stage they are most likely to do with
@@ -407,8 +395,8 @@ intended them to be.  Most of the (default) pathnames are dependent on
 the basic library path.  Ensure that is correct.  To find out what it
 has been set to, start the system without loading the init files.
      $ bin/festival -q
-     Festival Speech Synthesis System 1.4.2:release July 2001
-     Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
+     Festival Speech Synthesis System 1.4.3:release Jan 2003
+     Copyright (C) University of Edinburgh, 1996-2003. All rights reserved.
      For details type `(festival_warranty)'
      festival> libdir
      "/projects/festival/lib/"
@@ -463,45 +451,3 @@ Festival, to ensure new enhancements don't mess up existing supported
 features.  They are not designed to test an installation is successful,
 though if they run correctly it is most probable the installation has
 worked.
-
-
-File: festival.info,  Node: Y2K,  Prev: Checking an installation,  Up: Installation
-
-Y2K
-===
-
-   Festival comes with _no_ warranty therefore we will not make any
-legal statement about the performance of the system.  However a number
-of people have ask about Festival and Y2K compliance, and we have
-decided to make some comments on this.
-
-   Every effort has been made to ensure that Festival will continue
-running as before into the next millenium.  However even if Festival
-itself has no problems it is dependent on the operating system
-environment it is running in.  During compilation dates on files are
-important and the compilation process may not work if your machine
-cannot assign (reasonable) dates to new files.  At run time there is
-less dependence on system dates and times.  Specifically times are used
-in generation of random numbers (where only relative time is important)
-and as time stamps in log files when festival runs in server mode, thus
-we feel it is unlikely there will be any problems.
-
-   However, as a speech synthesizer, Festival must make explicit
-decisions about the pronunciation of dates in the next two decades when
-people themselves have not yet made such decisions.  Most people are
-still unsure how to read years written as '01, '04, '12, 00s, 10s, (cf.
-'86, 90s).  It is interesting to note that while there is a convenient
-short name for the last decade of the twentieth century, the "ninties"
-there is no equivalent name for the first decade of the twenty-first
-century (or the second).  In the mean time we have made reasonable
-decisions about such pronunciations.
-
-   Once people have themselves become Y2K compliant and decided what to
-actually call these years, if their choices are different from how
-Festival pronounces them we reserve the right to change how Festival
-speaks these dates to match their belated decisions.  However as we do
-not give out warranties about compliance we will not be requiring our
-users to return signed Y2K compliant warranties about their own
-compliance either.
-
-

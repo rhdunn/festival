@@ -84,22 +84,32 @@ LISP describe_module(LISP lname, LISP lstream);
 LISP describe_all_modules(void);
 #endif
 
+static int festival_initialized = 0;
+
 void festival_initialize(int load_init_files,int heap_size)
 {
     // all initialisation
 
-    siod_init(heap_size);
-    siod_est_init();		// add support for EST objects
-    siod_fringe_init();		// and for talking to fringe.
-
-    siod_prog_name = "festival";
-    cdebug = new ofstream("/dev/null");  // This wont work on Win/NT
-    stddebug = fopen("/dev/null","w");
-
-    festival_lisp_vars();
-    festival_lisp_funcs();
-    if (load_init_files)
-	festival_load_default_files();
+    if (! festival_initialized )
+    {
+	siod_init(heap_size);
+	siod_est_init();		// add support for EST objects
+	siod_fringe_init();		// and for talking to fringe.
+	
+	siod_prog_name = "festival";
+	cdebug = new ofstream("/dev/null");  // This wont work on Win/NT
+	stddebug = fopen("/dev/null","w");
+	
+	festival_lisp_vars();
+	festival_lisp_funcs();
+	if (load_init_files)
+	    festival_load_default_files();
+	festival_initialized = TRUE;
+    }
+    else
+    {
+	cerr << "festival_initialize() called more than once" << endl;
+    }
 
     return;
 }
@@ -200,7 +210,7 @@ static void festival_banner(void)
 	EST_Litem *t;
 	cout << STRINGIZE(FTNAME) << " " << 
 	    festival_version << endl;
-	cout << "Copyright (C) University of Edinburgh, 1996-2001. " <<
+	cout << "Copyright (C) University of Edinburgh, 1996-2003. " <<
 	    "All rights reserved." << endl;
 	cout << "For details type `(festival_warranty)'" << endl;
 	if (sub_copyrights.length() > 0)

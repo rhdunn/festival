@@ -42,15 +42,21 @@
 #include "EST_unix.h"
 #include "festival.h"
 
+#ifdef WIN32
+typedef HANDLE SERVER_FD;
+#else
+typedef FILE *SERVER_FD;
+#endif
+
 static void festival_client_main(int argc, char **argv);
-static void copy_to_server(FILE *fdin,FILE *serverfd);
-static void ttw_file(FILE *serverfd, const EST_String &file);
-static void client_accept_waveform(FILE *fd);
-static void client_accept_s_expr(FILE *fd);
+static void copy_to_server(FILE *fdin,SERVER_FD serverfd);
+static void ttw_file(SERVER_FD serverfd, const EST_String &file);
+static void client_accept_waveform(SERVER_FD fd);
+static void client_accept_s_expr(SERVER_FD fd);
 static void new_state(int c, int &state, int &bdepth);
 
 static EST_String output_filename = "-";
-static EST_String output_type = "nist";
+static EST_String output_type = "riff";
 static EST_String tts_mode = "nil";
 static EST_String prolog = "";
 static int withlisp = FALSE;
@@ -83,7 +89,7 @@ static void festival_client_main(int argc, char **argv)
 	"--server <string>   hostname (or IP number) of server\n"+
 	"--port <int> {1314} port number of server proces (1314)\n"+
 	"--output <string>   file to save output waveform to\n"+
-	"--otype <string> {nist}\n"
+	"--otype <string> {riff}\n"
         "                    output type for waveform\n"+
 	"--passwd <string>   server passwd in plain text (optional)\n"+
 	"--prolog <string>   filename containing commands to be sent\n"+
@@ -142,10 +148,30 @@ static void festival_client_main(int argc, char **argv)
 	async_mode = FALSE;
 
     int fd = festival_socket_client(server,port);
+#ifdef WIN32
+    HANDLE serverfd = (HANDLE)fd;
+#else
     FILE *serverfd = fdopen(fd,"wb");
+#endif
 
     if (al.present("--passwd"))
+#ifdef WIN32
+	{
+		DWORD bytes_written;
+		DWORD passwdlen = (DWORD)strlen(al.val("--passwd"))+1;
+		char *buffer = new char[passwdlen];
+		sprintf(buffer,"%s\n",al.val("--passwd"));
+		bytes_written = send((SOCKET)serverfd,buffer,passwdlen,0);
+		if (SOCKET_ERROR == bytes_written || bytes_written < passwdlen)
+		{
+			GetLastError();  // at least get the error
+			cerr << "festival_client:  can't send password to server\n";
+		}
+		delete [] buffer;
+	}
+#else
 	fprintf(serverfd,"%s\n",(const char *)al.val("--passwd"));
+#endif
 
     if (al.present("--prolog"))
     {
@@ -181,7 +207,7 @@ static void festival_client_main(int argc, char **argv)
     return;
 }
 
-static void ttw_file(FILE *serverfd, const EST_String &file)
+static void ttw_file(SERVER_FD serverfd, const EST_String &file)
 {
     // text to waveform file.  This includes the tts wraparounds for
     // the text in file and outputs a waveform in output_filename
@@ -247,7 +273,7 @@ static void ttw_file(FILE *serverfd, const EST_String &file)
     unlink(tmpfile);
 }
 
-static void copy_to_server(FILE *fdin,FILE *serverfd)
+static void copy_to_server(FILE *fdin,SERVER_FD serverfd)
 {
     // Open a connection and copy everything from stdin to 
     // server
@@ -258,16 +284,44 @@ static void copy_to_server(FILE *fdin,FILE *serverfd)
 
     while((c=getc(fdin)) != EOF)
     {
+#ifdef WIN32
+	DWORD bytes_pending;
+	n = send((SOCKET)serverfd,(const char *)&c,1,0);
+	if (SOCKET_ERROR == n || 0 == n)
+	{
+		if (SOCKET_ERROR == n)
+			GetLastError();
+		cerr << "festival_client: couldn't copy to server\n";
+	}
+#else
 	putc(c,serverfd);
+#endif
 	new_state(c,state,bdepth);
 
 	if (state == 1)
 	{
 	    state = 0;
+#ifndef WIN32
 	    fflush(serverfd);
+#endif
 	    do {
+#ifdef WIN32
+		{
+			for (n=0; n < 3; )
+			{
+				int bytes_read = recv((SOCKET)serverfd,ack+n,3-n,0);
+				if (SOCKET_ERROR == bytes_read)
+				{
+					GetLastError();
+					cerr << "festival_client: error reading from server\n";
+				}
+				else n+= bytes_read;
+			}
+		}
+#else
 		for (n=0; n < 3; )
 		    n += read(fileno(serverfd),ack+n,3-n);
+#endif
 		ack[3] = '\0';
 		if (streq(ack,"WV\n"))    // I've been sent a waveform
 		    client_accept_waveform(serverfd);
@@ -359,7 +413,7 @@ static void new_state(int c, int &state, int &bdepth)
 	state = 5;
 }
 
-static void client_accept_waveform(FILE *fd)
+static void client_accept_waveform(SERVER_FD fd)
 {
     // Read a waveform from fd.  The waveform will be passed
     // using 
@@ -367,7 +421,11 @@ static void client_accept_waveform(FILE *fd)
     EST_Wave sig;
 
     // Have to copy this to a temporary file, then load it.
+#ifdef WIN32
+    socket_receive_file((SOCKET)fd,tmpfile);
+#else
     socket_receive_file(fileno(fd),tmpfile);
+#endif
     sig.load(tmpfile);
     if (aucommand != "")
     {
@@ -388,7 +446,7 @@ static void client_accept_waveform(FILE *fd)
     unlink(tmpfile);
 }
 
-static void client_accept_s_expr(FILE *fd)
+static void client_accept_s_expr(SERVER_FD fd)
 {
     // Read an s-expression.  Inefficeintly into a file
     EST_String tmpfile = make_tmp_filename();
@@ -396,7 +454,11 @@ static void client_accept_s_expr(FILE *fd)
     int c;
     
     // Have to copy this to a temporary file, then load it.
+#ifdef WIN32
+    socket_receive_file((SOCKET)fd,tmpfile);
+#else
     socket_receive_file(fileno(fd),tmpfile);
+#endif
     
     if (withlisp)
     {

@@ -31,8 +31,8 @@
  ##                                                                       ##
  ###########################################################################
  ##                                                                       ##
- ##                 Author: Richard Caley (rjc@cstr.ed.ac.uk)             ##
- ##                   Date: Wed May 27 1998                               ##
+ ##                 Author: Alan W Black (awb@cstr.ed.ac.uk)              ##
+ ##                   Date: December 1998                                 ##
  ## --------------------------------------------------------------------  ##
  ## Command line editor based on editline                                 ##
  ##                                                                       ##
@@ -40,7 +40,13 @@
 
 INCLUDE_EDITLINE=1
 
-MOD_DESC_EDITLINE=Use editline for command line editor and history
+MOD_DESC_EDITLINE=Use editline for command line editing and history
 
 IO_DEFINES   += -DSUPPORT_EDITLINE $(MODULE_EDITLINE_OPTIONS:%=-DEDITLINE_%)
-MODULE_LIBS  += -ltermcap
+MODULE_LIBS  += $(TERMCAPLIB)
+
+ifeq ($(DIRNAME),siod)
+    CSRCS := $(CSRCS) el_complete.c editline.c el_sys_unix.c
+endif
+
+

@@ -81,6 +81,8 @@ Join the preselected and gotten units into a waveform."
        (utt.relation.items utt 'Unit)
        (utt.relation.items utt 'Segment))
       (us_unit_concat utt)
+      (if (boundp 'awb_hack1)
+	  (awb_hack1 utt))
       (if (not (member 'f0 (utt.relationnames utt)))
 	  (targets_to_f0 utt))
       (if (utt.relation.last utt 'Segment)
@@ -99,10 +101,18 @@ Join the preselected and gotten units into a waveform."
       (Parameter.def 'us_sigpr 'lpc)
       (mapcar 
        (lambda (u s)
-	 (item.set_feat s "source_end" (item.feat u "end")))
+	 (item.set_feat s "source_end" (item.feat u "end"))
+	 (item.set_feat s "unit_duration" 
+			(- (item.feat u "seg_end") (item.feat u "seg_start")))
+	 )
        (utt.relation.items utt 'Unit)
        (utt.relation.items utt 'Segment))
       (us_unit_concat utt)
+      (mapcar 
+       (lambda (u s)
+	 (item.set_feat s "num_frames" (item.feat u "num_frames")))
+       (utt.relation.items utt 'Unit)
+       (utt.relation.items utt 'Segment))
       (if (not (member 'f0 (utt.relationnames utt)))
 	  (targets_to_f0 utt))
       (if (utt.relation.last utt 'Segment)

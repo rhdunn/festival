@@ -2,7 +2,7 @@
 ##                                                                       ##
 ##                Centre for Speech Technology Research                  ##
 ##                     University of Edinburgh, UK                       ##
-##                      Copyright (c) 1996-2001                          ##
+##                      Copyright (c) 1996-2002                          ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -34,7 +34,7 @@
 ##                The Festival Speech Synthesis System                   ##
 ##                                                                       ##
 ##       Authors:  Alan W Black, Paul Taylor, Richard Caley and others   ##
-##          Date:  April 2001                                            ##
+##          Date:  January 2003                                          ##
 ##                                                                       ## 
 ###########################################################################
 TOP=.

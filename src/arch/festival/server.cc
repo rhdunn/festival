@@ -55,10 +55,13 @@
 #include "festivalP.h"
 
 #define DEFAULT_MAX_CLIENTS 10
-/* If you uncomment the folloing you'll get a server that never forks */
-/* and only accepts one client at a time.  This is probabaly good for */
-/* OSs with an expensive implementation of fork (e.g. NT)             */
-/* #define SINGLE_CLIENT */
+
+/* The folloing gives a server that never forks */
+/* and only accepts one client at a time.  This is good for */
+/* OSs with an expensive implementation of fork and or waitpid (e.g. NT) */
+#ifdef WIN32
+#define SINGLE_CLIENT 1
+#endif
 
 
 static int client_access_check(int fd,int client);

@@ -51,6 +51,7 @@ MACHINETYPE=`{ mach || uname -m || echo unknown ; } 2>/dev/null |
 	sed -e 's/i[0-9]86/ix86/' \
 	    -e 's/sun4/sparc/' \
 	    -e 's/ip[0-9]*/ip/'\
+	    -e 's/ /_/g'\
 	    -e 's/9000_7../hp9000/'
 	    `
 
@@ -90,8 +91,11 @@ if [ ! -f "${SYSTEMS}/${MACHINETYPE}_${OSTYPE}${OSREV}.mak" ]; then
 	MACHINETYPE=unknown
 	OSTYPE=Linux
 	OSREV=
+    elif [ "$OSTYPE" = "Darwin" ]; then
+        OSREV=
     else
 	OSTYPE=unknown
+	OSREV=
     fi
 fi
 

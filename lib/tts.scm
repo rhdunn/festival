@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;                                                                       ;;
 ;;;                Centre for Speech Technology Research                  ;;
 ;;;                     University of Edinburgh, UK                       ;;
@@ -239,9 +239,10 @@ This function name maybe added to the server safe functions."
 This function is called by clients who wish to return waveforms of
 their text samples asynchronously.  This replaces utt.play in tts_hooks
 with utt.send.wave.client."
-  (set! tts_hooks
-	(append (delq utt.play tts_hooks)
-		(list utt.send.wave.client))))
+  (if (not (member utt.send.wave.client tts_hooks))
+      (set! tts_hooks
+	    (append (delq utt.play tts_hooks)
+		    (list utt.send.wave.client)))))
 
 (defvar tts_text_modes nil
 "tts_text_modes

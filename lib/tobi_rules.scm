@@ -33,6 +33,7 @@
 ;;;                Authors: Robert A. J. Clark and Alan W Black
 ;;;                Modifications and Checking: 
 ;;;                         Gregor Moehler (moehler@ims.uni-stuttgart.de)
+;;;                         Matthew Stone (mdstone@cs.rutgers.edu)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Generate F0 points from tobi labels using rules given in:
@@ -42,6 +43,11 @@
 ;;;  *** Converted to new Relation architecture -- but not checked yet -- awb
 ;;;      -> crude (beta) checking: gm in Dec. 98
 ;;;
+;;;      -> fixed TAKEOVER bug that used time value 
+;;;         as pitch target (!) - MDS 1/02
+;;;      -> hacked around bunches of target overlap problems - MDS 1/02
+;;;      -> added primitive pitch range controls
+;;;      
 ;;;  Known problems and bugs:
 ;;;      Can't currently use voicing intervals which cross syllable boundaries,
 ;;;      so pre/post-nuclear tones are currently places 0.2s before/after the 
@@ -59,8 +65,6 @@
 ;;;      
 ;;;      !H- does not generate any targets
 ;;;      
-;;;      L-H% can't have an additional (high) accent in the last syllable
-;;;      
 ;;;      Unfortunaltely some other modules may decide to put pauses in the 
 ;;;      middle of a phrase
 ;;;      
@@ -73,9 +77,8 @@
 ;;;  And in the voice call
 ;;;     (setup_tobi_f0_method)
 ;;;  Set the following for your speaker's F0 range
-;;;  (Parameter.set 'Default_Topline 110)
-;;;  (Parameter.set 'Default_Start_Baseline 90)
-;;;  (Parameter.set 'Default_End_Baseline 80)
+;;;  (Parameter.set 'Default_Topline 146)
+;;;  (Parameter.set 'Default_Start_Baseline 61)
 ;;;  (Parameter.set 'Valley_Dip 75)
 
 ;; level of debug printout
@@ -93,7 +96,7 @@ of ToBI labels to F0 targets by rule."
 	(list 
 	 (list 'targ_func tobi_f0_targets)))   ; we will return a list of f0 targets here
 
-;  (Parameter.set 'Phrase_Method 'cart_tree)
+  (Parameter.set 'Phrase_Method 'cart_tree)
   (set! phrase_cart_tree tobi_label_phrase_cart_tree) ; redefines the phrasebreak tree
   t)
 
@@ -104,14 +107,13 @@ of ToBI labels to F0 targets by rule."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Set global parameters
-;;; You may want to reset these for differen speakers
+;;; You may want to reset these for different speakers
 
-(Parameter.set 'Default_Topline 110) ;110
-(Parameter.set 'Default_Start_Baseline 90) ;87
-(Parameter.set 'Default_End_Baseline 80)   ;83
+(Parameter.set 'Default_Topline 146) ;146
+(Parameter.set 'Default_Start_Baseline 61) ;61
 (Parameter.set 'Current_Topline        (Parameter.get 'Default_Topline))
 (Parameter.set 'Current_Start_Baseline (Parameter.get 'Default_Start_Baseline))
-(Parameter.set 'Current_End_Baseline   (Parameter.get 'Default_End_Baseline))
+(Parameter.set 'Current_End_Baseline   (Parameter.get 'Current_Start_Baseline))
 (Parameter.set 'Downstep_Factor 0.70)
 (Parameter.set 'Valley_Dip 75)
 ;;; function to add target points on a given syllable and fill in 
@@ -124,7 +126,7 @@ of ToBI labels to F0 targets by rule."
 	   (not(equal? 0 (item.feat syl "R:Intonation.daughter1.name"))))
       (format t "### %l (%.2f %.2f) %l ptarg: %l ###\n" (item.name syl)
 	      (item.feat syl "syllable_start")(item.feat syl "syllable_end")
-	      (item.feat syl "R:Intonation.daughter1.name") (ttt_last_target syl)))
+	      (item.feat syl "R:Intonation.daughter1.name") (ttt_last_target_time syl)))
   
   ;; only continue if there is a Word related to this syllable
   ;; I know there always should be, but there might be a bug elsewhere
@@ -137,23 +139,30 @@ of ToBI labels to F0 targets by rule."
 	  (pvoicing (ttt_get_voice_times                      ; previous voicing
 		     (item.relation.prev syl 'Syllable)))
 	  (nvoicing (ttt_get_voice_times                      ; next voicing
-		     (item.relation.next syl 'Syllable)))) 
+		     (item.relation.next syl 'Syllable))))
 
     ; if first syl of phrase set Phrase_Start and Phrase_End parameters
     ; and reset downstep (currently does so on big and little breaks.)
-    ; only assignes Default values at this stage (maybe trained from CART later)
+    ; only assignes Default values at this stage 
+    ; maybe trained from CART later - first steps now - MDS
+    ; following Moehler and Mayer, SSW 2001 
     (if   (eq 0 (item.feat syl 'syl_in)) ;; GM maybe something better needed here?
 	(progn
 	 (Parameter.set 'Phrase_Start (item.feat syl 'R:SylStructure.parent.R:Phrase.last.word_start))
 	 (Parameter.set 'Phrase_End (item.feat syl 'R:SylStructure.parent.R:Phrase.last.word_end))
-	 (Parameter.set 'Current_Topline (Parameter.get 'Default_Topline))
-	 (Parameter.set 'Current_Start_Baseline (Parameter.get 'Default_Start_Baseline))
-	 (Parameter.set 'Current_End_Baseline (Parameter.get 'Default_End_Baseline))
+	 (Parameter.set 'Current_Topline 
+			(/ (* (wagon syl ttt_topline_tree) 
+			      (Parameter.get 'Default_Topline)) 100))
+	 (Parameter.set 'Current_Start_Baseline
+			(/ (* (wagon syl ttt_baseline_tree)
+			      (Parameter.get 'Default_Start_Baseline)) 100))
+	 (Parameter.set 'Current_End_Baseline 
+			(Parameter.get 'Current_Start_Baseline))
 	 (if (>= printdebug  3)
 	     (begin 
 	       (print (format nil "new range: %f %f %f" 
 			      (Parameter.get 'Current_Topline) 
-			      (Parameter.get 'Current_End_Baseline)
+			      (Parameter.get 'Current_Start_Baseline)
 			      (Parameter.get 'Current_End_Baseline) ))))  ))
 
     ; do stuff (should go only if there is an accent/boundary?)
@@ -196,13 +205,13 @@ of ToBI labels to F0 targets by rule."
 
 ;;;
 ;;; Relate phrasing to boundary tones.
-;;;
+;;;   Added downstepped tones - MDS
 
 (set! tobi_label_phrase_cart_tree
 '
 ((tone in ("L-" "H-" "!H-"))
  ((B))
- ((tone in ("H-H%" "H-L%" "L-L%" "L-H%"))
+ ((tone in ("H-H%" "H-L%" "!H-L%" "L-L%" "L-H%"))
   ((BB))
   ((NB)))))
 
@@ -266,7 +275,7 @@ of ToBI labels to F0 targets by rule."
      ;; a TAKEOVER marker
      ((eq (car (car tset)) 'TAKEOVER)
       (list (list (ttt_interval_percent voicing 0) 
-		  (ttt_last_target syl))))
+		  (ttt_last_target_value syl))))
      (t (error "unknown target pair in ttt_bound_set_to_targets"))))
    (t (error "unknown target set type in ttt_bound_set_to_targets"))))
 
@@ -288,13 +297,13 @@ of ToBI labels to F0 targets by rule."
      ; V1 marker
      ((eq (car (car tset)) 'V1)
       (let ((target_time (+ (/ (- (next_accent_start syl)
-				  (ttt_last_target syl))
+				  (ttt_last_target_time syl))
 			       2.0)
-			    (ttt_last_target syl))))
+			    (ttt_last_target_time syl))))
 	(list (list target_time (ttt_accent_pitch (Parameter.get 'Valley_Dip) target_time)))))
      ; V2 marker
      ((eq (car (car tset)) 'V2)
-      (let ((target_time (+ (ttt_last_target syl) 0.25)))
+      (let ((target_time (+ (ttt_last_target_time syl) 0.25)))
 	(list (list target_time (ttt_accent_pitch (Parameter.get 'Valley_Dip) target_time)))))
      ; V3 marker
      ((eq (car (car tset)) 'V3)
@@ -308,22 +317,25 @@ of ToBI labels to F0 targets by rule."
      ;; a *ed tone with PRE type tone (as in L+H*)
      ((eq (car (car tset)) 'PRE)
       (let ((star_target (ttt_get_target (car (cdr tset)) voicing))
-	    (last_target (parse-number(ttt_last_target syl))))
+	    (last_target (parse-number(ttt_last_target_time syl))))
 	(cond
 	 ; normal 0.2s case (currently doesn't check for voicing)
-	 ((and (< 0 (parse-number(item.feat syl "syl_in")))
+	 ((and (eqv? 0 (ip_initial syl))
 	       (> (- (car star_target) 0.2) last_target))
 	  (list  (list (- (car star_target) 0.2)
 	   	       (ttt_accent_pitch (car (cdr (car tset)))
 					 (- (car star_target) 0.2))) ; the time
 	   	 star_target))
-	 ; 90% prev voiced if not before last target
-	    ; ((> (ttt_interval_percent pvoicing 90) 
-	    ;      (ttt_last_target syl))
-	    ;  (list (list (ttt_interval_percent pvoicing 90)
-	    ;	       (ttt_accent_pitch (car (cdr (car tset)))
-	    ;				(ttt_interval_percent pvoicing 90)))
-	    ; 	star_target))
+
+	 ; 90% prev voiced if not before last target - Added back in MDS,
+	 ; with parse-number added and new check for ip_initial
+	 ((and (eqv? 0 (ip_initial syl))
+	       (> (parse-number (ttt_interval_percent pvoicing 90))
+		  (parse-number (ttt_last_target_time syl))))
+	  (list (list (ttt_interval_percent pvoicing 90)
+		      (ttt_accent_pitch (car (cdr (car tset)))
+					(ttt_interval_percent pvoicing 90)))
+		star_target))
 
 	 ;  otherwise (UNTESTED) [NOTE: Voicing for this syllable only]
 	 (t 
@@ -364,7 +376,11 @@ of ToBI labels to F0 targets by rule."
 					  (ttt_interval_percent voicing 90) )))))))
      
      (t 
-      (error (format nil "Unknown pair of targets: %l" tset)))))
+      ;; This case didn't use to happen, but now must 
+      ;; to avoid +H's clobbering endtones - MDS's hack.
+      (list (ttt_get_target (car tset) voicing)
+	    (ttt_get_target (cadr tset) voicing)))))
+
    
    ;; something else...
    (t (error (format nil "unknown accent set in ttt_accent_set_to_targets: %l" tset)))))
@@ -458,8 +474,57 @@ returns last segment if all are unvoiced."
    (t
     (ttt_first_voiced (cdr segs)))))
 
-(define (ttt_last_target syl)
+;;; ttt_last_target has bifurcated into
+;;;   ttt_last_target_time and
+;;;   ttt_last_target_value 
+;;; to fix a place where f0 was set to last target time!
+;;;   - MDS
+
+(define (ttt_last_target_time syl)
   "Returns the end of the most recent previous target 
+in the utterance or nil if there is not one present
+"
+  (if (>= printdebug  3)
+      (begin (print "Entering  ttt_last_target_time")
+	     (print syl))
+      )
+  (let ((target (ttt_last_target syl)))
+    (if (null? target)
+	nil
+	(item.feat target "R:Target.daughter1.pos"))))
+
+(define (ttt_last_target_value syl)
+  "Returns the pitch of the most recent previous target 
+in the utterance or nil if there is not one present
+"
+  (if (>= printdebug  3)
+      (begin (print "Entering  ttt_last_target_time")
+	     (print syl))
+      )
+  (let ((target (ttt_last_target syl)))
+    (if (null? target)
+	nil
+	(item.feat target "R:Target.daughter1.f0"))))
+
+;; Changed to scan through segments in the segment relation,
+;; to catch (notional) targets on pauses.  - MDS
+;;
+;;; associated segments are:
+;;; - the segments in the word
+;;; - subsequent segments not in the syllable structure
+;;; and on the first word, preceding segments
+;;; not in the syllable structure 
+
+(define (ttt_collect_following seg accum)
+  (if (or (null? seg)
+	  (not (null? (item.relation seg 'SylStructure))))
+      accum
+      (ttt_collect_following (item.next seg) 
+			     (cons seg accum))))
+
+
+(define (ttt_last_target syl)
+  "Returns the most recent previous target 
 in the utterance or nil if there is not one present
 "
 (if (>= printdebug  3)
@@ -471,11 +536,18 @@ in the utterance or nil if there is not one present
 ;     ((symbol-bound? 'new_targets) (last (caar new_targets)))
      ((null prev_syl) nil)
      ((ttt_last_target_segs 
-       (reverse (item.relation.daughters prev_syl "SylStructure")))) ;list of segments of prev. syllables
+       (ttt_collect_following 
+	(item.relation.next 
+	 (item.relation.daughtern prev_syl "SylStructure")
+	 "Segment")
+	(reverse (item.relation.daughters prev_syl "SylStructure")))))
+					;list of segments of prev. syllable
+					;in reverse order, with pauses
+					;prepended.
      (t (ttt_last_target prev_syl)))))
 
 (define (ttt_last_target_segs segs)
-  "Returns the end of the first target in a list of segments,
+  "Returns the first target no earlier than seg
 or nil if there is not one
 "
 (if (>= printdebug  4)
@@ -489,7 +561,7 @@ or nil if there is not one
 	  (eq 0 (item.feat (car segs) "R:SylStructure.parent.lisp_lh_condition"))
 	  (eq 0 (item.feat (car segs) "R:SylStructure.parent.lisp_hl_condition"))
 	  (eq 0 (item.feat (car segs) "R:SylStructure.parent.lisp_valley_condition")))
-    (item.feat (car segs) "R:Target.daughter1.pos"))
+    (car segs))
    
    (t (ttt_last_target_segs (cdr segs)))))
 
@@ -516,8 +588,8 @@ or nil if there is not one
 	 ((((100 -20))))
 	 ((tobi_endtone is "L-H%")   ; L-H%
 	  ((lisp_last_accent > 2)
-	   ((lisp_last_accent_type is "L*") ;GM  2nd point 80->40 of pitchrange
-	    ((((0 25) (100 40))))
+	   ((lisp_last_accent_type is "L*") 
+	    ((((0 25) (100 40))))    ; paper says 80 but AWB had 40
 	    ((((0 0) (100 40)))))
 	   ((lisp_last_accent_type is "L*")
 	    ((((100 40))))
@@ -544,7 +616,7 @@ or nil if there is not one
 
 (set! ttt_starttone_tree
       '
-      ((syl_in = 0)                                    ;; GM better: (lisp_ip_initial = 1)
+      ((lisp_ip_initial = 1)
        ((tobi_endtone is "%H")
 	((((0 100))))
 	((p.tobi_endtone in ("H-" "!H-" "L-"))
@@ -562,72 +634,90 @@ or nil if there is not one
 	    ((((0 70))))))))
        ((((NONE))))))     ; otherwise (and usually) nothing.  
 
+;; Redone after Jilka, Moehler and Dogil
+;; - But treating one-syllable-ip's like
+;; last-syllable-of-ip's in cases of 
+;; two tone switches per syllable (e.g. H* L-H%). 
+;; - And (hack) a 70% target for the initial 
+;; H*'s of phrases when the next accent is L+H*
+;; - MDS
+
 (set! ttt_accent_tree
       '
       ((tobi_accent is "H*" )    ; H*
-       ((lisp_ip_initial = 1) 
-	((lisp_ip_final = 1)
+       ((lisp_ip_final = 1)
+	((lisp_ip_one_syllable_case = 1)
 	 ((((50 100))))
-	 ((((85 100)))))
-	((lisp_ip_final = 1)
-	 ((((25 100))))
-	 ((((60 100))))))
-       ((tobi_accent is "!H*" )    ; !H*
-	((lisp_ip_initial = 1) 
-	 ((lisp_ip_final = 1)
-	  ((((50 DHIGH))))
-	  ((((85 DHIGH)))))
-	 ((lisp_ip_final = 1)
-	  ((((25 DHIGH))))
-	  ((((60 DHIGH))))))
-	((tobi_accent is "L*" )    ; L*
+	 ((((25 100)))))
+	((lisp_hstar_weak_target = 1)
+	 ((((60 70))))
 	 ((lisp_ip_initial = 1) 
-	  ((lisp_ip_final = 1)
+	  ((((85 100))))
+	  ((((60 100)))))))
+
+      ((tobi_accent is "!H*" )    ; !H*
+       ((lisp_ip_final = 1)
+	((lisp_ip_one_syllable_case = 1)
+	 ((((50 DHIGH))))
+	 ((((25 DHIGH)))))
+       ((lisp_ip_initial = 1) 
+	((((85 DHIGH))))
+	((((60 DHIGH))))))
+
+	((tobi_accent is "L*" )    ; L*
+	 ((lisp_ip_final = 1)
+	  ((lisp_ip_one_syllable_case = 1)
 	   ((((50 0))))
-	   ((((85 0)))))
-	  ((lisp_ip_final = 1)
-	   ((((25 0))))
+	   ((((25 0)))))
+	  ((lisp_ip_initial = 1) 
+	   ((((85 0))))
 	   ((((60 0))))))
-	 ((tobi_accent is "L+H*")   ; L+H*
+
+	((tobi_accent is "L+H*")   ; L+H*
+	 ((lisp_ip_final = 1)
+	  ((lisp_ip_one_syllable_case = 1)
+	   ((((PRE 20) (50 100))))  ; JMD estimated 70
+	   ((((PRE 20) (25 100)))))
 	  ((lisp_ip_initial = 1) 
-	   ((lisp_ip_final = 1)
-	    ((((PRE 20) (70 100))))    
-	    ((((PRE 20) (90 100)))))   
-	   ((lisp_ip_final = 1)
-	    ((((PRE 20) (25 100))))
-	    ((((PRE 20) (75 100))))))
+	   ((((PRE 20) (90 100))))
+	   ((((PRE 20) (75 100))))))
+
 	 ((tobi_accent is "L+!H*")   ; L+!H*
+	 ((lisp_ip_final = 1)
+	  ((lisp_ip_one_syllable_case = 1)
+	   ((((PRE 20) (70 DHIGH))))
+	   ((((PRE 20) (25 DHIGH)))))
 	  ((lisp_ip_initial = 1) 
-	   ((lisp_ip_final = 1)
-	    ((((PRE 20) (70 DHIGH)))) 
-	    ((((PRE 20) (90 DHIGH)))))
-	   ((lisp_ip_final = 1)
-	    ((((PRE 20) (25 DHIGH))))
-	    ((((PRE 20) (75 DHIGH))))))
+	   ((((PRE 20) (90 DHIGH))))
+	   ((((PRE 20) (75 DHIGH))))))
+
 	  ((tobi_accent is "L*+H")   ; L*+H
-	   ((lisp_ip_initial = 1) 
-	    ((lisp_ip_final = 1)
-	     ((((35 0) (POST 100))))
-	     ((((55 0) (POST 100)))))
-	    ((lisp_ip_final = 1)
-	     ((((15 0) (POST 100))))
+	   ((lisp_ip_final = 1)
+	    ((lisp_ip_one_syllable_case = 1)
+	     ((((35 0) (80 100))))     ; POST would clobber endtones
+	     ((((15 0) (40 100)))))    ; POST would clobber endtones - MDS
+	    ((lisp_ip_initial = 1) 
+	     ((((55 0) (POST 100))))
 	     ((((40 0) (POST 100))))))
+
 	  ((tobi_accent is "L*+!H")   ; L*+!H
-	   ((lisp_ip_initial = 1) 
-	    ((lisp_ip_final = 1)
-	     ((((35 0) (POST DHIGH))))
-	     ((((55 0) (POST DHIGH)))))
-	    ((lisp_ip_final = 1)
-	     ((((15 0) (POST DHIGH))))
+	   ((lisp_ip_final = 1)
+	    ((lisp_ip_one_syllable_case = 1)
+	     ((((35 0) (80 DHIGH))))    ; POST would clobber endtones - MDS
+	     ((((15 0) (40 DHIGH)))))   ; POST would clobber endtones - MDS
+	    ((lisp_ip_initial = 1) 
+	     ((((55 0) (POST DHIGH))))
 	     ((((40 0) (POST DHIGH))))))
+
 	   ((tobi_accent is "H+!H*")    ; H+!H* 
-	    ((lisp_ip_initial = 1)
-	     ((lisp_ip_final = 1)
+	    ((lisp_ip_final = 1)
+	     ((lisp_ip_one_syllable_case = 1)
 	      ((((PRE 143) (60 DHIGH)))) ; the 143 is a hack to level out the downstep
-	      ((((PRE 143) (90 DHIGH)))))
-	     ((lisp_ip_final = 1)
-	      ((((PRE 143) (20 DHIGH))))
+	      ((((PRE 143) (20 DHIGH)))))
+	     ((lisp_ip_initial = 1) 
+	      ((((PRE 143) (90 DHIGH))))
 	      ((((PRE 143) (60 DHIGH))))))
+
 	    ((lisp_lh_condition = 1) 
 	     ((((100 75))))
 	     ((lisp_lh_condition = 2)
@@ -644,7 +734,55 @@ or nil if there is not one
 		   ((((NONE))))
 		   ((((UNKNOWN))))))))))))))))))))     ; UNKNOWN TARGET FOUND
 
-     
+;;; Cart tree to "predict" pitch range
+;;; Right now just accesses a feature
+;;; "register" following Moehler & Mayer 2001.
+;;; Register must be one of
+;;;   H    - primary high register (default): 133% lowest, 92% highest
+;;;   H-H  - expanded high register: 134% lowest, 100% highest
+;;;   H-L  - lowered high register: 128% lowest, 87% highest
+;;;   L    - primary low register: 100% lowest, 73% highest
+;;;   L-L  and HL-L - low compressed: 100% lowest, 66% highest
+;;;   HL   - expanded register:   100% lowest, 84% highest
+;;;   HL-H - complete register:   100% lowest, 96% highest
+;;; For their speaker, ,BASELINE was 42% of PEAK
+
+(set! ttt_topline_tree 
+      '
+      ((R:SylStructure.parent.register is "H")
+       (92)
+       ((R:SylStructure.parent.register is "H-H")
+	(100)
+	((R:SylStructure.parent.register is "H-L")
+	 (87)
+	 ((R:SylStructure.parent.register is "L")
+	  (73)
+	  ((R:SylStructure.parent.register is "L-L")
+	   (66)
+	   ((R:SylStructure.parent.register is "HL")
+	    (84)
+	    ((R:SylStructure.parent.register is "HL-H")
+	     (96)
+	     (92)))))))))
+
+(set! ttt_baseline_tree 
+      '
+      ((R:SylStructure.parent.register is "H")
+       (133)
+       ((R:SylStructure.parent.register is "H-H")
+	(134)
+	((R:SylStructure.parent.register is "H-L")
+	 (128)
+	 ((R:SylStructure.parent.register is "L")
+	  (100)
+	  ((R:SylStructure.parent.register is "L-L")
+	   (100)
+	   ((R:SylStructure.parent.register is "HL")
+	    (100)
+	    ((R:SylStructure.parent.register is "HL-H")
+	     (100)
+	     (133)))))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;
 ;;;;;;   Lisp Feature functions.
@@ -672,17 +810,17 @@ Returns:  0 - no target required
   (let ((nas (next_accent_start syl))
 	(syls (item.feat syl 'syllable_start))
 	(syle (item.feat syl 'syllable_end))
-	(las (ttt_last_target syl)))
+	(las (ttt_last_target_time syl)))
     (if (>= printdebug  3)
 	(begin (print (format nil "nas: %l syls: %l syle %l las %l" nas syls syle las))))
     (cond
      ((and (< (- nas las) 0.5)
 	   (> (- nas las) 0.25)
-	   (< syls (+ (/ (- nas las) 2.0) (ttt_last_target syl)))
-	   (> syle (+ (/ (- nas las) 2.0) (ttt_last_target syl)))) 1)
+	   (< syls (+ (/ (- nas las) 2.0) (ttt_last_target_time syl)))
+	   (> syle (+ (/ (- nas las) 2.0) (ttt_last_target_time syl)))) 1)
      ((and (> (- nas las) 0.5)
-	   (< syls (+ (ttt_last_target syl) 0.25))
-	   (> syle (+ (ttt_last_target syl) 0.25))) 2)
+	   (< syls (+ (ttt_last_target_time syl) 0.25))
+	   (> syle (+ (ttt_last_target_time syl) 0.25))) 2)
      ((and (> (- nas las) 0.5)
 	   (< syls (- nas 0.25))
 	   (> syle (- nas 0.25))) 3)
@@ -724,11 +862,14 @@ Returns: 1 - extra target required
 (cond
  ((and (eq 0 (item.feat syl 'accented))
        (string-matches (next_accent_type syl)
-           "\\(L\\*\\|L\\+H\\*\\|L\\*\\+H\\|L\\-\\|L\\-L\\%\\|L-H\\%\\)")
+           "\\(L\\*\\|L\\+H\\*\\|L\\+\\!H\\*\\|L\\*\\+H\\|L\\*\\+!H\\|L\\-\\|L\\-L\\%\\|L-H\\%\\)")
        (string-matches (last_accent_type syl)
-		       "\\(H\\*\\|L\\+H\\*\\|L\\*\\+H\\|\\%H\\)")
+		       "\\(H\\*\\|L\\+H\\*\\|L\\*\\+H\\\\|\\!H\\*\\|L\\+\\!H\\*\\|L\\*\\+\\!H\\|\\%H\\)")
+                       ;MDS: added !H's
        (eq 1 (last_accent syl))
-       (< 2 (next_accent syl))) 1)
+
+       ;; fall faster! -MDS
+       (<= 2 (next_accent syl))) 1)
  (t 0)))
 
 (define (next_accent syl)
@@ -745,19 +886,26 @@ etc..."
  ((eq 0 (next_accent_type syl)) 0)
  (t (+ (item.feat syl 'next_accent) 1))))
 
+;; Fixed bug that crashed complex phrase tones. - MDS
+;; Not sure how else to get a big number...
+(define infinity (/ 1 0))
+
+;; Modified to include current accent as well -MDS
 
 (define (last_accent syl)
 "(last_accent syl)
 Wrapper for c++ func ff_last_accent.
 Returns the number of the syllables to the previous accent in the following format.
-0 - no prev accent
+0 - accent on current syllable
 1 - prev syllable
 2 - prev to prev syllable
-etc..."
+etc...
+infinity - no previous syllable"
 (if (>= printdebug  4) 
     (begin (print "Entering last_accent")))
 (cond
- ((eq 0 (last_accent_type syl)) 0)
+ ((not (equal? "NONE" (item.feat syl 'tobi_accent))) 0)
+ ((equal? 0 (last_accent_type syl)) infinity)
  (t (+  (item.feat syl 'last_accent) 1))))
 
 (define (next_accent_type syl)
@@ -807,8 +955,8 @@ Returns the start time  of the vowel of next accented syllable"
    (t 0)))
 
 (define (ip_initial syl)
-  "(ip_final SYL)
-  returns true if the syllable is the initial syllable of an 
+  "(ip_initial SYL)
+  returns 1 if the syllable is the initial syllable of an 
   ip (intermediate phrase)"
   (cond
    ((equal? 0 (item.feat syl "syl_in"))
@@ -817,5 +965,38 @@ Returns the start time  of the vowel of next accented syllable"
     1)
    (t 0)))
 
+;; NEXT TWO FUNCTIONS ARE NEW - MDS
+(define (ip_one_syllable_case syl)
+  "(ip_one_syllable_case SYL)
+  returns true if the syllable is the initial syllable of an 
+  ip (intermediate phrase) and doesn't itself contain a complex
+  tone that starts opposite this syllable's accent"
+  (if (eqv? 0 (ip_initial syl))
+      0
+      (let ((accent (item.feat syl "tobi_accent"))
+	    (tone (item.feat syl "tobi_endtone")))
+	(cond
+	  ((and (equal? tone "L-H%")
+		(or (equal? accent "H*")
+		    (equal? accent "!H*")
+		    (equal? accent "L+H*")
+		    (equal? accent "L+!H*")
+		    (equal? accent "L*+H")
+		    (equal? accent "L*+!H*")
+		    (equal? accent "H+!H*")))
+	   0)
+	  ((and (or (equal? tone "H-L%")
+		    (equal? tone "!H-L%"))
+		(equal? accent "L*"))
+	   0)
+	  (t
+	   1)))))
 
+(define (hstar_weak_target syl)
+  (if (and (equal? 0 (item.feat syl 'asyl_in))
+	   (member (next_accent_type syl)
+		   (list "L*" "L*+H" "L*+!H" "L+H*" "L+!H*")))
+      1
+      0))
+       
 (provide 'tobi_rules)

@@ -44,18 +44,20 @@
 
 #define ques_oper_str(X) (get_c_string(car(cdr(X))))
 #define ques_operand(X) (car(cdr(cdr(X))))
-static int wagon_ask(EST_Item *s, LISP tree);
-static LISP l_wagon_predict(EST_Item *s, LISP tree);
+static int wagon_ask(EST_Item *s, LISP tree,
+		     EST_TKVL <EST_String,EST_Val> *fcache);
+static LISP l_wagon_predict(EST_Item *s, LISP tree,
+			    EST_TKVL <EST_String,EST_Val> *fcache);
 
 /* It seems to be worth building a feature cache */
-static EST_TKVL <EST_String,EST_Val> *fcache;
 
 EST_Val wagon_predict(EST_Item *s, LISP tree)
 {
     LISP answer,val;
+    EST_TKVL <EST_String,EST_Val> *fcache;
 
     fcache = new EST_TKVL<EST_String,EST_Val>;  // feature cache saves some calls
-    answer = l_wagon_predict(s,tree);
+    answer = l_wagon_predict(s,tree,fcache);
     delete fcache;
     
     // Decide if this is a number of a string
@@ -73,28 +75,31 @@ LISP wagon_pd(EST_Item *s, LISP tree)
 {
     // return probability distribution 
     LISP answer;
+    EST_TKVL <EST_String,EST_Val> *fcache;
 
     fcache = new EST_TKVL<EST_String,EST_Val>;  // feature cache saves some calls
-    answer = l_wagon_predict(s,tree);
+    answer = l_wagon_predict(s,tree,fcache);
     delete fcache;
 
     return answer;
 
 }
 
-static LISP l_wagon_predict(EST_Item *s, LISP tree)
+static LISP l_wagon_predict(EST_Item *s, LISP tree,
+			    EST_TKVL <EST_String,EST_Val> *fcache)
 {
     // Use the tree to predict
 
     if (cdr(tree) == NIL)
 	return car(tree);
-    else if (wagon_ask(s,car(tree)) == TRUE)
-	return l_wagon_predict(s,car(cdr(tree)));
+    else if (wagon_ask(s,car(tree),fcache) == TRUE)
+	return l_wagon_predict(s,car(cdr(tree)),fcache);
     else
-	return l_wagon_predict(s,car(cdr(cdr(tree))));
+	return l_wagon_predict(s,car(cdr(cdr(tree))),fcache);
 }
 
-static int wagon_ask(EST_Item *s, LISP question)
+static int wagon_ask(EST_Item *s, LISP question,
+		     EST_TKVL <EST_String,EST_Val> *fcache)
 {
     // Ask a question of this stream item
     EST_Val answer;
@@ -162,9 +167,10 @@ LISP l_wagon(LISP si, LISP tree)
     // Lisp level binding for tree prediction 
     EST_Item *s = item(si);
     LISP answer;
+    EST_TKVL <EST_String,EST_Val> *fcache;
     
     fcache = new EST_TKVL<EST_String,EST_Val>;  // feature cache saves some calls
-    answer = l_wagon_predict(s,tree);
+    answer = l_wagon_predict(s,tree,fcache);
     delete fcache;
     return answer;
 }
