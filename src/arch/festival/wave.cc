@@ -183,6 +183,8 @@ void play_wave(EST_Wave *w)
     {
 	if ((audio = ft_get_param("Audio_Method")) != NIL)
 	    al.add_item("-p",get_c_string(audio));
+	if ((audio = ft_get_param("Audio_Device")) != NIL)
+	    al.add_item("-audiodevice",get_c_string(audio));
 	if ((audio = ft_get_param("Audio_Command")) != NIL)
 	    al.add_item("-command",quote_string(get_c_string(audio)));
 	if ((audio = ft_get_param("Audio_Required_Rate")) != NIL)
@@ -383,6 +385,24 @@ static LISP utt_send_wave_client(LISP utt)
     return utt;
 }
 
+static LISP send_sexpr_to_client(LISP l)
+{
+    EST_String sl;
+    unsigned int i,n,csllen;
+
+    sl = siod_sprint(l);
+    const char *csl = sl;
+    csllen = strlen(csl);
+
+    write(ft_server_socket,"LP\n",3);
+    for (i=0; i < csllen; i+=n)
+    {
+	n = write(ft_server_socket,csl,( i+256 < csllen ? 256 : csllen-i));
+    }
+
+    return l;
+}
+
 void festival_wave_init(void)
 {
     // declare utterance (wave) specific Lisp functions 
@@ -434,6 +454,9 @@ void festival_wave_init(void)
  "(utt.send.wave.client UTT)\n\
   Sends wave in UTT to client.  If not in server mode gives an error\n\
   Note the client must be expecting to receive the waveform.");
+    init_subr_1("send_sexpr_to_client", send_sexpr_to_client,
+ "(send_sexpr_to_client SEXPR)\n\
+Sends given sexpression to currently connected client.");
     init_subr_2("utt.save.f0",utt_save_f0,
  "(utt.save.f0 UTT FILENAME)\n\
  Save F0 of UTT as esps track file in FILENAME.");

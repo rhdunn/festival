@@ -97,7 +97,7 @@ void targets_to_f0(EST_Relation &targ, EST_Track &f0, const float shift)
 
     for (m=0.0,i = 0; i < f0.num_frames(); ++i)
     {
-	if (f0.t(i) > s->F("pos"))
+	if (s && f0.t(i) > s->F("pos"))
 	{
 	    prev_pos = s->F("pos");
 	    prev_f0 = s->F("f0");

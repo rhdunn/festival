@@ -21,7 +21,7 @@ equivalent set for HTML 3.
 	%HTMLlat1;
 -->
 <!--	Modified for use in HTML
-	$Id: sable-latin.ent,v 1.1 1998/08/25 16:05:07 awb release $ =
+	$Id: sable-latin.ent,v 1.2 2001/04/04 13:12:35 awb Exp $ =
 
 -->
 <!--    Modified to add characters in the range &161; to &191; in

@@ -142,9 +142,11 @@ void festival_init_lang(const EST_String &language)
 int festival_load_file(const EST_String &fname)
 {
     // Load and evaluate named file
-    return festival_eval_command(EST_String("(load ")+
-					    quote_string(fname,"\"","\\",1)+
-					    ")");
+    EST_String b;
+    b = EST_String("(load ")+quote_string(fname,"\"","\\",1)+")";
+    // I used to do the above without the b intermediate variable
+    // but that caused a crash for some compilers on some machines 
+    return festival_eval_command(b);
 }
 
 int festival_eval_command(const EST_String &command)
@@ -198,7 +200,7 @@ static void festival_banner(void)
 	EST_Litem *t;
 	cout << STRINGIZE(FTNAME) << " " << 
 	    festival_version << endl;
-	cout << "Copyright (C) University of Edinburgh, 1996-1999. " <<
+	cout << "Copyright (C) University of Edinburgh, 1996-2001. " <<
 	    "All rights reserved." << endl;
 	cout << "For details type `(festival_warranty)'" << endl;
 	if (sub_copyrights.length() > 0)
@@ -237,7 +239,7 @@ int festival_text_to_wave(const EST_String &text,EST_Wave &wave)
     LISP lutt;
     EST_Wave *w;
     
-    if (!festival_eval_command(EST_String("(set! wave_utt (SayText ")+
+    if (!festival_eval_command(EST_String("(set! wave_utt (SynthText ")+
 					    quote_string(text,"\"","\\",1)+
 					    "))"))
 	return FALSE;

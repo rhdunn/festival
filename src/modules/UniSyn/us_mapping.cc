@@ -62,8 +62,8 @@ void make_segment_single_mapping(EST_Relation &source_lab,
 	            source_lab.tail()->F("end",0.0));
     }
 
-//    cout << "Source_pm" << source_pm.equal_space() << endl << endl;
-//    cout << "Target_pm" << target_pm.equal_space() << endl << endl;
+    //cout << "Source_pm" << source_pm.equal_space() << endl << endl;
+    //cout << "Target_pm" << target_pm.equal_space() << endl << endl;
 
     for (s = source_lab.head(); s; s = next(s))
     {
@@ -79,13 +79,12 @@ void make_segment_single_mapping(EST_Relation &source_lab,
 	if (s_i_end <= s_i_start)
 	    s_i_end += 1;
 	
-//	printf("%d %d %d %d\n", s_i_start, s_i_end, t_i_start, t_i_end);
-//	printf("%f %f %f %f\n\n", s_start, s_end, t_start, t_end);
+	//printf("%d %d %d %d\n", s_i_start, s_i_end, t_i_start, t_i_end);
+	//printf("%f %f %f %f\n\n", s_start, s_end, t_start, t_end);
 	
 	m = float (s_i_end - s_i_start)/ float(t_i_end - t_i_start);
 	for (i = t_i_start, f = 0.0; i < t_i_end; ++i, ++f)
             map[i] = EST_NINT(f * m) + s_i_start;
-
 	s_start = s->F("source_end");
 	t_start = s->F("end");
     }
@@ -139,12 +138,6 @@ void us_mapping(EST_Utterance &utt, const EST_String &method)
     utt.create_relation("US_map");
     EST_Item *item = utt.relation("US_map")->append();
     item->set_val("map", est_val(map));
-
-//    cout << "map: ";
-//    for (int i = 0; i < map->n(); ++ i)
-//	cout << i << ":" << map->a(i) << "  ";
-//    cout << endl;
-      
 }
 
 
@@ -324,8 +317,8 @@ void make_dp_mapping(EST_Relation &source_lab, EST_Track &source_pm,
 	if (s_i_end <= s_i_start)
 	    s_i_end += 1;
 	
-	printf("%d %d %d %d\n", s_i_start, s_i_end, t_i_start, t_i_end);
-	printf("%f %f %f %f\n", s_start, s_end, t_start, t_end);
+	//printf("%d %d %d %d\n", s_i_start, s_i_end, t_i_start, t_i_end);
+	//printf("%f %f %f %f\n", s_start, s_end, t_start, t_end);
 	
 	m = float (s_i_end - s_i_start)/ float(t_i_end - t_i_start);
 	for (i = t_i_start, f = 0.0; i < t_i_end; ++i, ++f)

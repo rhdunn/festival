@@ -197,7 +197,7 @@ else
     pext=".$port"
 fi
 
-server_log="$logdir/festival_server$pext"
+server_log="$logdir/festival_server$pext.log"
 
 # hangup
 trap "handle_hup" 1

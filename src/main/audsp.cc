@@ -40,7 +40,6 @@
 /* utterance.                                                            */
 /*                                                                       */
 /* Actually this doesn't use anything in Festival, only the speech_tools */
-/*                                                                       */
 /*=======================================================================*/
 #include <stdlib.h>
 #include <stdio.h>
@@ -374,6 +373,10 @@ static void process_command(char *line)
     else if (comm == "otype")
     {
 	play_wave_options.add_item("-otype",ts.get().string());
+    }
+    else if (comm == "device")
+    {
+	play_wave_options.add_item("-audiodevice",ts.get().string());
     }
     else if (comm == "close")
     {

@@ -191,14 +191,48 @@ SayText which constructs a single utterance for the whole given text."
     (tts_file tmpfile mode)
     (delete-file tmpfile)))
 
+(define (save_record_wave utt)
+"Saves the waveform and records its so it can be joined into a 
+a single waveform at the end."
+  (let ((fn (make_tmp_filename)))
+    (utt.save.wave utt fn)
+    (set! wavefiles (cons fn wavefiles))
+    utt))
+
+(define (combine_waves)
+  "Join all the waves together into the desired output file
+and delete the intermediate ones."
+  (let ((wholeutt (Utterance Text "")))
+    (mapcar
+     (lambda (d) 
+       (utt.import.wave wholeutt d t)
+       (delete-file d))
+     (reverse wavefiles))
+    wholeutt))
+
 (define (tts_textall string mode)
   "(tts_textall STRING MODE)
 Apply tts to STRING.  This function is specifically designed for
 use in server mode so a single function call may synthesize the string.
 This function name maybe added to the server safe functions."
-  (utt.send.wave.client 
-   (utt.synth
-    (eval (list 'Utterance 'Text string)))))
+  (if (not (string-equal mode "nil"))
+      (begin
+ 	  ;; a mode has been specified so do something different
+	  (let ((tmpfile (make_tmp_filename))
+		(fd))
+	    (set! fd (fopen tmpfile "wb"))
+	    (format fd "%s" string)
+	    (fclose fd)
+	    (set! tts_hooks (list utt.synth save_record_wave))
+	    (set! wavefiles nil)
+	    (tts_file tmpfile mode)
+	    (delete-file tmpfile)
+	    (utt.send.wave.client (combine_waves))
+	))
+      ;; Simple fundamental mode
+      (utt.send.wave.client 
+       (utt.synth
+	(eval (list 'Utterance 'Text string))))))
 
 (define (tts_return_to_client)
   "(tts_return_to_client)

@@ -1,8 +1,8 @@
 ###########################################################################
 ##                                                                       ##
 ##                Centre for Speech Technology Research                  ##
-##                     University of Edinburgh, UK                       ##
-##                       Copyright (c) 1996,1997                         ##
+##                     University of Edinburgh,UK                        ##
+##                         Copyright (c) 1996                            ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -30,24 +30,24 @@
 ##  THIS SOFTWARE.                                                       ##
 ##                                                                       ##
 ###########################################################################
+##                                                                       ##
+##                 Author: Alan W Black                                  ##
+##                   Date: Nov 1997                                      ##
+###########################################################################
+## Settings for Irix                                                     ##
+##                                                                       ##
+###########################################################################
 
-## Makefile for build utilities.
+include $(EST)/config/systems/default.mak
 
-TOP=../../..
-DIRNAME=src/modules/utilities
-H = 
-SRCS =  find_inits.cc
-OBJS = $(SRCS:.cc=.o)
+## the native audio module for this type of system
+NATIVE_AUDIO_MODULE = IRIX
 
-FILES = Makefile NoInit $(SRCS) $(H) extract_module_doc++.prl
+## echo -n doesn't work (well only sometimes ?)
+ECHO_N = /bin/printf "%s"
 
-ALL_EXECS = find_inits
+## Doesn't have or need RANLIB
+RANLIB = true
 
-VCLIBS = $$(ESTLIBS) 
-
-ALL =  $(ALL_EXECS) 
-
-include $(TOP)/config/common_make_rules
-
-find_inits: find_inits.o $(ESTOOLSLIBS)
-	$(strip $(LINK_COMMAND) -o $@ $@.o $(NON_PROJECT_LIBS) $($(@:=_LIBS)))
+## IRIX specific java include files.
+JAVA_SYSTEM_INCLUDES  = -I$(JAVA_HOME)/include/irix

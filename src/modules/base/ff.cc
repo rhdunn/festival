@@ -817,7 +817,7 @@ void festival_ff_init(void)
     "Segment.segment_end\n\
   The end time of the given segment.");
     festival_def_nff("syllable_end","Syllable",ff_syl_end,
-    "Syllable.word_end\n\
+    "Syllable.syllable_end\n\
   The end time of the given syllable.");
     festival_def_nff("word_end","Word",ff_word_end,
     "Word.word_end\n\

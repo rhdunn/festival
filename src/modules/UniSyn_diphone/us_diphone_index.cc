@@ -43,15 +43,6 @@
 #include "us_diphone.h"
 #include "Phone.h"
 
-Declare_TVector(EST_Item)
-
-#if defined(INSTANTIATE_TEMPLATES)
-#include "../base_class/EST_TVector.cc"
-
-Instantiate_TVector(EST_Item)
-
-#endif
-
 static bool US_full_coefs = false;
 USDiphIndex *diph_index = 0;
 extern LISP us_dbs;
@@ -83,6 +74,7 @@ void us_check_db()
 {
     if (diph_index == 0)
 	EST_error("US DB: no diphone database loaded\n");
+    diph_index->ts.restart();
 }
 
 
@@ -260,7 +252,6 @@ static void us_get_all_diphones(EST_Relation &diphone)
 
     for (int i = 0; i < diph_index->diphone.n(); ++i)
     {
-	cout << diph_index->diphone[i].f("name").string() << endl;
 	d = diphone.append();
 	d->set("name", diph_index->diphone[i].S("name"));
 	get_diphone(*d);
@@ -438,7 +429,7 @@ static void load_grouped_diphone(int unit)
     
     diph_index->ts.seek(wave_start + diph_index->index_offset);
     sig->load(diph_index->ts,diph_index->sig_file_format);
-    
+
     diph_index->diphone[unit].set_val("coefs", est_val(coefs));
     diph_index->diphone[unit].set("middle_frame", middle_frame);
     

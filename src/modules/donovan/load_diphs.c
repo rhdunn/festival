@@ -37,6 +37,7 @@
 /*                                                                       */
 /*************************************************************************/
 #include <stdio.h>
+#include <string.h>
 #include "EST_cutils.h"
 #include "t2s.h"
 

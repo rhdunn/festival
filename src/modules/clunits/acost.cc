@@ -1,8 +1,9 @@
 /*************************************************************************/
 /*                                                                       */
+/*                   Carnegie Mellon University and                      */
 /*                Centre for Speech Technology Research                  */
 /*                     University of Edinburgh, UK                       */
-/*                         Copyright (c) 1998                            */
+/*                       Copyright (c) 1998-2001                         */
 /*                        All Rights Reserved.                           */
 /*                                                                       */
 /*  Permission is hereby granted, free of charge, to use and distribute  */
@@ -19,15 +20,15 @@
 /*      derived from this software without specific prior written        */
 /*      permission.                                                      */
 /*                                                                       */
-/*  THE UNIVERSITY OF EDINBURGH AND THE CONTRIBUTORS TO THIS WORK        */
-/*  DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING      */
-/*  ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT   */
-/*  SHALL THE UNIVERSITY OF EDINBURGH NOR THE CONTRIBUTORS BE LIABLE     */
-/*  FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    */
-/*  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN   */
-/*  AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,          */
-/*  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF       */
-/*  THIS SOFTWARE.                                                       */
+/*  THE UNIVERSITY OF EDINBURGH, CARNEGIE MELLON UNIVERSITY AND THE      */
+/*  CONTRIBUTORS TO THIS WORK DISCLAIM ALL WARRANTIES WITH REGARD TO     */
+/*  THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY   */
+/*  AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF EDINBURGH, CARNEGIE */
+/*  MELLON UNIVERSITY NOR THE CONTRIBUTORS BE LIABLE FOR ANY SPECIAL,    */
+/*  INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER          */
+/*  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN  AN ACTION   */
+/*  OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF     */
+/*  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.       */
 /*                                                                       */
 /*************************************************************************/
 /*             Author :  Alan W Black                                    */
@@ -38,8 +39,8 @@
 /* of various params to this but it falls downs to a weighted summed     */
 /* difference of parameters for the two units.                           */
 /*                                                                       */
-/* A linear interpolation of the smallest to largest is done, and a      */
-/* penality is factored.                                                 */
+/* A linear interpolation of the smallest to largest is done, and an     */
+/* optional penality is factored.                                        */
 /*                                                                       */
 /* This is independent of any particular Unit Database                   */
 /*                                                                       */
@@ -51,6 +52,7 @@
 static void find_unit_distances(LISP units, const EST_String &fname);
 
 static float duration_penalty_weight=1.0;
+static float f0_penalty_weight=0.0;
 static EST_FVector weights;
 static LISP get_stds_per_unit = NIL;
 static EST_String directory = "";
@@ -177,6 +179,7 @@ void acost_dt_params(LISP params)
     for (l=lweights,i=0; l != NIL; l=cdr(l),i++)
 	weights[i] = get_c_float(car(l));
     duration_penalty_weight = get_param_float("dur_pen_weight",params,1.0);
+    f0_penalty_weight = get_param_float("f0_pen_weight",params,0.0);
     get_stds_per_unit = get_param_lisp("get_stds_per_unit",params,NIL);
 
 }    
@@ -191,10 +194,12 @@ static void cumulate_ss_frames(EST_Track *a,EST_SuffStats *ss_frames)
 	for (j=0; j < a->num_channels(); j++)
 	{
 	    p = a->a_no_check(i,j);
-	    if (finite(p))
-		ss_frames[j] += p;
-	    else
-		printf("%d %d\n",i,j);
+	    if (!finite(p))
+	    {
+		p = 1.0e5;
+		a->a_no_check(i,j) = p;
+	    }
+	    ss_frames[j] += p;
 	}
 }
 
@@ -266,9 +271,10 @@ float ac_unit_distance(const EST_Track &unit1,
     int i,j,k;
     float fj,incr,dur_penalty;
     float cost,diff;
+    float score;
     int nc = unit1.num_channels();
 
-    if (unit1.num_frames() > unit2.num_frames())
+    if (unit1.end() > unit2.end())
 	return ac_unit_distance(unit2,unit1,wghts);  // unit1 is smaller
     if (unit1.num_frames() == 0)
 //	return 1.0e20; // HUGE_VAL is too HUGE
@@ -282,27 +288,26 @@ float ac_unit_distance(const EST_Track &unit1,
 		wghts.length() << ") are of different size" << endl;
 	festival_error();
     }
-    // no we know they are the same size we can use a_no_check
 
-    incr = (float)unit1.num_frames()/(float)unit2.num_frames();
-    for (fj=0.0,i=0; i < unit2.num_frames(); i++,fj+=incr)
+//    printf("unit1 nf %d end %f unit2 nf %d end %f \n",
+//	   unit1.num_frames(),
+//	   unit1.end(),
+//	   unit2.num_frames(),
+//	   unit2.end());
+    incr = unit1.end()/ unit2.end();
+    for (fj=0.0,j=i=0; i < unit2.num_frames(); i++,fj+=incr)
     {
-	j = (int)fj;
-	cost = 0;
-	// Special comparison with 0 coefficient (F0)
-	if (wghts.a_no_check(0) != 0.0)
-	    if (unit2.a_no_check(i,0) != unit1.a_no_check(j,0))
-		if ((unit2.a_no_check(i,0) == 0.0) || 
-		    (unit1.a_no_check(j,0) == 0.0))
-		    cost += 26.0*wghts.a_no_check(0);  // stddev of F0;
-		else
-		{
-		    diff = unit2.a_no_check(i,0)-unit1.a_no_check(j,0);
-		    diff *= diff;
-		    cost += diff*wghts.a_no_check(0);
-		}
-
-	for (k=1; k < nc; k++)
+	while ((j < unit1.num_frames()-1) && (unit1.t(j) < unit2.t(i)*incr) )
+	    j++;
+//	printf("unit1 j %d %f unit2 %d %f %f\n",
+//	       j,unit1.t(j),
+//	       i,unit2.t(i),
+//	       unit2.t(i)*incr);
+	cost = f0_penalty_weight *
+	    fabs((unit1.t(j)-((j > 0) ? unit1.t(j-1) : 0))-
+		 (unit2.t(i)-((i > 0) ? unit2.t(i-1) : 0)));
+	    
+	for (k=0; k < nc; k++)
 	    if (wghts.a_no_check(k) != 0.0)
 	    {
 		diff = unit2.a_no_check(i,k)-unit1.a_no_check(j,k);
@@ -312,15 +317,18 @@ float ac_unit_distance(const EST_Track &unit1,
 	distance += cost;
     }
 
-    dur_penalty = (float)unit2.num_frames()/(float)unit1.num_frames();
+    dur_penalty = (float)unit2.end()/(float)unit1.end();
 
-    return (distance/(float)i)+(dur_penalty*duration_penalty_weight);
+    score = (distance/(float)i)+(dur_penalty*duration_penalty_weight);
+
+    return score;
 }
 
 // Maybe can reduce this to an FVector pulled out of the track 
 float frame_distance(const EST_Track &a, int ai,
 		     const EST_Track &b, int bi,
-		     const EST_FVector &wghts)
+		     const EST_FVector &wghts,
+		     float f0_weight)
 {
     float cost = 0.0,diff;
 
@@ -341,26 +349,22 @@ float frame_distance(const EST_Track &a, int ai,
 	festival_error();
     }
     
-    // I know param 0 is F0 
-    if (wghts.a_no_check(0) != 0.0)
-	if (a.a_no_check(ai,0) != b.a_no_check(bi,0))
-	    if ((a.a_no_check(ai,0) == 0.0) || 
-		(b.a_no_check(bi,0) == 0.0))
-		cost += 26.0*wghts.a_no_check(0);  // stddev of F0;
-	    else
-	    {
-		diff = a.a_no_check(ai,0)-b.a_no_check(bi,0);
-		diff *= diff;
-		cost += diff*wghts.a_no_check(0);
-	    }
+    if (f0_weight > 0)
+    {
+	cost = f0_weight *
+	    fabs((a.t(ai)-((ai > 0) ? a.t(ai-1) : 0))-
+		 (b.t(bi)-((bi > 0) ? b.t(bi-1) : 0)));
+    }
 
-    for (int k=1; k < a.num_channels(); k++)
+    for (int k=0; k < a.num_channels(); k++)
+    {
 	if (wghts.a_no_check(k) != 0.0)
 	{
 	    diff = a.a_no_check(ai,k)-b.a_no_check(bi,k);
 	    diff *= diff;
-	    cost += diff*wghts.a_no_check(k);
+	    cost += sqrt(diff)*wghts.a_no_check(k);
 	}
+    }
 
     return cost;
 }

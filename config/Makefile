@@ -37,12 +37,12 @@
 TOP=..
 DIRNAME=config
 
-CONFIGS = config-dist vc_config_make_rules-dist
+CONFIGS = config.in vc_config_make_rules-dist
 FILES=Makefile common_make_rules vc_common_make_rules \
       test_make_rules project.mak project_config_check.mak \
       system.sh make_system.mak \
       $(CONFIGS)
-ALL_DIRS = modules
+ALL_DIRS = modules systems
 
 include $(TOP)/config/common_make_rules
 

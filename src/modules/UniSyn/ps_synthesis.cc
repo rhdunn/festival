@@ -145,10 +145,10 @@ void td_synthesis(EST_WaveVector &frames,
 	for (j = 0; j < frame.num_samples(); ++j)
 	    if (j+t_start>=0)
 	    {
-		target_sig.a_no_check(j + t_start) += frame.a_no_check(j);
-		// The above *is* safe, unless there are real bugs elsewhere
-		// that may first manifest themselves here.
-		// target_sig.a(j + t_start) += frame.a(j);
+	      //target_sig.a_no_check(j + t_start) += frame.a_no_check(j);
+	      // The above *is* safe, unless there are real bugs elsewhere
+	      // that may first manifest themselves here.
+	      target_sig.a(j + t_start) += frame.a(j);
 	    }
     }    
 }
@@ -306,21 +306,3 @@ void td_synthesis2(EST_WaveVector &frames,
 }
 */
 
-
-
-int operator != (EST_Wave a, EST_Wave b)
-{ (void)a; (void)b; return 1; }
-int operator == (EST_Wave a, EST_Wave b)
-{  (void)a; (void)b; return 0; }
-
-
-#if defined(INSTANTIATE_TEMPLATES)
-#include "../base_class/EST_TVector.cc"
-
-template class EST_TVector<EST_Wave>;
-
-#endif
-static const EST_Wave def_val_s;
-static EST_Wave error_return_s;
-const EST_Wave *EST_TVector<EST_Wave>::def_val=&def_val_s;
-EST_Wave *EST_TVector<EST_Wave>::error_return=&error_return_s;

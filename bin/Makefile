@@ -47,8 +47,11 @@ TOP=..
 DIRNAME=bin
 FILES= Makefile
 
-ALL = .remove_links .link_main .process_scripts
+ALL = .remove_links .link_main .process_scripts text2wave
 
 include $(TOP)/config/common_make_rules
 include $(EST)/config/rules/bin_process.mak
+
+text2wave:
+	@ cp -p $(TOP)/examples/text2wave .
 

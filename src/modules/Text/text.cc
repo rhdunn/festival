@@ -198,9 +198,12 @@ static void tts_raw_utt(LISP utt)
 		cons(rintern("tts_hooks"),
 		     cons(lutt,NIL)));
 
+
+
     lutt = cons(rintern("set!"),
 		cons(rintern("utt_tts"),
 		     cons(lutt,NIL)));
+
     // Synth and Play it
     lutt = leval(lutt,NIL);
     user_gc(NIL);
@@ -254,6 +257,22 @@ LISP tts_chunk_stream(EST_TokenStream &ts,
     return utt;
 }
 
+#if 0
+LISP memon(void)
+{
+    printf("memon\n");
+    putenv("MALLOC_TRACE=mallfile");
+    mtrace();
+    return NIL;
+}
+
+LISP memoff(void)
+{
+    muntrace();
+    printf("memoff\n");
+    return NIL;
+}
+#endif
 
 void festival_Text_init(void)
 {
@@ -266,6 +285,12 @@ void festival_Text_init(void)
   Low level access to tts function, you probably want to use the function\n\
   tts rather than this one.  Render data in FILE as speech.  Respect\n\
   MODE.  Currently modes are defined through the variable tts_text_modes.");
+#if 0
+    init_subr_0("memon",memon,
+		"(tts_file FILE MODE)");
+    init_subr_0("memoff",memoff,
+		"(tts_file FILE MODE)");
+#endif
     init_subr_3("extract_tokens",extract_tokens,
     "(extract_tokens FILE TOKENS OUTFILE)\n\
   Find all occurences of TOKENS in FILE and output specified context around\n\

@@ -92,7 +92,7 @@ num syllables: 9
 Usage: festival Usage:
 festival  <options> <file0> <file1> ...
 In evaluation mode "filenames" starting with ( are evaluated inline
-Festival Speech Synthesis System: 1.4.1:release November 1999
+Festival Speech Synthesis System: 1.4.2:release July 2001
 -q            Load no default setup files
 --libdir <string>
               Set library directory pathname

@@ -50,7 +50,6 @@ test_basic () {
 test_utt () {
 
 	echo "utt feats " >&2
-	
 	$FESTIVAL -b data/utt1.scm || exit 1
 
 }

@@ -12,15 +12,15 @@
 @c aid in producing this document -- awb
 
 @set EDITION 1.4
-@set VERSION 1.4.1
-@set UPDATED 16th November 1999
+@set VERSION 1.4.2
+@set UPDATED 25th July 2001
 
 @ifinfo
 This file documents the @code{Festival} Speech Synthesis System a general
 text to speech system for making your computer talk and developing
 new synthesis techniques.
 
-Copyright (C) 1996-1999 University of Edinburgh
+Copyright (C) 1996-2001 University of Edinburgh
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -53,7 +53,7 @@ by the authors.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1996-1999 University of Edinburgh, all rights
+Copyright @copyright{} 1996-2001 University of Edinburgh, all rights
 reserved.
 
 Permission is granted to make and distribute verbatim copies of
@@ -189,10 +189,10 @@ know as it helps justify ourselves to our various sponsors.
 
 The current copyright on the core system is
 @example
-          The Festival Speech Synthesis System: version 1.4.1
+          The Festival Speech Synthesis System: version 1.4.2
                 Centre for Speech Technology Research                  
                      University of Edinburgh, UK                       
-                      Copyright (c) 1996-1999                            
+                      Copyright (c) 1996-2001                            
                         All Rights Reserved.                           
                                                                        
   Permission is hereby granted, free of charge, to use and distribute 
@@ -622,9 +622,9 @@ In order to compile Festival you first need the following
 source packages
 
 @table @code
-@item festival-1.4.1.tar.gz
+@item festival-1.4.2.tar.gz
 Festival Speech Synthesis System source
-@item speech_tools-1.2.1.tar.gz
+@item speech_tools-1.2.2.tar.gz
 The Edinburgh Speech Tools Library 
 @item festlex_NAME.tar.gz
 @cindex lexicon
@@ -638,7 +638,7 @@ program to convert that file to the Festival format is included.
 You'll need a speech database.  A number are available (with varying
 distribution policies).  Each voice may have other dependencies such as
 requiring particular lexicons
-@item festdoc_1.4.1.tar.gz
+@item festdoc_1.4.2.tar.gz
 Full postscript, info and html documentation for Festival and the
 Speech Tools.  The source of the documentation is available
 in the standard distributions but for your conveniences it has
@@ -650,12 +650,12 @@ In addition to Festival specific sources you will also need
 @table @emph
 @item A UNIX machine
 Currently we have compiled and tested the system under Solaris (2.5(.1),
-2.6 and 2.7), SunOS (4.1.3), FreeBSD 2.2, 3.x, Linux (Redhat 4.1, 5.0, 5.1,
-5.2, 6.0 and other Linux distributions), and it should work under OSF
-(Dec Alphas) SGI (Irix), HPs (HPUX).  But any standard UNIX machine
-should be acceptable.  We have now successfully ported this version to
-Windows NT nad Windows 95 (using the Cygnus GNU win32 environment).
-This is still a young port but seems to work.
+2.6, 2.7 and 2.8), SunOS (4.1.3), FreeBSD 3.x, 4.x Linux (Redhat 4.1,
+5.0, 5.1, 5.2, 6.[012], 7.[01] and other Linux distributions), and it
+should work under OSF (Dec Alphas) SGI (Irix), HPs (HPUX).  But any
+standard UNIX machine should be acceptable.  We have now successfully
+ported this version to Windows NT nad Windows 95 (using the Cygnus GNU
+win32 environment).  This is still a young port but seems to work.
 @item A C++ compiler
 @cindex GNU g++
 @cindex g++
@@ -667,24 +667,20 @@ compile without change except with compilers that have already been tested.
 The currently tested systems are
 @itemize @bullet
 @item Sun Sparc Solaris 2.5, 2.5.1, 2.6, 2.7:
-GCC 2.7.2, GCC 2.8.1, SunCC 4.1, egcs 1.1.1, egcs 1.1.2, GCC 2.95.1
+GCC 2.7.2, egcs 1.1.1, egcs 1.1.2, GCC 2.95.1
 @item Sun Sparc SunOS 4.1.3:
 GCC 2.7.2
-@item Intel SunOS 2.5.1:
-GCC 2.7.2
-@item FreeBSD for Intel 2.2.1, 2.2.6 and 3.x (ELF based)
-GCC 2.7.2.1, GCC 2.95.1
-@item Linux (2.0.30) for Intel (RedHat 4.1/5.0/5.1/5.2/6.0):
-GCC 2.7.2, GCC 2.7.2/egcs-1.0.2, egcs 1.1.1, egcs-1.1.2, GCC 2.95.1
+@item FreeBSD for Intel 3.x and 4.x
+GCC 2.95.1, GCC 3.0
+@item Linux for Intel (RedHat 4.1/5.0/5.1/5.2/6.0):
+GCC 2.7.2, GCC 2.7.2/egcs-1.0.2, egcs 1.1.1, egcs-1.1.2, GCC 2.95.[123],
+GCC "2.96", GCC 3.0
 @item Windows NT 4.0:
-GCC 2.7.2 plus egcs (from Cygnus GNU win32 b19), Visual C++ PRO v5.0
+GCC 2.7.2 plus egcs (from Cygnus GNU win32 b19), Visual C++ PRO v5.0,
+Visual C++ v6.0
 @end itemize
 Note if GCC works on one version of Unix it usually works on
 others.  
-
-We still recommend GCC 2.7.2 which we use as our standard compiler.  It
-is (mostly) standard across platforms and compiles faster and produces
-better code than any of the other compilers we've used.
 
 @cindex Windows NT/95
 We have compiled both the speech tools and Festival under Windows NT 4.0
@@ -733,12 +729,6 @@ However the document files are also available pre-processed into,
 postscript, DVI, info and html as part of the distribution in
 @file{festdoc-1.4.X.tar.gz}.
 
-Most of the related software not part of the Festival distribution
-has been made available in
-@example
-@url{ftp://ftp.cstr.ed.ac.uk/pub/festival/extras/}
-@end example
-
 Ensure you have a fully installed and working version of your C++
 compiler.  Most of the problems people have had in installing Festival
 have been due to incomplete or bad compiler installation.   It
@@ -767,29 +757,20 @@ Speech Tools Library.  See @file{speech_tools/INSTALL} for
 instructions.
 
 @cindex configuration
-Before compilation of Festival it is necessary to configure your
-implementation to be aware of the environment it is being compiled in.
-Specifically it must know the names of various local programs, such as
-your compiler; directories were local libraries are held, and choices
-for various options about sub-systems it is to use.  In most
-cases this can be done automatically if your system is a supported,
-otherwise it may be necessary to edit a few lines.
+The system now supports the standard GNU @file{configure} method
+for set up.  In most cases this will automatically configure festival
+for your particular system.  In most cases you need only
+type
+@example
+gmake
+@end example
+and the system will configure itself and conpile, (note you
+need to have compiled the Edinburgh Speech Tools
+@file{speech_tools-1.2.2} first.
 
 @cindex @file{config/config}
-All compilation information is set in a local per installation
-file called @file{config/config}.  You should copy 
-the example one, mark it writable and edit it according to your
-local set up.
-@lisp
-cd config/
-cp config-dist config
-chmod +w config
-@end lisp
-@file{config/config} is included by all @file{Makefiles} in
-the system and therefore should be the only place machine specific
-information need be changed.  Note that all @file{Makefiles} define
-the variable @code{TOP} to allow appropriate relative addressing
-of directories within the @file{Makefiles} and their included files.
+In some case hand configure is require.  All of the configuration
+choise are held in the file @file{config/config}
 
 @cindex OTHER_DIRS
 For the most part Festival configuration inherits the configuration from
@@ -811,19 +792,28 @@ automounter (e.g. amd) it is recommend to explicitly set the variable
 @code{FESTIVAL_HOME} in @file{config/config}. The command @code{pwd} is
 not reliable when a directory may have multiple names.
 
-To check your configuration type in the @file{festival/} directory.
+There is a simple test suite with Festival but it requires the three
+basic voices and their respective lexicons install before it will work.
+Thus you need to install
 @example
-gnumake info
+festlex_CMU.tar.gz
+festlex_OALD.tar.gz
+festlex_POSLEX.tar.gz
+festvox_don.tar.gz
+festvox_kedlpc16k.tar.gz
+festvox_rablpc16k.tar.gz
+@end example
+If these are installed you can test the installation with
+@example
+gmake test
 @end example
 
-If that seems fine, compile the system with
+To simply make it run with a male US Ebglish voiuce it is 
+sufficient to install just
 @example
-gnumake
-@end example
-
-On completion you can check the system with
-@example
-gnumake test
+festlex_CMU.tar.gz
+festlex_POSLEX.tar.gz
+festvox_kallpc16k.tar.gz
 @end example
 
 Note that the single most common reason for problems in compilation and
@@ -844,13 +834,6 @@ no warnings this is not possible under some systems.
 Under SunOS the system include files do not declare a number of
 system provided functions.  This a bug in Sun's include files.  This
 will causes warnings like "implicit definition of fprintf".  These
-are harmless.
-
-Under Sun's CC compiler a number of warnings are given about not
-being able to find source, particularly for operator @code{<<} and
-some @code{==} operators.  It is unclear why this should be a warning as
-the code exists in other files deliberately for modularity purposes
-and should not be visible in these files anyway.  These warnings
 are harmless.
 
 @cindex Linux
@@ -1078,19 +1061,6 @@ A second level of customization is on a per user basis.  After loading
 @file{.festivalrc} from the user's home directory (if it exists).  This
 file may contain arbitrary Festival commands.    
 
-@cindex language specification
-For example a particular installation of Festival may set Spanish
-as the default language by adding
-@lisp
-(language_spanish)
-@end lisp
-in @file{siteinit.scm}, while a user may wish their version to
-use Welsh by default.  In this case they would add
-@lisp
-(language_welsh)
-@end lisp
-to their @file{.festivalrc} in their home directory.
-
 @node Checking an installation, Y2K, Site initialization, Installation
 @section Checking an installation
 
@@ -1100,8 +1070,8 @@ to see if Festival can speak or not.
 Start the system
 @example
 $ bin/festival
-Festival Speech Synthesis System 1.4.1:release November 1999
-Copyright (C) University of Edinburgh, 1996-1999. All rights reserved.
+Festival Speech Synthesis System 1.4.2:release July 2001
+Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
 For details type `(festival_warranty)'
 festival> ^D
 @end example
@@ -1114,8 +1084,8 @@ is correct.  To find out what it has been set to, start the
 system without loading the init files.
 @example
 $ bin/festival -q
-Festival Speech Synthesis System 1.4.1:release November 1999
-Copyright (C) University of Edinburgh, 1996-1999. All rights reserved.
+Festival Speech Synthesis System 1.4.2:release July 2001
+Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
 For details type `(festival_warranty)'
 festival> libdir
 "/projects/festival/lib/"
@@ -1330,8 +1300,8 @@ Here is a short session using Festival's command interpreter.
 Start Festival with no arguments
 @lisp
 $ festival
-Festival Speech Synthesis System 1.4.1:release November 1999
-Copyright (C) University of Edinburgh, 1996-1999. All rights reserved.
+Festival Speech Synthesis System 1.4.2:release July 2001
+Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
 For details type `(festival_warranty)'
 festival>
 @end lisp
@@ -2888,6 +2858,77 @@ American labelled lexicons.
 A list of all matching entries in the addenda and the compiled lexicon
 may be found by the function @code{lex.lookup_all}.  This function takes
 a word and returns all matching entries irrespective of part of speech.
+
+@cindex pre_hooks
+@cindex post_hooks
+You can optionall intercept the words as they are lookup up, and after
+they have been found through @code{pre_hooks} and @code{post_hooks} for
+each lexicon.  This allows a function or list of functions to be applied
+to an word and feature sbefore lookup or to the resulting entry after
+lookup.  The following example shows how to add voice specific entries
+to a general lexicon without affecting other voices that use that
+lexicon.
+
+For example suppose we were trying to use a Scottish English voice with
+the US English (cmu) lexicon.  A number of entgries will be
+inapporpriate but we can redefine some entries thus
+@lisp
+(set! cmu_us_awb::lexicon_addenda
+      '(
+	("edinburgh" n (((eh d) 1) ((ax n) 0) ((b r ax) 0)))
+	("poem" n (((p ow) 1) ((y ax m) 0)))
+	("usual" n (((y uw) 1) ((zh ax l) 0)))
+	("air" n (((ey r) 1)))
+	("hair" n (((hh ey r) 1)))
+	("fair" n (((f ey r) 1)))
+	("chair" n (((ch ey r) 1)))))
+@end lisp
+We can the define a function that chesk to see if the word looked
+up is in the speaker specific exception list and use that entry
+instead.
+@lisp
+(define (cmu_us_awb::cmu_lookup_post entry)
+  "(cmu_us_awb::cmu_lookup_post entry)
+Speaker specific lexicon addeda."
+  (let ((ne 
+	 (assoc_string (car entry) cmu_us_awb::lexicon_addenda)))
+    (if ne
+	ne
+	entry)))
+@end lisp
+And then for the particualr voice set up we need to
+add both a selection part @emph{and} a reset part.  Thuis following
+the FestVox vonventions for voice set up.
+@lisp
+(define (cmu_us_awb::select_lexicon)
+
+    ...
+    (lex.select "cmu")
+    ;; Get old var for reset and to append our function to is
+    (set! cmu_us_awb::old_cmu_post_hooks 
+       (lex.set.post_hooks nil))
+    (lex.set.post_hooks
+       (append cmu_us_awb::old_cmu_post_hooks
+               (list cmu_us_awb::cmu_lookup_post)))
+    ...
+)
+
+...
+
+(define (cmu_us_awb::reset_lexicon)
+
+  ...
+  ;; reset CMU's post_hooks back to original
+  (lex.set.post_hooks cmu_us_awb::old_cmu_post_hooks)
+  ...
+
+)
+@end lisp
+The above isn't the most efficient way as the word is looked up first
+then it is checked with the speaker specific list.
+
+The @code{pre_hooks} function are called with two arguments, the
+word and features, they should return a pair of word and features.
 
 @node Letter to sound rules, Building letter to sound rules, Lookup process, Lexicons
 @section Letter to sound rules
@@ -5846,6 +5887,13 @@ set up audio output as
 (Parameter.set 'Audio_Command "sunplay $FILE")
 @end lisp
 
+@cindex audio devices
+Where the audio method supports it, you can specify alternative audio
+device for machine that have more than one audio device.
+@lisp
+(Parameter.set 'Audio_Device "/dev/dsp2")
+@end lisp
+
 @cindex remote audio
 @cindex snack
 If Netaudio is not available and you need to play audio on a
@@ -8052,6 +8100,37 @@ when it is started.
 @cindex perl
 A PERL festival client is also available in
 @file{festival/examples/festival_client.pl}
+
+@subsection Server/client protocol
+
+@cindex client/server protocol
+@cindex server/client protocol
+The client talks to the server using s-expression (Lisp).  The server
+will reply with and number of different chunks until either OK, is
+returned or ER (on error).  The communicatotion is synchronous, each
+client request can generate a number of waveform (WV) replies and/or
+Lisp replies (LP) and terminated with an OK (or ER).  Lisp is used as it
+has its own inherent syntax that Festival can already parse.
+
+The following pseudo-code will help defined the protocol
+as well as show typical use
+@lisp
+
+   fprintf(serverfd,"%s\n",s-expression);
+   do
+      ack = read three character acknowledgemnt
+      if (ack == "WV\n")
+         read a waveform
+      else if (ack == "LP\n")
+         read an s-expression
+      else if (ack == "ER\n")
+         an error occurred, break;
+   while ack != "OK\n"
+@end lisp
+The server can send a waveform in an utterance to the client through the
+function @code{utt.send.wave.client};  The server can send a lisp
+expression to the client through the function
+
 
 @node C/C++ API, C only API, Server/client API, API
 @section C/C++ API

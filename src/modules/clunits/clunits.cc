@@ -1,8 +1,9 @@
 /*************************************************************************/
 /*                                                                       */
+/*                   Carnegie Mellon University and                      */
 /*                Centre for Speech Technology Research                  */
 /*                     University of Edinburgh, UK                       */
-/*                         Copyright (c) 1998                            */
+/*                       Copyright (c) 1998-2001                         */
 /*                        All Rights Reserved.                           */
 /*                                                                       */
 /*  Permission is hereby granted, free of charge, to use and distribute  */
@@ -19,15 +20,15 @@
 /*      derived from this software without specific prior written        */
 /*      permission.                                                      */
 /*                                                                       */
-/*  THE UNIVERSITY OF EDINBURGH AND THE CONTRIBUTORS TO THIS WORK        */
-/*  DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING      */
-/*  ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT   */
-/*  SHALL THE UNIVERSITY OF EDINBURGH NOR THE CONTRIBUTORS BE LIABLE     */
-/*  FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    */
-/*  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN   */
-/*  AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,          */
-/*  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF       */
-/*  THIS SOFTWARE.                                                       */
+/*  THE UNIVERSITY OF EDINBURGH, CARNEGIE MELLON UNIVERSITY AND THE      */
+/*  CONTRIBUTORS TO THIS WORK DISCLAIM ALL WARRANTIES WITH REGARD TO     */
+/*  THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY   */
+/*  AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF EDINBURGH, CARNEGIE */
+/*  MELLON UNIVERSITY NOR THE CONTRIBUTORS BE LIABLE FOR ANY SPECIAL,    */
+/*  INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER          */
+/*  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN  AN ACTION   */
+/*  OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF     */
+/*  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.       */
 /*                                                                       */
 /*************************************************************************/
 /*             Author :  Alan W Black                                    */
@@ -46,7 +47,7 @@
 /*  Advantages:                                                          */
 /*    requires little or no measurements at selection time               */
 /*    allows for clear method of pruning                                 */
-/*    no weights need to be generated                                    */
+/*    no weights need to be generated (well, except where they do)       */
 /*    will optimise appropriately with varying numbers of example units  */
 /*                                                                       */
 /*  Disadvantages:                                                       */
@@ -56,17 +57,20 @@
 /*  clustering similar units for unit selection in speech synthesis      */
 /*  Proceedings of Eurospeech 97, vol2 pp 601-604, Rhodes, Greece.       */
 /*                                                                       */
-/*  postscript: http://www.cstr.ed.ac.uk/~awb/papers/ES97units.ps        */
-/*  http://www.cstr.ed.ac.uk/~awb/papers/ES97units/ES97units.html        */
+/*  postscript: http://www.cs.cmu.edu/~awb/papers/ES97units.ps           */
+/*  http://www.cs.cmu.edu/~awb/papers/ES97units/ES97units.html           */
 /*                                                                       */
 /*  Comments:                                                            */
 /*                                                                       */
 /*  This is a new implementation using the newer unit selection/signal   */
 /*  processing archtecture in festival                                   */
 /*                                                                       */
-/*  This is still considered experimental code, its doesn't produce      */
-/*  reliable high quality synthesis (though does shine occasionally)     */
-/*  it is also slow due to optimal coupling being done in a naive way    */
+/*  This is still in development but become more stable.  It is robust   */
+/*  for many cases, though a lot depends on the db and parameters        */
+/*  you use                                                              */
+/*                                                                       */
+/*  This had significant new work (and bug fixes) done on it when awb    */
+/*  moved to CMU                                                         */
 /*                                                                       */
 /*=======================================================================*/
 #include <stdlib.h>
@@ -77,38 +81,65 @@
 static void setup_clunits_params();
 static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f);
 static EST_VTPath *TS_npath(EST_VTPath *p,EST_VTCandidate *c,EST_Features &f);
-static float naive_join_cost(const EST_String &u0,
-			     const EST_String &u1,
-			     EST_Item *s);
-static float optimal_couple(const EST_String &u0_name,
-			    const EST_String &u1_name,
+static float naive_join_cost(CLunit *unit0, CLunit *unit1,
+			     EST_Item *s,
+			     float &u0_move,
+			     float &u1_move);
+static float optimal_couple(CLunit *u0,
+			    CLunit *u1,
 			    float &u0_move,
-			    float &u1_move);
+			    float &u1_move,
+			    int type,
+			    float different_prev_pen,
+			    float non_consecutive_pen);
 static void cl_parse_diphone_times(EST_Relation &diphone_stream, 
 				   EST_Relation &source_lab);
 
 VAL_REGISTER_CLASS_NODEL(vtcand,EST_VTCandidate);
+VAL_REGISTER_CLASS_NODEL(clunit,CLunit);
 
 LISP selection_trees = NIL;
 LISP clunits_params = NIL;
 static int optimal_coupling = 0;
 static int extend_selections = 0;
+static int clunits_debug = 0;
+static int clunits_log_scores = 0;
 float continuity_weight = 1;
+float f0_join_weight = 0.0;
+float different_prev_pen = 1000.0;
+float non_consecutive_pen = 100.0;
+static EST_String clunit_name_feat = "name";
+
+static CLDB *cldb;
 
 static LISP clunits_select(LISP utt)
 {
     // Select units from db using CARTs to index into clustered unit groups
     EST_Utterance *u = get_c_utt(utt);
-    EST_Viterbi_Decoder v(TS_candlist,TS_npath,-1);
-    v.set_big_is_good(FALSE);  // big is bad
+    EST_Item *s, *f;
 
+    cldb = check_cldb();  // make sure there is one loaded
     setup_clunits_params();
 
-    v.initialise(u->relation("Segment"));
-    v.search();
-    v.result("unit_id");
-    v.copy_feature("unit_this_move");
-    v.copy_feature("unit_prev_move");
+    f = u->relation("Segment")->head();
+    for (s=f; s; s=next(s))
+	s->set_val("clunit_name",ffeature(s,clunit_name_feat));
+
+    if (f)
+    {
+	EST_Viterbi_Decoder v(TS_candlist,TS_npath,-1);
+	v.set_big_is_good(FALSE);  // big is bad
+
+	v.initialise(u->relation("Segment"));
+	v.search();
+	if (!v.result("unit_id"))
+	{
+	    cerr << "CLUNIT: failed to find path\n";
+	    return utt;
+	}
+	v.copy_feature("unit_this_move");
+	v.copy_feature("unit_prev_move");
+    }
 
     return utt;
 }
@@ -120,32 +151,41 @@ static LISP clunits_get_units(LISP utt)
     EST_Relation *units,*ss;
     EST_Item *s;
 
-    check_cldb();  // make sure there is one loaded
+    cldb = check_cldb();  // make sure there is one loaded
 
     units = u->create_relation("Unit");
     for (s=u->relation("Segment")->head(); s != 0; s=next(s))
     {
 	EST_Item *unit = units->append();
-	EST_Item *db_unit = cldb->get_unit(s->f("unit_id"));
+	CLunit *db_unit = clunit(s->f("unit_id"));
 	float st,e;
-	unit->set_name(s->f("unit_id"));
-	unit->set("fileid",db_unit->S("fileid"));
+	unit->set_name(db_unit->name);
+	unit->set("fileid",db_unit->fileid);
 	// These should be modified from the optimal coupling
 	if ((prev(s)) && (s->f_present("unit_this_move")))
 	    st = s->F("unit_this_move");
 	else
-	    st = db_unit->F("start");
+	    st = db_unit->start;
 	if ((next(s)) && (next(s)->f_present("unit_prev_move")))
 	    e = next(s)->F("unit_prev_move");
 	else
-	    e = db_unit->F("end");
+	    e = db_unit->end;
 	if ((e-st) < 0.011)
 	    e = st + 0.011;
 	unit->set("start",st);
-	unit->set("middle",db_unit->F("start"));
+	unit->set("middle",db_unit->start);
 	unit->set("end",e);
+	unit->set("unit_start",st);
+	unit->set("unit_middle",db_unit->start);
+	unit->set("unit_end",e);
+	unit->set("seg_start",db_unit->start);
+	unit->set("seg_end",db_unit->end);
 	cldb->load_coefs_sig(unit);
-//	cout << *unit << endl;
+	if (clunits_debug)
+	    printf("unit: %s fileid %s start %f end %f\n",
+		   (const char *)db_unit->name,
+		   (const char *)db_unit->fileid,
+		   st,e);
     }
 
     // Make it look as much like the diphones as possible for
@@ -154,7 +194,7 @@ static LISP clunits_get_units(LISP utt)
     for (s = u->relation("Segment")->head(); s != 0 ; s = next(s))
     {
 	EST_Item *d = ss->append();
-	d->set_name(s->name());
+	d->set_name(ffeature(s,"clunit_name"));
     }
 
     cl_parse_diphone_times(*units,*ss);
@@ -300,14 +340,73 @@ static LISP clunits_windowed_wave(LISP utt)
     return utt;
 }
 
+static LISP clunits_smoothedjoin_wave(LISP utt)
+{
+    // Actually not very smoothed yet, just joined
+    EST_Utterance *u = get_c_utt(utt);
+    EST_Wave *w = new EST_Wave;
+    EST_Wave *w1 = 0;
+    EST_Track *t1 = 0;
+    EST_Item *witem = 0;
+    EST_Item *s;
+    int size,i,wi;
+    int samp_end, samp_start;
+    EST_Wave *www=0;
+
+    for (size=0,s=u->relation("Unit")->head(); s != 0; s = next(s))
+    {
+	samp_end = s->I("samp_end");
+	samp_start = s->I("samp_start");
+	size += samp_end-samp_start;
+    }
+
+    if (u->relation("Unit")->head())
+    {   // This will copy the necessary wave features across
+	s = u->relation("Unit")->head();
+	www = wave(s->f("sig"));
+	*w = *www;
+    }
+    w->resize(size); // its maximum size
+    wi=0;
+    for (s=u->relation("Unit")->head(); s; s=next(s))
+    {
+	samp_end = s->I("samp_end");
+	samp_start = s->I("samp_start");
+	w1 = wave(s->f("sig"));
+/*	printf("%s %s %f %f %d %d\n",
+	       (const char *)s->S("name"),
+	       (const char *)s->S("fileid"),
+	       (float)samp_start/(float)w->sample_rate(),
+	       (float)samp_end/(float)w->sample_rate(),
+	       w1->num_samples(),
+	       samp_end); */
+	t1 = track(s->f("coefs"));
+	for (i=samp_start; i<samp_end; i++,wi++)
+	    w->a_no_check(wi) = w1->a_no_check(i);
+/*	printf("%d %f\n",wi,(float)wi/(float)w->sample_rate()); */
+    }
+    w->resize(wi);
+
+    witem = u->create_relation("Wave")->append();
+    witem->set_val("wave",est_val(w));
+
+    return utt;
+}
+
 static void setup_clunits_params()
 {
     // Set up params
     clunits_params = siod_get_lval("clunits_params",
 				    "CLUNITS: no parameters set for module");
     optimal_coupling = get_param_int("optimal_coupling",clunits_params,0);
+    different_prev_pen = get_param_float("different_prev_pen",clunits_params,1000.0);
+    non_consecutive_pen = get_param_float("non_consectutive_pen",clunits_params,100.0);
     extend_selections = get_param_int("extend_selections",clunits_params,0);
     continuity_weight = get_param_float("continuity_weight",clunits_params,1);
+    f0_join_weight = get_param_float("f0_join_weight",clunits_params,0.0);
+    clunits_debug = get_param_int("clunits_debug",clunits_params,0);
+    clunits_log_scores = get_param_int("log_scores",clunits_params,0);
+    clunit_name_feat = get_param_str("clunit_name_feat",clunits_params,"name");
     selection_trees = 
 	siod_get_lval("clunits_selection_trees",
 		      "CLUNITS: clunits_selection_trees unbound");
@@ -318,25 +417,41 @@ static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f)
     // Return a list of candidate units for target s
     // Use the appropriate CART to select a small group of candidates
     EST_VTCandidate *all_cands = 0;
-    EST_VTCandidate *c;
+    EST_VTCandidate *c, *gt;
     LISP tree,group,l,pd;
+    EST_String name;
+    EST_String lookingfor;
+    CLunit *u;
+    int bbb,ccc;
     float cluster_mean;
     (void)f;
+    bbb=ccc=0;
 
-    tree = car(cdr(siod_assoc_str(s->name(),selection_trees)));
+    lookingfor = s->S("clunit_name");
+    tree = car(cdr(siod_assoc_str(lookingfor,selection_trees)));
     pd = wagon_pd(s,tree);
     if (pd == NIL)
     {
-	cerr << "CLUNITS: no predicted class for " << s->name() << endl;
+	cerr << "CLUNITS: no predicted class for " << 
+	    s->S("clunit_name") << endl;
 	festival_error();
     }
     group = car(pd);
     cluster_mean = get_c_float(car(cdr(pd)));
     
-    for (l=group; l != NIL; l=cdr(l))
+    for (bbb=0,l=group; l != NIL; l=cdr(l),bbb++)
     {
 	c = new EST_VTCandidate;
-	c->name = s->name()+"_"+get_c_string(car(car(l)));
+	name = s->S("clunit_name")+"_"+get_c_string(car(car(l)));
+	u = cldb->get_unit(name);
+	if (u == 0)
+	{
+	    cerr << "CLUNITS: failed to find unit " << name <<
+		" in index" << endl;
+	    festival_error();
+	}
+	cldb->load_join_coefs(u);
+	c->name = est_val(u);
 	c->s = s;
 	// Mean distance from others in cluster (could be precalculated)
 	c->score = get_c_float(car(cdr(car(l))))-cluster_mean;
@@ -357,24 +472,45 @@ static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f)
 	if (ppp)
 	{
 	    EST_VTCandidate *lc = vtcand(ppp->f("unit_cands"));
-	    for ( ; lc; lc = lc->next)
+	    for (ccc=0 ; lc && (ccc < extend_selections); lc = lc->next)
 	    {
-		EST_Item *unit = cldb->get_unit(lc->name);
-		EST_String next_name = unit->S("next_unit","");
-		if (next_name.before("_") == s->name())
+		CLunit *unit = clunit(lc->name);
+		CLunit *next_unit;
+
+		if (unit->next_unit)
+		    next_unit = unit->next_unit;
+		else
+		    continue;
+		EST_String ss;
+		ss = next_unit->name.before("_");
+		if (ss.matches(".*_.*_.*"))
+		{
+		    ss += "_";
+		    ss += next_unit->name.after("_").before("_");
+		}
+/*		printf("%s %s\n",(const char *)ss, (const char *)lookingfor); */
+		for (gt=all_cands; gt; gt=gt->next)
+		    if (clunit(gt->name)->name == next_unit->name)
+			break;  /* got this one already */
+		if ((ss == lookingfor) && (gt == 0))
 		{  // its the right type so add it
 		    c = new EST_VTCandidate;
-		    c->name = next_name;
+		    c->name = est_val(next_unit);
+		    cldb->load_join_coefs(next_unit);
 		    c->s = s;
 		    c->score = 0; 
 		    c->next = all_cands;
 		    all_cands = c;
+		    bbb++;
+		    ccc++;
 		}
 	    }
 	}
 
 	s->set_val("unit_cands",est_val(all_cands));
     }
+    if (clunits_debug)
+	printf("cands %d (extends %d) %s\n",bbb,ccc,(const char *)lookingfor);
     return all_cands;
 }
 
@@ -384,8 +520,11 @@ static EST_VTPath *TS_npath(EST_VTPath *p,EST_VTCandidate *c,EST_Features &f)
     // with join cost
     float cost;
     EST_VTPath *np = new EST_VTPath;
-    EST_String u0, u1;
+    CLunit *u0, *u1;
     float u0_move=0.0, u1_move=0.0;
+    static EST_String static_unit_prev_move = "unit_prev_move";
+    static EST_String static_unit_this_move = "unit_this_move";
+    static EST_String static_lscore = "lscore";
     (void)f;
 
     np->c = c;
@@ -394,71 +533,106 @@ static EST_VTPath *TS_npath(EST_VTPath *p,EST_VTCandidate *c,EST_Features &f)
 	cost = 0;  // nothing previous to join to
     else
     {
-	u0 = p->c->name;
-	u1 = c->name;
+	u0 = clunit(p->c->name);
+	u1 = clunit(c->name);
+//	printf("u0 %s u1 %s\n",
+//	       (const char *)u0->name,
+//	       (const char *)u1->name);
 	if (optimal_coupling)
-	    cost = optimal_couple(u0,u1,u0_move,u1_move);
+	    cost = optimal_couple(u0,u1,u0_move,u1_move,
+				  optimal_coupling,
+				  different_prev_pen,
+				  non_consecutive_pen);
 	else // naive measure
-	    cost = naive_join_cost(u0,u1,c->s);
-	np->f.set("unit_prev_move",u0_move); // new (prev) end
-	np->f.set("unit_this_move",u1_move); // new start
+	    cost = naive_join_cost(u0,u1,c->s,u0_move,u1_move);
+	// When optimal_coupling == 2 the moves will be 0, just the scores
+	// are relevant
+	if (optimal_coupling == 1)
+	{
+	    np->f.set(static_unit_prev_move,u0_move); // new (prev) end
+	    np->f.set(static_unit_this_move,u1_move); // new start
+	}
     }
+//    printf("cost %f continuity_weight %f\n", cost, continuity_weight);
     cost *= continuity_weight;
     np->state = c->pos;  // "state" is candidate number
+    if (clunits_log_scores && (cost != 0))
+	cost = log(cost);
 
-    np->f.set("lscore",c->score+cost);
+//    np->f.set(static_lscore,c->score+cost);
     if (p==0)
 	np->score = (c->score+cost);
     else
 	np->score = (c->score+cost) + p->score;
-    
+
+    if (clunits_debug > 1)
+	printf("joining cost %f\n",np->score);
     return np;
 }
 
-static float optimal_couple(const EST_String &u0_name,
-			    const EST_String &u1_name,
+static float optimal_couple(CLunit *u0,
+			    CLunit *u1,
 			    float &u0_move,
-			    float &u1_move)
+			    float &u1_move,
+			    int type,
+			    float different_prev_pen,
+			    float non_consecutive_pen
+			    )
 {
     // Find combination cost of u0 to u1, checking for best
     // frame up to n frames back in u0 and u1.
     // Note this checks the u0 with u1's predecessor, which may or may not
     // be of the same type
+    // There is some optimisation here in unit coeff access
     EST_Track *u0_cep, *u1_p_cep;
     float dist, best_val;
     int i,eee;
-    EST_String u1_p_name;
     int u0_st, u0_end;
     int u1_p_st, u1_p_end;
     int best_u0, best_u1;
-    EST_Item *u0, *u1, *u1_p;
+    CLunit *u1_p;
     float f;
 
-    u0 = cldb->get_unit(u0_name);
-    u0_move = u0->F("end");
-    cldb->load_join_coefs(u0);
-    u1 = cldb->get_unit(u1_name);
-    u1_p_name = ffeature(u1,"prev_unit");
-    u1_p = cldb->get_unit(u1_p_name);
-    u1_move = ffeature(u1_p,"end");
+    u1_p = u1->prev_unit;
+
+    u0_move = u0->end;
+    if (u1_p == 0)
+	u1_move = 0;
+    else
+	u1_move = u1_p->end;
 
     if (u1_p == u0)  // they are consecutive
 	return 0.0;
-    if (u1_p == 0)  // hacky condition
-	return 0.0;
-
-    if (u1_p_name.before("_") != u0_name.before("_"))
-	f = 1000;
-    else
-	f = 1;
-    cldb->load_join_coefs(u1_p);
+    if (u1_p == 0)   // hacky condition, when there is no previous we'll
+	return 0.0;  // assume a good join (should be silence there)
+    
+    if (u1_p->join_coeffs == 0)
+	cldb->load_join_coefs(u1_p);
     // Get indexes into full cep for utterances rather than sub ceps
-    u0_cep = track(u0->f("join_coeffs"));
-    u1_p_cep = track(u1_p->f("join_coeffs"));
+    u0_cep = u0->join_coeffs;
+    u1_p_cep = u1_p->join_coeffs;
+
     u0_end = u0_cep->num_frames();
-    u0_st = u0_cep->num_frames()/3;  // up to 66% into previous
     u1_p_end = u1_p_cep->num_frames();
-    u1_p_st = u1_p_cep->num_frames()/3;
+
+    if (!streq(u1_p->base_name,u0->base_name))
+    {   /* prev(u1) is a different phone from u0 so don't slide */
+	f = different_prev_pen;
+	u0_st = u0_cep->num_frames()-1;
+	u1_p_st = u1_p_cep->num_frames()-1;
+    }
+    else if (type == 2)
+    {   /* we'll only check the edge for the join */
+	u0_st = u0_cep->num_frames()-1;
+	u1_p_st = u1_p_cep->num_frames()-1;
+	f = 1;
+    }
+    else
+    {
+	u0_st = (int)(u0_cep->num_frames() * 0.33);
+	u1_p_st = (int)(u1_p_cep->num_frames() * 0.33);
+	f = 1;
+    }
 
     best_u0=u0_end;
     best_u1=u1_p_end;
@@ -473,7 +647,8 @@ static float optimal_couple(const EST_String &u0_name,
     {
 	dist = frame_distance(*u0_cep,i+u0_st,
 			      *u1_p_cep,i+u1_p_st,
-			      cldb->cweights);
+			      cldb->cweights,
+			      f0_join_weight);
 	if (dist < best_val)
 	{
 	    best_val = dist;
@@ -503,27 +678,28 @@ static float optimal_couple(const EST_String &u0_name,
     }
 #endif
 
-    u0_move = u0_cep->t(best_u0);
-    u1_move = u1_p_cep->t(best_u1);
+    if (type == 1)
+    {
+	u0_move = u0_cep->t(best_u0);
+	u1_move = u1_p_cep->t(best_u1);
+    }
 
-    return best_val*f;
+    return non_consecutive_pen+(best_val*f);
 }
 
-static float naive_join_cost(const EST_String &u0,
-			     const EST_String &u1,
-			     EST_Item *s)
+static float naive_join_cost(CLunit *unit0, CLunit *unit1,
+			     EST_Item *s,
+			     float &u0_move,
+			     float &u1_move)
 {
     // A naive join cost, because I haven't ported the info yet
-    (void)u0;
-    (void)u1;
-    EST_Item *unit1, *unit0;
 
-    unit1 = cldb->get_unit(u1);
-    unit0 = cldb->get_unit(u0);
+    u0_move = unit0->end;
+    u1_move = unit1->start;
 
     if (unit0 == unit1)
 	return 0;
-    else if (unit1->S("prev_unit","0") == u0)
+    else if (unit1->prev_unit->name == unit0->name)
 	return 0;
     else if (ph_is_silence(s->name()))
 	return 0;
@@ -535,9 +711,24 @@ static float naive_join_cost(const EST_String &u0,
 	return 1.0;
 }
 
+static LISP cldb_load_all_coeffs(LISP filelist)
+{
+    LISP f;
+
+    cldb = check_cldb();
+    for (f=filelist; f; f=cdr(f))
+    {
+	cldb->get_file_coefs_sig(get_c_string(car(f)));
+	cldb->get_file_join_coefs(get_c_string(car(f)));
+    }
+
+    return NIL;
+}
+
 void festival_clunits_init(void)
 {
     // Initialization for clunits selection
+
     proclaim_module("clunits");
 
     gc_protect(&clunits_params);
@@ -561,9 +752,27 @@ void festival_clunits_init(void)
   Use hamming window over edges of units to join them, no prosodic \n\
   modification though.");
 
+    festival_def_utt_module("Clunits_SmoothedJoin_Wave",clunits_smoothedjoin_wave,
+    "(Clunits_SmoothedJoin_Wave UTT)\n\
+  smoothed join.");
+
     init_subr_1("clunits:load_db",cl_load_db,
     "(clunits:load_db PARAMS)\n\
-  Load index file for cluster database and set up params.");
+  Load index file for cluster database and set up params, and select it.");
+
+    init_subr_1("clunits:select",cldb_select,
+    "(clunits:select NAME)\n\
+  Select a previously loaded cluster database.");
+
+    init_subr_1("clunits:load_all_coefs",cldb_load_all_coeffs,
+    "(clunits:load_all_coefs FILEIDLIST)\n\
+  Load in coefficients, signal and join coefficients for each named\n\
+  fileid.  This is can be called at startup to to reduce the load time\n\
+  during synthesis (though may make the image large).");
+
+    init_subr_0("clunits:list",cldb_list,
+    "(clunits:list)\n\
+  List names of currently loaded cluster databases.");
 
     init_subr_2("acost:build_disttabs",make_unit_distance_tables,
     "(acost:build_disttabs UTTTYPES PARAMS)\n\
@@ -580,5 +789,9 @@ void festival_clunits_init(void)
     "(acost:file_difference FILENAME1 FILENAME2 PARAMS)\n\
   Load in the two named tracks and find the acoustic difference over all\n\
   based on the weights in PARAMS.");
+
+    init_subr_2("cl_mapping", l_cl_mapping,
+      "(cl_mapping UTT PARAMS)\n\
+  Impose prosody upto some percentage, and not absolutely.");
 
 }

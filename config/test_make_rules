@@ -37,9 +37,6 @@ TEST_PROGRAMS = $(TEST_MODULES:%=%_example) $(TEST_MODULES:%=%_regression)
 #TSRCS = $(TEST_PROGRAMS:%=%.C)
 #SRCS = $(TSRCS)
 #OBJS = $(SRCS:%.C=%.o)
-SCRIPTS = $(TEST_SCRIPTS:%=%.sh)
-FILES = Makefile \
-	$(SCRIPTS)
 
 include $(TOP)/config/common_make_rules
 
