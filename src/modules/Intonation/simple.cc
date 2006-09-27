@@ -37,7 +37,7 @@
 /* Simple intonation prediction: a hat shape on each content word        */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "intonation.h"
 

@@ -45,8 +45,10 @@ TOP=../../..
 DIRNAME=src/modules/hts_engine
 H = parser.h
 
-H = defaults.h global.h misc.h mlpg.h model.h tree.h vocoder.h
-CPPSRCS = hts_engine.cc misc.cc mlpg.cc model.cc tree.cc vocoder.cc
+H = defaults.h global.h misc.h mlpg.h model.h tree.h vocoder.h \
+    mlsa_resynthesis.h
+CPPSRCS = hts_engine.cc misc.cc mlpg.cc model.cc tree.cc vocoder.cc \
+    mlsa_resynthesis.cc
 SRCS = $(CPPSRCS)
 
 OBJS = $(CPPSRCS:.cc=.o) 

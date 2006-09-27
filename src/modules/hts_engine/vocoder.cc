@@ -41,9 +41,9 @@
 /*                                    2003/06/11 by Heiga Zen        */
 /*  ---------------------------------------------------------------  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 #include "EST_walloc.h"
 
 #include "misc.h"

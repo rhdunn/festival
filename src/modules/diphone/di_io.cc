@@ -37,9 +37,9 @@
 /*  The groupfile stuff is all awb's fault.                              */
 /*                                                                       */
 /*************************************************************************/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "festival.h"
 #include "diphone.h"
 

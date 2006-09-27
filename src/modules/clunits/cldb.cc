@@ -38,8 +38,8 @@
 /*  A quick database structure                                           */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 #include "festival.h"
 #include "EST_FileType.h"
 #include "clunits.h"

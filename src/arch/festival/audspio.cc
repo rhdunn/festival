@@ -37,9 +37,9 @@
 /* Interface with the audio spooler                                      */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "festival.h"
 #include "festivalP.h"
 

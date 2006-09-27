@@ -47,6 +47,7 @@
 #include "DiphoneVoiceModule.h"
 #include "EST_JoinCost.h"
 #include "EST_TargetCost.h"
+#include "EST_FlatTargetCost.h"
 #include "safety.h"
 
 
@@ -54,12 +55,66 @@ static LISP FT_voice_get_units(LISP l_voice, LISP l_utt)
 {
   EST_Utterance *u = get_c_utt(l_utt);
   VoiceBase *v = voice( l_voice );
-  
+
+  // Find units and put in utterance  
   v->getUnitSequence( u );
-  
-  // Find units and put in utterance
+
   return l_utt;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// experimental candidate omission stuff //////////////////////////////////////
+static LISP FT_voice_reget_units(LISP l_duv, LISP l_utt)
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_duv)) ){
+    EST_Utterance *u = get_c_utt(l_utt);
+    duv->regetUnitSequence( u );
+  }
+  else
+    EST_error( "du_voice_reget_units: expects DiphoneUnitVoice" );
+
+  return l_utt;
+}
+
+static LISP FT_utt_tag_unit( LISP l_utt, LISP l_unitnum )
+{
+  EST_Utterance *u = get_c_utt(l_utt);
+  const int n = get_c_int( l_unitnum );
+  
+  if( n<1 )
+    EST_error( "unit number must be greater than 1" );
+
+  EST_Item *it = u->relation("Unit")->first();  
+  int i;
+  for( i=1; i<=n && it!= 0; i++ )
+    it=it->next();
+  
+  if( i<=n )
+    EST_error( "unit number greater than number of items in unit relation") ;
+ 
+  ItemList* omitlist=0;
+  
+  if( !it->f_present("omitlist") ){
+    omitlist = new ItemList;
+    CHECK_PTR(omitlist);
+    it->set_val( "omitlist", est_val(omitlist) );
+  }
+  else
+    omitlist = itemlist( it->f("omitlist"));
+
+  EST_Item *currentCandidateUsed = item(it->f("source_ph1"));
+  
+  printf( "setting omit flag on unit %d (item %x)\n", i-1, currentCandidateUsed ); 
+
+  omitlist->append( currentCandidateUsed );
+  
+  return l_utt;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 static LISP FT_voice_get_name(LISP l_voice)
 {
@@ -79,10 +134,15 @@ static LISP FT_voice_set_name(LISP l_voice, LISP l_name)
   return NIL;
 }
 
-static LISP FT_voice_init( LISP l_voice )
+static LISP FT_voice_init( LISP l_voice, LISP l_ignore_bad_tag )
 {
   VoiceBase *v = voice( l_voice );
-  v->initialise();
+
+  bool ignore_bad_tag = false;
+  if( l_ignore_bad_tag != NIL )
+    ignore_bad_tag = true;
+  
+  v->initialise( ignore_bad_tag  );
   return NIL;
 }
 
@@ -263,6 +323,81 @@ static LISP FT_du_voice_set_ob_pruning_beam( LISP l_voice, LISP l_width )
   return NIL;
 }
 
+static LISP FT_du_voice_set_tc_rescoring_beam( LISP l_voice, LISP l_width )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_tc_rescoring_beam( get_c_float( l_width ) );
+  }
+  else
+    EST_error( "du_voice_set_tc_scoring_beam: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_set_tc_rescoring_weight( LISP l_voice, LISP l_weight )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_tc_rescoring_weight( get_c_float( l_weight ) );
+  }
+  else
+    EST_error( "du_voice_set_tc_rescoring_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_set_target_cost_weight( LISP l_voice, LISP l_weight )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_target_cost_weight( get_c_float( l_weight ) );
+  }
+  else
+    EST_error( "du_voice_set_target_cost_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+// static LISP FT_du_voice_set_join_cost_weight( LISP l_voice, LISP l_weight )
+// {
+//   if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+//     duv->set_join_cost_weight( get_c_float( l_weight ) );
+//   }
+//   else
+//     EST_error( "du_voice_set_target_cost_weight: expects DiphoneUnitVoice" );
+
+//   return NIL;
+// }
+
+static LISP FT_du_voice_set_prosodic_modification( LISP l_voice, LISP l_mod )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_prosodic_modification( get_c_int( l_mod ) );
+  }
+  else
+    EST_error( "du_voice_set_prosodic_modification: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_prosodic_modification(LISP l_voice)
+{
+  int pm;
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) )
+    {
+      pm = duv->get_prosodic_modification();
+      if (pm == 0)
+	return NIL;
+      else
+	return truth;
+    }
+  else
+    {
+    EST_error( "du_voice_prosodic_modification: expects DiphoneUnitVoice" );
+    return NIL;
+    }
+}
+
+
+
 static LISP FT_du_voice_set_diphonebackoff(LISP l_voice, LISP l_list)
 {
 
@@ -300,8 +435,20 @@ static LISP FT_du_voice_setTargetCost(LISP l_voice, LISP l_tc)
 	tc = new EST_SchemeTargetCost(l_tc);
 	CHECK_PTR(tc);
       }
+      else if(streq(get_c_string(l_tc),"flat")){
+	tc = new EST_FlatTargetCost();
+	CHECK_PTR(tc);
+      }
+      else if(streq(get_c_string(l_tc),"apml")){
+	tc = new EST_APMLTargetCost();
+	CHECK_PTR(tc);
+      }
+      else if(streq(get_c_string(l_tc),"singing")){
+	tc = new EST_SingingTargetCost();
+	CHECK_PTR(tc);
+      }
       else
-	EST_error( "du_voice_setTargetcost: expects t, nil or a closure." );
+	EST_error( "du_voice_setTargetcost: Unknown targetcost type." );
 
       duv->setTargetCost(tc,true);
     }
@@ -394,6 +541,16 @@ static LISP FT_voice_num_available_candidates( LISP l_voice, LISP l_unit )
   return flocons( number );
 }
 
+static LISP FT_du_voice_diphone_coverage( LISP l_voice, LISP l_filename)
+{
+  DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice));
+  EST_String filename = get_c_string(l_filename);
+ 
+  duv->diphoneCoverage(filename);
+
+  return NIL;
+}
+
 void festival_MultiSyn_init(void)
 {
   proclaim_module("MultiSyn");
@@ -402,6 +559,16 @@ void festival_MultiSyn_init(void)
   "(voice.getUnits VOICE UTT)\n\
     Voice object VOICE looks at the segment relation in utterance UTT\n\
     and adds a suitable unit sequence in the Unit relation.");
+
+  init_subr_2("utt.tag_unit", FT_utt_tag_unit,
+  "(utt.tag_unit UTT INT)\n\
+    Tags the candidate used in Unit INT in the Unit relation for omission in\n\
+    subsequent reruns of viterbi search for the unit sequence.");
+
+  init_subr_2("du_voice.regetUnits", FT_voice_reget_units,
+  "(du_voice.regetUnits DU_VOICE UTT)\n\
+    Voice object DU_VOICE looks at the unit relation in utterance UTT\n\
+    redoes the viterbi, respecting candidates flagged for omission");
 
   init_subr_1("voice.getName", FT_voice_get_name,
   "(voice.getName VOICE)\n\
@@ -436,9 +603,11 @@ void festival_MultiSyn_init(void)
     argument DATADIRS and adds it to the current voice. The voice waveform data\n\
     files are sampled at SAMPLERATE." );
     
-  init_subr_1("voice.init", FT_voice_init,
-  "(voice.init VOICE)\n\
-    Perform any necessary initialisation for the UnitSelection Voice object VOICE.");
+  init_subr_2("voice.init", FT_voice_init,
+  "(voice.init VOICE IGNORE_BAD)\n\
+    Perform any necessary initialisation for the UnitSelection Voice object VOICE.\n\
+    If optional IGNORE_BAD is not nil, then phones marked with a \"bad\" feature\n\
+    in the segment relation will not be added to the diphone inventory" );
 
   init_subr_2("voice.getUtteranceByFileID", FT_voice_getUtteranceByFileID,
   "(voice.getUtteranceByFileID VOICE FILEIDSTRING)\n\
@@ -484,6 +653,36 @@ void festival_MultiSyn_init(void)
   "(du_voice.set_ob_pruning_beam DU_VOICE BEAMFLOAT)\n\
     Sets the observation beam pruning parameter for Viterbi search");
 
+  init_subr_2("du_voice.set_tc_rescoring_beam", FT_du_voice_set_tc_rescoring_beam,
+  "(du_voice.set_tc_rescoring_beam DU_VOICE BEAMFLOAT)\n\
+    Sets the target cost rescoring beam width for Viterbi search (set to -1.0 to disable)");
+
+  init_subr_2("du_voice.set_tc_rescoring_weight", FT_du_voice_set_tc_rescoring_weight,
+  "(du_voice.set_tc_rescoring_weight DU_VOICE WEIGHTFLOAT)\n\
+    Sets the target cost rescoring weight for Viterbi search (set to 0.0 to disable)");
+
+  init_subr_2("du_voice.set_target_cost_weight", FT_du_voice_set_target_cost_weight,
+  "(du_voice.set_target_cost_weight DU_VOICE FLOAT)\n\
+    Sets the target cost weight (default is 1)");
+
+  /* 
+   * This is currently not implemented, due to problems of passing 
+   *  such a parameter to the viterbi extend path function.
+   * 
+   *  init_subr_2("du_voice.set_join_cost_weight", FT_du_voice_set_join_cost_weight,
+   *  "(du_voice.set_join_cost_weight DU_VOICE FLOAT)\n	\
+   *  Sets the join cost weight (default is 1)");
+   */
+
+  init_subr_2("du_voice.set_prosodic_modification", FT_du_voice_set_prosodic_modification,
+  "(du_voice.set_prosodic_modification DU_VOICE INT)\n\
+    Turns prosodic modification on or off (default is 0 [off])\n\
+    This will only work if durations and f0 targets are provided");
+
+  init_subr_1("du_voice.prosodic_modification", FT_du_voice_prosodic_modification,
+  "(du_voice.prosodic_modification DU_VOICE)\n\
+    Status of prosodic modification on or off.");
+
   init_subr_2("du_voice.setDiphoneBackoff", FT_du_voice_set_diphonebackoff,
   "(du_voice.setDiphoneBackoff DU_VOICE LIST)\n\
     Adds diphone backoff rules to the voice.");
@@ -498,7 +697,15 @@ void festival_MultiSyn_init(void)
    Sets the voice targetcost  function.\n\
    If t is specified then the default targetcost is used.\n\
    If nil is specified then a null targetcost is used.\n\
-   If a closure is specified, this is called as the target cost.");
+   If a closure is specified, this is called as the target cost.\n\
+   If 'apml is specified and apml targetcost is uses.");
+
+  init_subr_2("du_voice.getDiphoneCoverage", FT_du_voice_diphone_coverage,
+  "(du_voice.getDiphoneCoverage DU_VOICE FILENAME)\n\
+   prints diphone coverage information for this voice\n\
+   use filename '-' for stdout.");
+  
+
 }
 
 

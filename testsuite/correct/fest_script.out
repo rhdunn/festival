@@ -13,10 +13,10 @@
 4.1902 100 people
 4.7505 100 joined
 5.0889 100 Mr
-5.4076 100 Black
-5.4914 100 's
-6.2398 100 project
-(("On" "On" "syl") ("May" "May" "syl") ("fifth" "5" "syl") ("nineteen" "1985" "syl") ("eighty" "1985" "syl") ("five" "1985" "syl") ("around" "around" "syl") ("nineteen" "1985" "syl") ("eighty" "1985" "syl") ("five" "1985" "syl") ("people" "people" "syl") ("joined" "joined" "syl") ("Mr" "Mr" "syl") ("Black" "Black's" "syl") ("'s" "Black's" "syl") ("project" "project" "syl"))
+5.5076 100 Black
+0.0000 100 's
+6.2561 100 project
+(("On" "On" "syl") ("May" "May" "syl") ("fifth" "5" "syl") ("nineteen" "1985" "syl") ("eighty" "1985" "syl") ("five" "1985" "syl") ("around" "around" "syl") ("nineteen" "1985" "syl") ("eighty" "1985" "syl") ("five" "1985" "syl") ("people" "people" "syl") ("joined" "joined" "syl") ("Mr" "Mr" "syl") ("Black" "Black's" "syl") ("'s" "Black's" 0) ("project" "project" "syl"))
 #
 0.2100 100 #
 0.3003 100 o
@@ -72,19 +72,19 @@
 4.9613 100 s
 5.0367 100 t
 5.0889 100 @
-5.1599 100 b
-5.1983 100 l
-5.3304 100 a
-5.4076 100 k
-5.4914 100 s
-5.6335 100 p
-5.6667 100 r
-5.7659 100 o
-5.8717 100 jh
-5.9791 100 e
-6.1308 100 k
-6.2398 100 t
-6.6598 100 #
+5.1635 100 b
+5.2019 100 l
+5.3340 100 a
+5.4238 100 k
+5.5076 100 s
+5.6497 100 p
+5.6830 100 r
+5.7822 100 o
+5.8880 100 jh
+5.9953 100 e
+6.1471 100 k
+6.2561 100 t
+6.6761 100 #
 num syllables: 9
 "syls match: ok"
 "syls don't match: ok"
@@ -92,7 +92,7 @@ num syllables: 9
 Usage: festival Usage:
 festival  <options> <file0> <file1> ...
 In evaluation mode "filenames" starting with ( are evaluated inline
-Festival Speech Synthesis System: 1.95:beta July 2004
+Festival Speech Synthesis System: 1.96:beta July 2004
 -q            Load no default setup files
 --libdir <string>
               Set library directory pathname

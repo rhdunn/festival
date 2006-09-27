@@ -49,6 +49,7 @@
 #include "siod_defs.h"
 #include "EST_Val_defs.h"
 #include "EST_String.h"
+#include "EST_FlatTargetCost.h"
 
 #include "EST_types.h" // for EST_StrList
 
@@ -62,12 +63,14 @@ class EST_Wave;
 class EST_Item;
 class DiphoneVoiceModule;
 class EST_JoinCost;
-class EST_TargetCost;
+
 
 #include "EST_THash.h"
 template<class T> class EST_TList;
 typedef EST_TList<EST_Item*> ItemList;
 
+SIOD_REGISTER_TYPE_DCLS(itemlist, ItemList)
+VAL_REGISTER_TYPE_DCLS(itemlist, ItemList)
 
 SIOD_REGISTER_CLASS_DCLS(du_voice,DiphoneUnitVoice)
 VAL_REGISTER_CLASS_DCLS(du_voice,DiphoneUnitVoice)
@@ -87,19 +90,22 @@ public:
 		    const EST_String& coefExt = ".coef" );
   
   virtual ~DiphoneUnitVoice();
-  
-  virtual void initialise();
+
+  virtual void initialise( bool ignore_bad_tag=false );
   virtual unsigned int numDatabaseUnits() const;
   virtual unsigned int numUnitTypes() const;
 
   virtual bool synthesiseWave( EST_Utterance *utt );
 
   virtual void getUnitSequence( EST_Utterance *utt );
-
+  
+  void regetUnitSequence( EST_Utterance *utt );
+  
   void getCopyUnitUtterance( const EST_String &utt_fname, 
 			     EST_Utterance **utt_out ) const;
 
   EST_VTCandidate* getCandidates( EST_Item *s, EST_Features &f ) const;
+  void diphoneCoverage(const EST_String filename) const;
 
   virtual bool unitAvailable( const EST_String &diphone ) const;
   virtual unsigned int numAvailableCandidates( const EST_String &unit ) const;
@@ -131,14 +137,29 @@ public:
 
   void  set_pruning_beam( float width ) { pruning_beam=width; }
   float get_pruning_beam( ) const { return pruning_beam; } 
+
   void  set_ob_pruning_beam( float width ){ ob_pruning_beam=width; }
   float get_ob_pruning_beam( ) const { return ob_pruning_beam; }
+
+  void  set_tc_rescoring_beam( float width ){ tc_rescoring_beam = width; }
+  float get_tc_rescoring_beam( ) const { return tc_rescoring_beam; }
+
+  void  set_tc_rescoring_weight( float weight ){ tc_rescoring_weight = weight; }
+  float get_tc_rescoring_weight( ) const { return tc_rescoring_weight; }
+
+  void  set_target_cost_weight( float w ){ tc_weight=w; }
+  float get_target_cost_weight() const { return tc_weight; }
+
+  void  set_join_cost_weight( float w ){ jc_weight=w; }
+  float get_join_cost_weight() const { return jc_weight; }
+
+  void  set_prosodic_modification( int m ){ prosodic_modification=m; }
+  int get_prosodic_modification() const { return prosodic_modification; }
   
   void set_wav_samplerate( unsigned int sr ) { wav_srate = sr; }
   unsigned int get_wav_samplerate( ) const { return wav_srate; }
 
   void precomputeJoinCosts( const EST_StrList &phones, bool verbose=true );
-
 
 private:
   // don't allow copying of Voices (for now?)
@@ -148,14 +169,24 @@ private:
   void addToCatalogue( const EST_Utterance *utt ); 
 
   void getDiphone( const EST_VTCandidate *cand, 
-		   EST_Track* coef, EST_Wave* sig, int *midframe );
+		   EST_Track* coef, EST_Wave* sig, int *midframe,
+		   bool extendLeft=0, bool extendRight=0 );
 
   int getPhoneList( const EST_String &phone, ItemList &list );
+
+  void fillUnitRelation( EST_Relation *units, const EST_VTPath *path );
 
 private:
   EST_TList<DiphoneVoiceModule*> voiceModules;
   float pruning_beam;     // beam pruning
   float ob_pruning_beam;  // observation beam pruning
+  
+  float tc_rescoring_beam;
+  float tc_rescoring_weight;
+
+  float tc_weight;
+  float jc_weight;
+  int prosodic_modification;
 
   unsigned int wav_srate;
 
@@ -165,6 +196,8 @@ private:
   EST_TargetCost *tc;
   bool tc_delete;
 
+  TCDataHash *tcdh;
+
 private:
   DiphoneBackoff *diphone_backoff_rules;   // diphone backoff rules
   
@@ -172,6 +205,7 @@ public:
   void set_diphone_backoff(DiphoneBackoff *dbo);
 
 };
+
 
 #endif // __DIPHONEUNITVOICE_H__
 

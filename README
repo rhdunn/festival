@@ -1,6 +1,6 @@
 
               The Festival Speech Synthesis System
-                  version 2.0 RELEASE July 2004
+                  version 2.0 RELEASE August 2006
  
 This directory contains the Festival Speech Synthesis System,
 developed at CSTR, University of Edinburgh. The project was originally
@@ -32,10 +32,10 @@ INSTALL
 
 Festival should run on any standard Unix platform.  It has already run
 on Solaris, SunOS, Linux and FreeBSD.  It requires a C++ compiler (GCC
-2.7.2, 2.8.1, 2.95.[123], 3.2.3 3.3.2 RedHat "gcc-2.96" and gcc 3.3 are
-our standard compilers) to install. A port to Windows XP/NT/95/98 and
-2000 using either Cygnus GNUWIN32 and Visual C++ is included, this is
-still new but many people are successfully using it.
+2.7.2, 2.8.1, 2.95.[123], 3.2.3 3.3.2 RedHat "gcc-2.96" and gcc 3.3,
+3.4, 4.0, 4.0.1 4.1 are our standard compilers) to install. A port to Windows
+XP/NT/95/98 and 2000 using either Cygnus GNUWIN32 and Visual C++ is
+included, this is still new but many people are successfully using it.
 
 A detailed description of installation and requirements for the whole
 system is given in the file INSTALL read that for details.
@@ -48,7 +48,8 @@ or the US site
    http://festvox.org/festival/
 
 New in Festival 2.0
-   Two new synthesis engines.
+   Three new synthesis engines.
+     Clustergen - statistical parametric synthesis
      Multisyn - a general purpose unit selection engine.
      HTS - a compact HMM-based engine
    Various new gcc's support

@@ -36,7 +36,7 @@
 /*  Access to the Ngrammar                                               */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "festivalP.h"
 

@@ -37,8 +37,8 @@
 /* Compile a lexicon from set of exntries                                */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include "festival.h"
 #include "lexicon.h"
 #include "lexiconP.h"

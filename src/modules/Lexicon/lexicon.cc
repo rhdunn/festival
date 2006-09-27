@@ -37,7 +37,7 @@
 /* lexicons: lookup                                                      */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 #include "lexiconP.h"
@@ -96,7 +96,7 @@ Lexicon::~Lexicon()
 
 LISP Lexicon::lookup(const EST_String &word, const LISP features)
 {
-    LISP entry,mapped,hooked;
+    LISP entry,mapped,hooked, entry2;
     EST_String sword;
 
     if (pre_hooks != NIL)
@@ -115,8 +115,16 @@ LISP Lexicon::lookup(const EST_String &word, const LISP features)
 
     // Check addenda, them complex, then lts
     if ((entry = lookup_addenda(sword,mapped)) == NIL)
-	if ((entry = lookup_complex(sword,mapped)) == NIL)
+    {   if ((entry = lookup_complex(sword,mapped)) == NIL)
 	    entry = lookup_lts(sword,mapped);
+    } // After adding the city Nice to the addendum, FT said "nice" wrong, there-
+    else if(mapped != NIL)  // fore we try to find an entry with matching pos.
+         if(car(cdr(entry)) != NIL &&  // addendum pos is not NIL
+            mapped != car(cdr(entry))) // and does not match
+              if((entry2 = lookup_complex(sword,mapped)) != NIL)
+                    if(mapped == car(cdr(entry2))) // comp. lex. pos does match
+                       entry = entry2;
+    
 
     if (post_hooks != NIL)
     {

@@ -37,7 +37,7 @@
 /* Word based ffeature functions                                        */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexiconP.h"
 

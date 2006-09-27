@@ -41,7 +41,7 @@ ALL_DIRS=$(BUILD_DIRS)
 
 PHONESETS = mrpa_phones.scm mrpa_allophones.scm radio_phones.scm \
             holmes_phones.scm darpa_phones.scm phoneset.scm \
-            cmusphinx2_phones.scm
+            cmusphinx2_phones.scm unilex_phones.scm
 DURSTATS = mrpa_durs.scm klatt_durs.scm gswdurtreeZ.scm f2bdurtreeZ.scm
 INTSTATS = tobi.scm f2bf0lr.scm tobi_rules.scm \
            tilt.scm apml.scm apml_f2bf0lr.scm apml_kaldurtreeZ.scm

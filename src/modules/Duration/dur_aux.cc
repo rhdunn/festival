@@ -37,7 +37,7 @@
 /* Basic duration utilities common between different methods             */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "durationP.h"
 

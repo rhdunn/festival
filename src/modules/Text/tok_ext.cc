@@ -43,7 +43,7 @@
 /* Resolving homographs using David Yarowsky's techniques.               */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 #include "text.h"

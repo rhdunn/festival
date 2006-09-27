@@ -45,7 +45,7 @@ cmu_us_awb_arctic_hts
 4.4127 100 ay
 4.5878 100 k
 4.9878 100 pau
-((num_samples 89920) (sample_rate 16000) (num_channels 1) (file_type riff))
+((num_samples 68560) (sample_rate 16000) (num_channels 1) (file_type riff))
 cmu_us_bdl_arctic_hts
 #
 0.2000 100 pau

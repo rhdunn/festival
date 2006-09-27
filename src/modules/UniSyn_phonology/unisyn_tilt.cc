@@ -38,7 +38,7 @@
 /*                                                                       */
 /*=======================================================================*/
 
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "EST_tilt.h"
 #include "../UniSyn/us_features.h"

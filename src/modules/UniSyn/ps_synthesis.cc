@@ -43,7 +43,7 @@
 #include "siod.h"
 #include "EST_sigpr.h"
 #include "EST_error.h"
-#include <math.h>
+#include <cmath>
 #include "EST_inline_utils.h"
 
 void us_generate_wave(EST_Utterance &utt, 
@@ -127,26 +127,28 @@ void td_synthesis(EST_WaveVector &frames,
     if( (frames.length()>0) && (map_n>0) ){
       sr = (float)frames(0).sample_rate();
       last_sample = (int)(rint(target_pm.end()*sr)) +
-	((frames(map(map_n-1)).num_samples() - 1)/2);//window_signal guarantees odd
-
+	((frames(frames.length()-1).num_samples() - 1)/2);//window_signal guarantees odd
       target_sig.resize(last_sample+1);
       target_sig.fill(0);
       target_sig.set_sample_rate((int)sr);
  
-      for( i=0; i<map_n; ++i ){
-	const EST_Wave &frame = frames(map.a_no_check(i));
+      for( i=0; i<map_n; ++i )
+      {
+          int mapped_i;
+          if (map.a_no_check(i) < frames.length())
+              mapped_i = map.a_no_check(i);
+          else
+              mapped_i = frames.length()-1;
+	const EST_Wave &frame = frames(mapped_i);
 	const int frame_num_samples = frame.num_samples();
 	t_start = (int)(rint(target_pm.t(i)*sr)) -
 	  ((frame_num_samples - 1)/2);//window_signal guarantees odd
-
-
 	
 #if defined(EST_DEBUGGING)
 	cerr << t_start << " " 
 	     << (frame_num_samples-1)/2 + t_start << " "
 	     << frame_num_samples << "\n";
 #endif
-
 
 	for( j=0; j<frame_num_samples; ++j )
 	  if( j+t_start>=0 )

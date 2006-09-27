@@ -45,7 +45,7 @@
 /* This is independent of any particular Unit Database                   */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdlib.h>
+#include <cstdlib>
 #include "festival.h"
 #include "clunits.h"
 

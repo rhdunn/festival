@@ -44,7 +44,10 @@
 /* Note only English tokenization has any substance at present           */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
+
+using namespace std;
+
 #include "festival.h"
 #include "lexicon.h"
 #include "modules.h"
@@ -404,7 +407,7 @@ static int only_punc(const EST_String &tok)
     const char *tokch = tok;
 
     for (i=0; i<tok.length(); i++)
-	if (strchr(PunctuationChars,tokch[i]) == NULL)
+      if (strchr((const char *)PunctuationChars,tokch[i]) == NULL)
 	    return FALSE;
 
     return TRUE;

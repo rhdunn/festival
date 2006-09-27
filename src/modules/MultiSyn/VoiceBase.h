@@ -60,7 +60,7 @@ class VoiceBase {
 public:
   VoiceBase() : _verbosity(0), _name( EST_String::Empty ) {};
   virtual ~VoiceBase() {}; 
-  virtual void initialise( ) = 0;
+  virtual void initialise( bool ignore_bad_tag=false ) = 0;
 
   virtual EST_String name() { return _name; }
   virtual void set_name(EST_String n) { _name = n;}

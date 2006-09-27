@@ -39,7 +39,7 @@
 /* words, particularly, numbers (ordinals, digitized, years, numbers)    */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "tokenP.h"
 

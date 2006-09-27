@@ -38,7 +38,10 @@
 /*                                                                       */
 /*=======================================================================*/
 
-#include <stdio.h>
+#include <cstdio>
+
+using namespace std;
+
 #include "EST_unix.h"
 #include "festival.h"
 

@@ -49,15 +49,19 @@ ALL_DIRS = $(BUILD_DIRS)
 H = UnitSelection.h \
     VoiceBase.h DiphoneUnitVoice.h \
     VoiceModuleBase.h DiphoneVoiceModule.h \
-    EST_TargetCost.h EST_JoinCost.h EST_JoinCostCache.h \
-    DiphoneBackoff.h safety.h
+    EST_TargetCost.h TargetCostRescoring.h \
+    EST_JoinCost.h EST_JoinCostCache.h \
+    DiphoneBackoff.h safety.h EST_DiphoneCoverage.h \
+    EST_FlatTargetCost.h
 
 
 SRCS =  UnitSelection.cc \
         VoiceBase.cc DiphoneUnitVoice.cc \
         VoiceModuleBase.cc DiphoneVoiceModule.cc \
-        EST_TargetCost.cc EST_JoinCost.cc EST_JoinCostCache.cc \
-	DiphoneBackoff.cc
+        EST_TargetCost.cc TargetCostRescoring.cc \
+        EST_JoinCost.cc EST_JoinCostCache.cc \
+	DiphoneBackoff.cc EST_DiphoneCoverage.cc \
+        EST_FlatTargetCost.cc
 
 OBJS = $(SRCS:.cc=.o)
 

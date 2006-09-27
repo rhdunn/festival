@@ -37,7 +37,8 @@
 /* From words to syllables and segments using the lexicon                */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 #include "modules.h"
@@ -113,10 +114,10 @@ LISP FT_Unilex_Word_Utt(LISP utt)
     for (w=u->relation("Word")->first(); w != 0; w = next(w))
     {
 	lpos = NIL;
-	pos = string(ffeature(w,"hg_pos"));
+	pos = EST_String(ffeature(w,"hg_pos"));
                         // explicit homograph pos disambiguation
 	if (pos == "0")
-	    pos = string(ffeature(w,"pos"));
+	    pos = EST_String(ffeature(w,"pos"));
 	if (pos != "0")
 	    lpos = rintern(pos);
 

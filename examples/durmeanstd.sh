@@ -49,8 +49,12 @@
   Options
   -output <ofile>
              File to save output in
+  -relation <string>
+             Relation for phones (default Segment)
   -log 
              Take log of durations first
+  -from_file 
+             file with list of utt names
 ")
   (quit))
 
@@ -58,6 +62,7 @@
 (defvar utt_files nil)
 (defvar outfile "durs.meanstd")
 (defvar log_domain nil)
+(defvar durrelation 'Segment)
 
 ;;; Get options
 (define (get_options)
@@ -75,6 +80,18 @@
 	  (if (not (cdr o))
 	      (durmeanstd_error "no output file specified"))
 	  (set! outfile (car (cdr o)))
+	  (set! o (cdr o)))
+	 ((string-equal "-relation" (car o))
+	  (if (not (cdr o))
+	      (durmeanstd_error "no relation file specified"))
+	  (set! durrelation (car (cdr o)))
+	  (set! o (cdr o)))
+	 ((string-equal "-from_file" (car o))
+	  (if (not (cdr o))
+	      (durmeanstd_error "no file of utts names file specified"))
+          (set! files 
+                (append
+                 (load (car (cdr o)) t) files))
 	  (set! o (cdr o)))
 	 ((string-equal "-log" (car o))
 	  (set! log_domain t))
@@ -143,6 +160,11 @@
 		 phonelist))
 	  (car (cdr (assoc phone phonelist)))))))
 
+(define (duration i)
+  (if (item.prev i)
+      (- (item.feat i "end") (item.feat i "p.end"))
+      (item.feat i "end")))
+
 (define (cummulate_seg_durs utt_name)
   (let ((utt (utt.load nil utt_name)))
     (mapcar
@@ -150,9 +172,9 @@
        (suffstats.add 
 	(get_phone_data (item.name s))
 	(if log_domain
-	    (log (item.feat s "segment_duration"))
-	    (item.feat s "segment_duration"))))
-     (utt.relation.items utt 'Segment))))
+	    (log (duration s))
+            (duration s))))
+     (utt.relation.items utt durrelation))))
 
 (define (output_dur_data data outfile)
   (let ((fd (fopen outfile "w")))
@@ -171,7 +193,12 @@
 (define (main)
   (get_options)
 
-  (mapcar cummulate_seg_durs utt_files)
+  (mapcar 
+   (lambda (u)
+     (unwind-protect
+      (cummulate_seg_durs u)
+      nil))
+   utt_files)
   (output_dur_data phonelist outfile)
 )
 

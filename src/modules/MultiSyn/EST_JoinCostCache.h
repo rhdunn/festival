@@ -58,9 +58,11 @@
 
 #include "EST_TList.h"
 #include "ling_class/EST_Item.h"
+#include <iostream>
+
+using namespace std;
 
 class EST_JoinCost;
-class ostream;
 
 class EST_JoinCostCache {
 public:

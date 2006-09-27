@@ -39,8 +39,11 @@
 #ifndef __FESTIVAL_H__
 #define __FESTIVAL_H__
 
-#include <stdlib.h>
-#include <fstream.h>
+#include <cstdlib>
+#include <fstream>
+
+using namespace std;
+
 #include "EST.h"
 #include "EST_cutils.h"
 #include "siod.h"

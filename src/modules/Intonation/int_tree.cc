@@ -43,7 +43,7 @@
 /* described in Black and Hunt ICSLP96)                                  */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "intonation.h"
 

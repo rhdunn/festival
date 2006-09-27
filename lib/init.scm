@@ -87,6 +87,8 @@
   (Parameter.def 'Audio_Method 'linux16audio))
  ((member 'irixaudio *modules*)
   (Parameter.def 'Audio_Method 'irixaudio))
+ ((member 'macosxaudio *modules*)
+  (Parameter.def 'Audio_Method 'macosxaudio))
  ((member 'win32audio *modules*)
   (Parameter.def 'Audio_Method 'win32audio))
  ((member 'os2audio *modules*)

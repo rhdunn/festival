@@ -42,10 +42,6 @@
 ; to detect prespecified accents (feature "accent" in 'Word relation)
 ; AS 5/29/00
 
-(define (item.feat.present item feat)
-  (and item
-       (assoc feat (item.features item))))
-
 (define (tobi_accent_prespecified utt)
   (let ((tobi_found nil)
 	(words (utt.relation.items utt 'Word)))

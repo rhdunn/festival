@@ -200,6 +200,7 @@ Find the alignement containg the most frequent alignment pairs."
   fba_best
 )
 
+
 (define (find-best-align phones letters path score)
   "(find-best-align phones letters)
 Find all feasible alignments."
@@ -268,7 +269,7 @@ Aligns all possible ways for these strings."
 		     (enworden (car (cdr (cdr entry))))
 		     lets))
 	   (if (not bp)
-	       (format t "failed: %l\n" lets)
+	       (format t "align failed: %l\n" entry)
 	       (save_info (car (cdr entry)) bp ofd))
 	   (set! c (+ 1 c)))
     (fclose fd)
@@ -308,7 +309,9 @@ Change scores into probabilities."
      (let ((sum (apply + (mapcar cdr (cdr s)))))
        (mapcar
 	(lambda (p)
-	  (set-cdr! p (/ (cdr p) sum)))
+          (if (equal? sum 0)
+              (set-cdr! p 0)
+              (set-cdr! p (/ (cdr p) sum))))
 	(cdr s))))
    pl-table)
   t)
@@ -368,14 +371,18 @@ Merge the models into a single list of cart trees as a variable
 named by name, in filename."
   (require 'cart_aux)
   (let (trees fd)
-    (set! trees
-	  (mapcar 
-	   (lambda (l)
-             (format t "%s\n" l)
-	     (set! tree (car (load (format nil "lts.%s.tree" l) t)))
-	     (set! tree (cart_simplify_tree tree nil))
-	     (list l tree))
-	   (remove '# (mapcar car allowables))))
+    (set! trees nil)
+    (set! lets (mapcar car allowables))
+    (while lets
+      (if (probe_file (format nil "lts.%s.tree" (car lets)))
+          (begin
+            (format t "%s\n" (car lets))
+            (set! tree (car (load (format nil "lts.%s.tree" (car lets)) t)))
+            (set! tree (cart_simplify_tree tree nil))
+            (set! trees
+                  (cons (list (car lets) tree) trees))))
+      (set! lets (cdr lets)))
+    (set! trees (reverse trees))
     (set! fd (fopen filename "w"))
     (format fd ";; LTS rules \n")
     (format fd "(set! %s '\n" name)
@@ -407,7 +414,7 @@ the structure as saved by merge_models."
 	     (if (equal? (ph-normalize pphones) (ph-normalize phones))
 		 (set! correctwords (+ 1 correctwords))
 		 (or nil
-		     (format t "failed %l %l %l\n" (car entry) phones pphones)))
+		     (format t "failed %l %l %l %l\n" (car entry) (car (cdr entry)) phones pphones)))
 	     (count_correct_letters   ;; exclude #, cause they're always right
 	      (cdr letters)
 	      (cdr phones)
@@ -582,7 +589,38 @@ model, if appropriate)."
          (begin
            (format ofd
                    "( \"%s\" %s ("
-                   (car entry)
+                   (downcase (car entry))
+                   (cadr entry))
+           (mapcar
+            (lambda (syl)
+              (mapcar
+               (lambda (seg)
+                 (cond
+;                 ((string-equal seg "ax")
+;                    (format ofd "%s " seg))
+                  ((string-matches seg "[aeiouAEIOU@].*")
+                     (format ofd "%s " (string-append seg (cadr syl))))
+                  (t
+                   (format ofd "%s " seg))))
+               (car syl)))
+            (car (cddr entry)))
+           (format ofd "))\n"))))
+    (fclose ifd)
+    (fclose ofd)))
+
+(define (dump-flat-entries-all infile outfile)
+  "(dump-flat-entries-all infile outfile)
+Do this for *all* entries not just ones with more than three chars."
+  (let ((ifd (fopen infile "r"))
+        (ofd (fopen outfile "w"))
+        entry)
+    (readfp ifd) ;; skip "MNCL"
+    (while (not (equal? (set! entry (readfp ifd)) (eof-val)))
+     (if (consp entry)
+         (begin
+           (format ofd
+                   "( \"%s\" %s ("
+                   (downcase (car entry))
                    (cadr entry))
            (mapcar
             (lambda (syl)

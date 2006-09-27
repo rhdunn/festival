@@ -43,11 +43,13 @@ function and utt.play. [see TTS]")
 
 ;;;  This is used to define utterance breaks in tts on files
 (defvar eou_tree 
-  '((n.whitespace matches ".*\n.*\n\\(.\\|\n\\)*");; significant break (2 nls)
+  '((lisp_max_num_tokens > 200)
     ((1))
-    ((name matches "--+")
+    ((n.whitespace matches ".*\n.*\n\\(.\\|\n\\)*");; significant break (2 nls)
      ((1))
-     ((punc matches ".*[\\?:!].*")
+     ((name matches "--+")
+     ((1))
+     ((punc matches ".*[\\?:!;].*")
       ((1))
       ((punc matches ".*\\..*")
        ((punc matches "..+");; longer punctuation string
@@ -67,11 +69,23 @@ function and utt.play. [see TTS]")
 	   ((1))
 	   ((0)))
 	  ((1)))))
-       ((0))))))
+       ((0)))))))
   "eou_tree
 End of utterance tree.  A decision tree used to determine if the given
 token marks the end of an utterance.  It may look one token ahead to
 do this. [see Utterance chunking]")
+
+(define (max_num_tokens x)
+  "(num_tokens x)
+This is probably controversial, but its good to have a maximum number
+of tokens in an utterance.  You really dont want to wait on very long
+utterances, some utts can be thousands of words long, these maybe
+shouldn't be spoken, but we do have to deal with them."
+  (let ((c 1) (y x))
+    (while y
+     (set! c (+ 1 c))
+     (set! y (item.prev y)))
+    c))
 
 ;;;  The program used to parse stml files
 ;;;  Needs version 1.0 to allow -D option to work
@@ -234,6 +248,19 @@ This function name maybe added to the server safe functions."
       (utt.send.wave.client 
        (utt.synth
 	(eval (list 'Utterance 'Text string))))))
+
+;; Function to interface with app_festival for asterisk
+;; See http://www.asterisk.org
+(define (tts_textasterisk string mode)
+  "(tts_textasterisk STRING MODE)
+Apply tts to STRING.  This function is specifically designed for
+use in server mode so a single function call may synthesize the string.
+This function name may be added to the server safe functions."
+  (utt.send.wave.asterisk
+   (utt.synth
+    (eval (list 'Utterance 'Text string)))))
+
+
 
 (define (tts_return_to_client)
   "(tts_return_to_client)

@@ -46,7 +46,7 @@
 /*    exit function        run after mode is applied                     */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
 #include "festival.h"
 #include "text.h"

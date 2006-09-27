@@ -37,7 +37,7 @@
 /* Basic intonation utilities common between different                   */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "intonation.h"
 #include "modules.h"
@@ -49,15 +49,33 @@ static EST_String Targetname("Target");
 EST_Item *add_target(EST_Utterance *u,EST_Item *seg, 
 			    float pos, float val)
 {
-    if (seg->as_relation(Targetname) == 0)
-	u->relation(Targetname)->append(seg);
-    EST_Item *item = append_daughter(seg,Targetname);
-    
-    item->set("f0",val);
-    item->set("pos",pos);
 
-    return item;
+  // Check time is NOT the same as the last target, as this causes problems...
+
+  float last_time;
+  EST_Item* last_item = u->relation(Targetname)->last_leaf();
+  if (last_item)
+    last_time = last_item->f("pos");
+  else 
+    last_time = -1.0; // no last time.
+
+  if(last_time == pos)
+    {
+      pos += 0.001;
+      *cdebug << "Repeated f0 target time, fix your generation function!\n";
+    }
+
+  if (seg->as_relation(Targetname) == 0)
+    u->relation(Targetname)->append(seg);
+  EST_Item *item = append_daughter(seg,Targetname);
+  
+  item->set("f0",val);
+  item->set("pos",pos);
+  
+  return item;
+
 }
+
 
 EST_Item *add_IntEvent(EST_Utterance *u,EST_Item *syl,
 			      const EST_String &label)

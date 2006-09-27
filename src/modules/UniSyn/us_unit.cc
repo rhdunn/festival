@@ -45,7 +45,7 @@
 #include "EST_track_aux.h"
 #include "EST_ling_class.h"
 #include "us_synthesis.h"
-#include <math.h>
+#include <cmath>
 
 #include "Phone.h"
 
@@ -95,7 +95,7 @@ static void window_frame(EST_Wave &frame, EST_Wave &whole, float scale,
   
   int print_centre;
   if ( centre_index < 0 ){
-    window_function( window_length, window );
+    window_function( window_length, window, -1 );
     print_centre = (window_length-1)/2+start;
   }
   else{
@@ -174,67 +174,81 @@ void window_signal(EST_Wave &sig, EST_Track &pm,
     // pitchmark at 0.0 time, waveform sample 0)
     prev_pm = 0.0;
 
-    if (pm_num_frames < 1 )
-      EST_error( "Attempted to Window around less than 1 pitchmark" );
 
     if( window_symmetric )
-      for( int j=0; j<pm_num_frames; ++j, ++i ){
-	current_pm = pm.t(j);
-	period = current_pm - prev_pm;
-	centre_sample = (int)rint( current_pm*(float)sample_rate );
-	
-	first_pos = prev_pm - (period * (window_factor-1.0));
-	first_sample = (int)rint( first_pos*(float)sample_rate );
+      {
+	if (pm_num_frames < 1 )
+	  EST_error( "Attempted to Window around less than 1 pitchmark" );
 
-	last_sample  = (2*centre_sample)-first_sample;
-
-	window_frame(frames[i], sig, scale, first_sample, last_sample, window_function);
-
-	prev_pm = current_pm;
+	for( int j=0; j<pm_num_frames; ++j, ++i ){
+	  current_pm = pm.t(j);
+	  period = current_pm - prev_pm;
+	  centre_sample = (int)rint( current_pm*(float)sample_rate );
+	  
+	  first_pos = prev_pm - (period * (window_factor-1.0));
+	  first_sample = (int)rint( first_pos*(float)sample_rate );
+	  
+	  last_sample  = (2*centre_sample)-first_sample;
+	  
+	  window_frame(frames[i], sig, scale, first_sample, last_sample, window_function);
+	  
+	  prev_pm = current_pm;
+	}
       }
     else{
       if( pm_indices == 0 )
 	EST_error( "required pitchmark indices EST_IVector is null" ); 
-      
+
       int j;
-      for( j=0; j<pm_num_frames-1; ++j, ++i ){
-	current_pm = pm.t(j);
-	period = current_pm - prev_pm;
-	centre_sample = (int)rint( current_pm*(float)sample_rate );
-	
-	first_pos = prev_pm - (period * (window_factor-1.0));
-	first_sample = (int)rint( first_pos*(float)sample_rate );
-	
-	float next_pm = pm.t(j+1);
-	float last_pos = next_pm + ((next_pm-current_pm)*(window_factor-1.0)); 
-	last_sample = (int)rint( last_pos*(float)sample_rate );
 
-	window_frame(frames[i], sig, scale, first_sample, last_sample, window_function, centre_sample);
-	(*pm_indices)[i] = centre_sample - first_sample;
-
-	prev_pm = current_pm;
-      }
+      // Rob's experiment to see if we can handle small bits of speech with no pitchmarks.
+      // We just 0 the frames in this case.
+      
+      if (pm_num_frames < 1 ) 
+	{
+	  EST_warning( "Attempted to Window around less than 1 pitchmark" );
+	}
+      else
+	{
+	  for( j=0; j<pm_num_frames-1; ++j, ++i ){
+	    current_pm = pm.t(j);
+	    period = current_pm - prev_pm;
+	    centre_sample = (int)rint( current_pm*(float)sample_rate );
+	    
+	    first_pos = prev_pm - (period * (window_factor-1.0));
+	    first_sample = (int)rint( first_pos*(float)sample_rate );
+	
+	    float next_pm = pm.t(j+1);
+	    float last_pos = next_pm + ((next_pm-current_pm)*(window_factor-1.0)); 
+	    last_sample = (int)rint( last_pos*(float)sample_rate );
+	    
+	    window_frame(frames[i], sig, scale, first_sample,
+			 last_sample, window_function, centre_sample);
+	    (*pm_indices)[i] = centre_sample - first_sample;
+	    
+	    prev_pm = current_pm;
+	  }
 
       //last frame window size is set according to pm.t(end) and the number
       //of samples in the waveform (it is presumed the waveform begins at the
       //preceeding pitchmark and ends at the pitchmark following the current 
       //unit...)
 
-      current_pm = pm.t(j);
-      centre_sample = (int)rint( current_pm*(float)sample_rate );
-
-      first_pos = prev_pm - (period * (window_factor-1.0));
-      first_sample = (int)rint( first_pos*(float)sample_rate );
-      last_sample = sig.num_samples()-1;
-
-      window_frame(frames[i], sig, scale, first_sample, last_sample, window_function);
-      (*pm_indices)[i] = centre_sample - first_sample;
-
+	  current_pm = pm.t(j);
+	  centre_sample = (int)rint( current_pm*(float)sample_rate );
+	  first_pos = prev_pm - (period * (window_factor-1.0));
+	  first_sample = (int)rint( first_pos*(float)sample_rate );
+	  last_sample = sig.num_samples()-1;
+	  window_frame(frames[i], sig, scale, first_sample,
+		       last_sample, window_function);
+	  (*pm_indices)[i] = centre_sample - first_sample;
+	  
 #if defined(EST_DEBUGGING)
-      cerr << "changed: " << i << " " << pm_indices->n() << endl; 
+	  cerr << "changed: " << i << " " << pm_indices->n() << endl; 
 #endif
-
-      ++i;
+	  
+	  ++i;
+	}
     }
 }
 
@@ -538,7 +552,7 @@ static EST_Track* us_pitch_period_energy_contour( const EST_WaveVector &pp,
     // RMSE for EST_Wave window
     int j;
     for( contour->a_no_check(i,0) = 0.0, j=0; j<frame_length; ++j )
-      contour->a_no_check( i, 0 ) += pow( frame.a_no_check( j ), 2 );
+      contour->a_no_check( i, 0 ) += pow( float(frame.a_no_check( j )), float(2.0) );
 
     contour->a_no_check(i,0) = sqrt( contour->a_no_check(i,0) / (float)j ); 
     contour->t(i) = pm.t(i);

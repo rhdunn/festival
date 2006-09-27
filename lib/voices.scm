@@ -275,7 +275,7 @@ voice.describe."
    Search down multisyn voice-path to locate multisyn voices."
   (let ((dirs voice-path-multisyn)
 	(dir nil)
-	languages lanuguage
+	languages language
 	voices voicedir voice voice-list
 	)
     (while dirs
@@ -328,10 +328,10 @@ the default voice. [see Site initialization]")
     cmu_us_jmk_arctic_hts
     cmu_us_slt_arctic_hts
     cmu_us_awb_arctic_hts
-    cstr_rpx_jon_multisyn       ; restricted license (lexicon)
-    cstr_rpx_nina_multisyn       ; restricted license (lexicon)
-    cstr_edi_awb_arctic_multisyn ; restricted license (lexicon)
-    cstr_us_awb_arctic_multisyn
+;    cstr_rpx_nina_multisyn       ; restricted license (lexicon)
+;    cstr_rpx_jon_multisyn       ; restricted license (lexicon)
+;    cstr_edi_awb_arctic_multisyn ; restricted license (lexicon)
+;    cstr_us_awb_arctic_multisyn
     ked_diphone
     don_diphone
     rab_diphone

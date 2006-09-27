@@ -39,7 +39,7 @@
 /*   distance between two vectors).                                      */
 /*                                                                       */
 /*=======================================================================*/
-#include <iostream.h>
+#include <iostream>
 #include "festival.h"
 
 #define LEFT_PHONE(x) (car(x))

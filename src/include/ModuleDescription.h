@@ -34,8 +34,11 @@
 #ifndef __MODULEDESCRIPTION_H__
 #define __MODULEDESCRIPTION_H__
 
-#include <stdio.h>
-#include <iostream.h>
+#include <cstdio>
+#include <iostream>
+
+using namespace std;
+
 #include "EST_String.h"
 
 /** Machine readable descriptions of modules. Useful for help messages
@@ -44,7 +47,7 @@
   * This is a struct rather than a class so that it can be initialised
   * in the source of the module. 
   * @author Richard Caley <rjc@cstr,ed,ac,uk>
-  * @version $Id: ModuleDescription.h,v 1.2 2001/04/04 13:12:35 awb Exp $
+  * @version $Id: ModuleDescription.h,v 1.3 2004/09/29 08:56:56 robert Exp $
   */
 
 struct ModuleDescription {

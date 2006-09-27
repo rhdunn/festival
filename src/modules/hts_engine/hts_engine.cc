@@ -45,10 +45,10 @@
 /*  ---------------------------------------------------------------  */
 
 /*  Standard C Libraries  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 #include "festival.h"
 
 #include "misc.h"
@@ -362,6 +362,13 @@ LISP HTS_Synthesize_Utt(LISP utt)
     labfp = do_fopen(get_param_str("-labelfile",hts_output_params,
 				 "utt.feats"), "r");
 
+    gp.RHO      = get_param_float("-r",hts_engine_params,0.0);
+    gp.ALPHA    = get_param_float("-a",hts_engine_params,0.42);
+    gp.F0_STD = get_param_float("-fs",hts_engine_params,1.0);
+    gp.F0_MEAN = get_param_float("-fm",hts_engine_params,0.0);
+    gp.UV       = get_param_float("-u",hts_engine_params,0.5);
+    gp.LENGTH   = (int)get_param_float("-l",hts_engine_params,0.0);
+
     /* do what needs to be done */
     LoadTreesFile(&ts, DUR);
     LoadTreesFile(&ts, LF0);
@@ -387,11 +394,23 @@ LISP HTS_Synthesize_Utt(LISP utt)
     }
    
     /* generate speech */
-    HTS_Process(labfp, rawfp, lf0fp, mcepfp, 
-		&mceppst, &lf0pst, &gp, &ms, &ts, &vs);
+    if (u->relation("Segment")->first())  /* only if there segments */
+        HTS_Process(labfp, rawfp, lf0fp, mcepfp, 
+                    &mceppst, &lf0pst, &gp, &ms, &ts, &vs);
 
     /* Load back in the waveform */
     EST_Wave *w = new EST_Wave;
+
+    fclose(ts.fp[DUR]);
+    fclose(ts.fp[LF0]);
+    fclose(ts.fp[MCP]);
+    fclose(ms.fp[DUR]);
+    fclose(ms.fp[LF0]);
+    fclose(ms.fp[MCP]);
+    fclose(rawfp);
+    fclose(lf0fp);
+    fclose(mcepfp);
+    fclose(labfp);
 
     wfree(vs.c);
     wfree(lf0pst.dw.fn);
@@ -401,15 +420,18 @@ LISP HTS_Synthesize_Utt(LISP utt)
     FreeTrees(&ts, MCP);
     DeleteModelSet(&ms);
 
-    w->load_file(get_param_str("-or",hts_output_params,"tmp.raw"),
-		 "raw", 16000,
-		 "short", str_to_bo("native"), 1);
+    if (u->relation("Segment")->first())  /* only if there segments */
+        w->load_file(get_param_str("-or",hts_output_params,"tmp.raw"),
+                     "raw", 16000,
+                     "short", str_to_bo("native"), 1);
 
     item = u->create_relation("Wave")->append();
     item->set_val("wave",est_val(w));
 
     return utt;
 }
+
+LISP mlsa_resynthesis(LISP ltrack);
 
 void festival_hts_engine_init(void)
 {
@@ -418,6 +440,9 @@ void festival_hts_engine_init(void)
     festival_def_utt_module("HTS_Synthesize",HTS_Synthesize_Utt,
     "(HTS_Synthesis UTT)\n\
   Synthesize a waveform using the HTS Engine and the current models");
+    init_subr_1("mlsa_resynthesis",mlsa_resynthesis,
+                "(mlsa_resynthesis TRACK)\n\
+  Return a WAVE synthesized from the F0/MCEP TRACK.");
 }
 
 /* -------------------- End of "hts_engine.c" -------------------- */

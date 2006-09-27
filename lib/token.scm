@@ -343,6 +343,9 @@ rules are not used unless explicitly called. [see Token to word rules]"
     (tok_string_as_letters (string-before name "&"))
     (list "and")
     (tok_string_as_letters (string-after name "&"))))
+  ((and (string-equal name "Ms")
+        (string-matches (item.feat token "n.name") "[A-Z][^A-Z]*"))
+   (list "mizz"))
   ((or (string-matches name "[A-Z][A-Z]+s")
        (string-matches name "[BCDEFGHJKLMNOPQRSTVWXYZ]+s"))
    (append

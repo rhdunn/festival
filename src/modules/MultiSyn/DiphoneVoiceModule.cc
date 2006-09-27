@@ -54,7 +54,7 @@
 #include "siod.h"
 #include "siod_est.h"
 #include "safety.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "EST_Val.h"
 
@@ -66,8 +66,34 @@ void parse_diphone_times(EST_Relation &diphone_stream,
 SIOD_REGISTER_CLASS(du_voicemodule,DiphoneVoiceModule)
 VAL_REGISTER_CLASS(du_voicemodule,DiphoneVoiceModule)
 
-VAL_REGISTER_CLASS(diphonevoicemoduleptr,DiphoneVoiceModulePtr)
+VAL_REGISTER_CLASS(diphonecandidate,DiphoneCandidate)
 
+// defined in a single place to avoid inconsistency.
+// Given a phone segment item, return the standard cut point
+// time, calculated in the standard way.
+float getJoinTime( const EST_Item *seg )
+{
+  float midt=0.0;
+
+  // hack to avoid overhead of string creation and deletion
+  // (EST feature access should really be changed to take 
+  // const char* instead of const EST_String& )
+  static const EST_String cl_end_str( "cl_end" );
+  static const EST_String dipth_str( "dipth" );
+  static const EST_String start_str( "start" );
+
+  // work out boundary for diphone join
+  if( seg->f_present(cl_end_str) ) // join at cl_end point for stops
+    midt = seg->features().val("cl_end").Float();
+  else if( seg->f_present(dipth_str) ) // join at 25% through a diphthong
+    midt = 0.75*seg->F(start_str) 
+      + 0.25*seg->features().val("end").Float();
+  else
+    midt = ( seg->F(start_str)
+	     + seg->features().val("end").Float() ) / 2.0;
+
+  return midt;
+}
 
 DiphoneVoiceModule::DiphoneVoiceModule( const EST_StrList& basenames,
 					const EST_String& uttDir,
@@ -90,6 +116,7 @@ DiphoneVoiceModule::DiphoneVoiceModule( const EST_StrList& basenames,
     wave_dir( wavDir  ),
     wave_ext( wavExt  ),
     wav_srate( sr ),
+    tcdatahash ( 0 ),
     utt_dbase( 0 ),
     catalogue( 0 )
 {
@@ -98,30 +125,65 @@ DiphoneVoiceModule::DiphoneVoiceModule( const EST_StrList& basenames,
 
 void DiphoneVoiceModule::addCoefficients( EST_Relation *segs, const EST_Track& coefs )
 {
-  EST_FVector *f;
+  float startt, midt, endt;
+  EST_FVector *startf, *midf, *endf;
+  const int num_coefs = coefs.num_channels();
+  
+  // hack to avoid overhead of string creation and deletion
+  // (EST feature access should really be changed to take 
+  // const char* instead of const EST_String& )
+  static const EST_String startcoef_str("startcoef");
+  static const EST_String midcoef_str("midcoef");
+  static const EST_String endcoef_str("endcoef");
+  static const EST_String start_str("start");
 
-  for( EST_Item *seg=segs->head(); seg!=0; seg=seg->next() ){
+  EST_Item *seg=segs->head();
+  startt = seg->F(start_str);
+  
+  startf = new EST_FVector(num_coefs);
+  CHECK_PTR(startf);
+  coefs.copy_frame_out(coefs.index(startt), *startf); //this one not shared
+ 
+  for( ; seg!=0; seg=seg->next() ){
+    
+    // work out boundary for diphone join
+    midt = getJoinTime( seg );
+    
+    // copy frames out and set as features
+    seg->features().set_val( startcoef_str, est_val(startf) );
 
-    float midt;
-    if (seg->f_present("cl_end")) // join at cl_end point for stops
-      midt = seg->F("cl_end");
-    else if (seg->f_present("dipth")) // join at 25% through a diphthong
-      midt =  0.75*seg->F("start") + 0.25*seg->F("end");
-    else
-      midt = (seg->F("start")+seg->F("end"))/2;
+    midf = new EST_FVector(num_coefs);
+    CHECK_PTR(midf);
+    coefs.copy_frame_out(coefs.index(midt), *midf);    
+    seg->features().set_val( midcoef_str, est_val(midf) );
     
-    f = new EST_FVector;
-    CHECK_PTR(f);
-    coefs.copy_frame_out(coefs.index(midt), *f);    
+    endt = seg->features().val("end").Float();
+    endf = new EST_FVector(num_coefs);
+    CHECK_PTR(endf);
+    coefs.copy_frame_out(coefs.index(endt), *endf);    
+    seg->features().set_val( endcoef_str, est_val(endf) );
     
-    seg->set_val( "midcoef", est_val(f) );
+    startf = endf; // phones share frame at phone boundary (reference counted in EST_Val)
   }
 }
 
-void DiphoneVoiceModule::initialise()
+void DiphoneVoiceModule::flatPack( EST_Relation *segs,
+				   const EST_TargetCost *tc ) const
+{
+
+  const EST_FlatTargetCost *ftc = (EST_FlatTargetCost *)tc;
+
+  for( EST_Item *seg=segs->head(); seg->next() !=0; seg=seg->next() )
+    tcdatahash->add_item(seg, ftc->flatpack(seg));
+
+}
+
+void DiphoneVoiceModule::initialise( const EST_TargetCost *tc, bool ignore_bad_tag )
 {
   EST_Utterance *u=0;
   EST_Relation *segs=0;
+
+  tcdatahash = new TCDataHash(500);
 
   utt_dbase = new EST_TList<EST_Utterance *>;
   CHECK_PTR(utt_dbase);
@@ -141,24 +203,6 @@ void DiphoneVoiceModule::initialise()
     
     segs = u->relation( "Segment" );
     
-    // temporary hack in case utterance files don't
-    // have pauses marked at start and end
-    //       EST_Item *endItem = segs->last();
-    //       if( endItem->S( "name" ) != "pau" ){
-    // 	EST_Item *item = segs->append();
-    // 	item->set( "name", "pau" );
-    // 	item->set_function( "start", "standard+unisyn_start" );
-    // 	item->set( "end", endItem->F("end")+0.1 );
-    //       }
-    
-    //       EST_Item *firstItem = segs->first();
-    //       if( firstItem->S( "name" ) != "pau" ){
-    // 	EST_Item *item = segs->prepend();
-    // 	item->set( "name", "pau" );
-    // 	item->set( "end", firstItem->F("start") );
-    // 	item->set( "start", firstItem->F("start")-0.1 );
-    //       }
-    
     // add join cost coefficients (at middle of phones)
     EST_Track coefs;
     if( (coefs.load((coef_dir+fileList(it)+coef_ext))) != read_ok )
@@ -166,8 +210,20 @@ void DiphoneVoiceModule::initialise()
 		 (const char*) (coef_dir+fileList(it)+coef_ext) );      
     
     addCoefficients( segs, coefs );
-    
-    addToCatalogue( u, &numIgnoredPhones );
+
+    if (tc->is_flatpack())
+      {
+	flatPack(segs,tc);
+	u->remove_relation("Token");
+	u->remove_relation("Word");
+	u->remove_relation("Phrase");
+	u->remove_relation("Syllable");
+	u->remove_relation("SylStructure");
+	u->remove_relation("IntEvent");
+	u->remove_relation("Intonation");
+      }    
+
+    addToCatalogue( u, &numIgnoredPhones, ignore_bad_tag );
     utt_dbase->append( u );
   }
   
@@ -184,22 +240,28 @@ DiphoneVoiceModule::~DiphoneVoiceModule()
   }
   
   delete catalogue;
+
+  if(tcdatahash)
+    delete tcdatahash;
+
 }
 
-void DiphoneVoiceModule::addToCatalogue( const EST_Utterance *utt, int *num_ignored )
+void DiphoneVoiceModule::addToCatalogue( const EST_Utterance *utt, int *num_ignored, bool ignore_bad )
 {
   EST_Item *item;
   ItemList *diphoneList;
-  EST_String ph1, ph2;
+  const EST_String *ph1, *ph2;
   int found=0;
   
+  static const EST_String bad_str( "bad" );
+
   item = (utt->relation( "Segment" ))->tail();
   if( item!=0 ){
-    ph2 = item->S("name");
+    ph2 = &(item->features().val("name").String());
     
     while( (item=item->prev()) != 0 ){
 
-      if( item->f_present( "bad" ) ){
+      if( item->f_present( bad_str ) && ignore_bad == true ){
 
 	(*num_ignored)++;
 
@@ -210,21 +272,21 @@ void DiphoneVoiceModule::addToCatalogue( const EST_Utterance *utt, int *num_igno
 // 		     item->S("bad").str() );
 	
 	if( (item=item->prev()) != 0 ){ //skip 2 diphones with this bad phone
-	  ph2 = item->S("name");
+	  ph2 = &(item->features().val("name").String());
 	  continue;
 	}
 	else 
 	  break; //already at start of list, so finish up
       }
       
-      ph1 = item->S("name");
+      ph1 = &(item->features().val("name").String());
       
-      diphoneList = catalogue->val(EST_String::cat(ph1,"_",ph2), found);
+      diphoneList = catalogue->val(EST_String::cat(*ph1,"_",*ph2), found);
       
       if( !found ){
 	diphoneList = new ItemList;
 	CHECK_PTR(diphoneList);
-	catalogue->add_item(EST_String::cat(ph1,"_",ph2), diphoneList, 1); // no_search=1
+	catalogue->add_item(EST_String::cat(*ph1,"_",*ph2), diphoneList, 1); // no_search=1
       }
      
       diphoneList->append( item );
@@ -235,37 +297,49 @@ void DiphoneVoiceModule::addToCatalogue( const EST_Utterance *utt, int *num_igno
 }
 
 void DiphoneVoiceModule::getDiphone( const EST_Item *phone1, 
-				     EST_Track* coef, EST_Wave* sig, int *midframe ) const
+				     EST_Track* coef, EST_Wave* sig, int *midframe,
+				     bool extendLeft, bool extendRight ) const
 {
   EST_Item *phone2 = phone1->next();
 	
   // load the relevant parts
-  EST_String fname = phone1->relation()->utt()->f.S("fileid");
+  const EST_String &fname = phone1->relation()->utt()->f.val("fileid").String();
+
+  static const EST_String start_str( "start" );
 
   float startt,midt,endt;
+  
+  if( extendLeft==true )
+    startt = phone1->F(start_str);
+  else
+    startt = getJoinTime( phone1 );
+  
+  midt = phone1->features().val("end").Float();
 
-  startt = phone1->f_present("cl_end") ? phone1->F("cl_end")
-    : ( phone1->F("end")+phone1->F("start") )/2;
-  midt = phone1->F("end");
-  endt = phone2->f_present("cl_end") ? phone2->F("cl_end")
-    : ( phone2->F("end")+phone2->F("start") )/2;
-
+  if( extendRight==true )
+    endt = phone2->features().val("end").Float();
+  else
+    endt = getJoinTime( phone2 );
+  
   // get pitchmarks for pitch synchronous synthesis
   EST_Track *tempcoef = new EST_Track;
   CHECK_PTR(tempcoef);
   if( (tempcoef->load((pm_dir+fname+pm_ext))) != read_ok )
     EST_error( "Couldn't load data file %s", 
 	       (const char*) (pm_dir+fname+pm_ext) );
-
+  
   // following few lines effectively moves segment boundaries to
   // line up with pitch periods. 
   int copy_start = tempcoef->index( startt );
   int copy_end   = tempcoef->index( endt );
-  copy_end -= 1; //so that adjacent units don't start and end with same frame
-  int copy_len   = copy_end - copy_start + 1;
+  //copy_end -= 1; //so that adjacent units don't start and end with same frame
+
+  int copy_len   = copy_end - copy_start;
+  //int copy_len   = copy_end - copy_start + 1;
+
   startt = tempcoef->t( copy_start );
   endt = tempcoef->t( copy_end );
-
+  
   if( copy_len == 0 ){
     EST_warning( "%s(%f->%f): %s_%s diphone length means 1 pitchmark will be duplicated",
 		 fname.str(), startt, endt, phone1->S("name").str(), phone2->S("name").str() );
@@ -275,11 +349,11 @@ void DiphoneVoiceModule::getDiphone( const EST_Item *phone1,
     EST_error( "%s(%f->%f): %s_%s diphone length renders %d pitchmark",
 	       fname.str(), startt, endt, phone1->S("name").str(), phone2->S("name").str(), copy_len );
   }
-
+  
   tempcoef->copy_sub_track( *coef, copy_start, copy_len );
-
+  
   *midframe = coef->index( midt );
-
+  
   // adjust timing, which Festival synthesis code makes assumptions about
   // SPECIFICALLY, the unisyn module wants all units to start from
   // the first value above 0.0 (as the first pitch mark)
@@ -293,12 +367,15 @@ void DiphoneVoiceModule::getDiphone( const EST_Item *phone1,
 
   //preferably end waveform at following pitchmark (follows convention in UniSyn module)
   int end_sample;
-  if( copy_end+1 < tempcoef->num_frames() )
-    end_sample = (int) rint( tempcoef->t(copy_end+1) * (float) wav_srate );
+  if( copy_end < tempcoef->num_frames() )
+    end_sample = (int) rint( tempcoef->t(copy_end) * (float) wav_srate );
+  //if( copy_end+1 < tempcoef->num_frames() )
+  //  end_sample = (int) rint( tempcoef->t(copy_end+1) * (float) wav_srate );
   else{
     // estimate from previous pitch mark shift
     int pp_centre_sample = (int) rint( endt * (float) wav_srate );
-    int pp_first_sample  = (int) rint( tempcoef->t(copy_end-1) * (float) wav_srate );
+    int pp_first_sample  = (int) rint( tempcoef->t(copy_end) * (float) wav_srate );
+    //int pp_first_sample  = (int) rint( tempcoef->t(copy_end-1) * (float) wav_srate );
     end_sample           = (2*pp_centre_sample)-pp_first_sample;    
   }
 
@@ -313,63 +390,135 @@ void DiphoneVoiceModule::getDiphone( const EST_Item *phone1,
   delete tempcoef;
 }
 
-int DiphoneVoiceModule::getCandidateList( const EST_Item& target, 
-					  const EST_TargetCost& tc,
-					  EST_VTCandidate **head,
-					  EST_VTCandidate **tail ) const
-{ 
-  int nfound=0;
-  EST_VTCandidate *c = 0;
-  EST_VTCandidate *nextc = 0;
-  ItemList::Entries it;
+
+inline EST_VTCandidate* makeCandidate( const EST_Item *target_ph1,
+				       const EST_Item *cand_ph1,
+				       const EST_TargetCost *tc,
+				       const TCData *tcd,
+				       const TCDataHash *tcdatahash,
+				       float tc_weight,
+				       const DiphoneVoiceModule *dvm_p )
+{
+  // hack to avoid overhead of string creation and deletion
+  // (EST feature access should really be changed to take 
+  // const char* instead of const EST_String& )
+  static const EST_String extendLeft_str("extendLeft");
+  static const EST_String extendRight_str("extendRight");
+  static const EST_String jccid_str("jccid");
+
+  EST_VTCandidate *c = new EST_VTCandidate;
+  CHECK_PTR(c);
   
-  int i=0,found=0;
-  const ItemList *candidateItemList = catalogue->val( target.S("name"), found );
-  if( found!=0 ){
-    // iterate along ItemList and build a corresponding candidate list
-    // (note the order will be reversed, because we use c->next)
-    it.begin( *candidateItemList );
+  EST_Item *cand_ph2 = cand_ph1->next();
 
-    *tail = c = new EST_VTCandidate; //keep hold of first one created
-    CHECK_PTR(tail);
+  // set up all the members we can here
+  c->s = const_cast<EST_Item*>(cand_ph1);
+  
+  EST_FVector *left, *right;
+  if( target_ph1->f_present( extendLeft_str ) )
+    left = fvector( cand_ph1->features().val( "startcoef" ) );
+  else
+    left = fvector( cand_ph1->features().val( "midcoef" ) );
 
-    // set up first candidate created (tail one)
-    c->s = (*it);
-    //    c->name = i; //c->name is an EST_Val;
+  if( target_ph1->next()->f_present( extendRight_str ) )
+    right = fvector( cand_ph2->features().val( "endcoef" ) );
+  else
+    right = fvector( cand_ph2->features().val( "midcoef" ) );
+  
+  // an abuse of the "name" EST_Val member to store data we want instead
+  // of what is intended to go there
+  // (will become unnecessary with a more general candidate class)
+  DiphoneCandidate *cand = new DiphoneCandidate( cand_ph1, dvm_p, left, right );
+  CHECK_PTR(cand);
+  c->name = est_val( cand ); //to get synthesis parameters (deleted by EST_Val c->name) 
 
-    // probably an abuse (will become unnecessary with a more general candidate class)
-    DiphoneVoiceModulePtr *p1 = new DiphoneVoiceModulePtr( this ); //deleted by EST_Val c->name 
-    CHECK_PTR(p1);
-    c->name = est_val( p1 ); // used later to get synthesis parameters
+  if( cand_ph1->f_present( jccid_str ) ){
+    cand->ph1_jccid = cand_ph1->features().val( "jccid" ).Int();
+    cand->ph1_jccindex = cand_ph1->features().val( "jccindex" ).Int();
+  }
 
-    c->score = tc( item(target.f("ph1")), (*it) );
+  if( cand_ph2->f_present( jccid_str ) ){
+    cand->ph1_jccid = cand_ph2->features().val( "jccid" ).Int();
+    cand->ph1_jccindex = cand_ph2->features().val( "jccindex" ).Int();
+  }
+   
+  if(tc->is_flatpack())
+    c->score = tc_weight*
+      ((const EST_FlatTargetCost *)tc)
+      ->operator()( tcd, 
+		    tcdatahash->val( const_cast<EST_Item*>(cand_ph1) ) );
+  else
+    c->score = tc_weight*tc->operator()( target_ph1, cand_ph1 );
+
+  return c;
+}
+
+inline void itemListToCandidateList( ItemList::Entries &it,
+				     EST_VTCandidate **head,
+				     EST_VTCandidate **tail,
+				     const EST_Item *target_ph1,
+				     const EST_TargetCost *tc,
+				     const TCDataHash *tcdh,
+				     const TCDataHash *tcdatahash,
+				     float tc_weight,
+				     int count,
+				     const DiphoneVoiceModule *dvm_p )
+
+{
+  int i=0;
+  
+  if( count > 0 ){
+    TCData *tcd = tcdh->val( const_cast<EST_Item*>(target_ph1) );
+    EST_VTCandidate *nextc = 0;
+    
+    // make last one first
+    EST_VTCandidate *c = makeCandidate( target_ph1, (*it), tc, tcd, tcdatahash, tc_weight, dvm_p );
     c->next = nextc;
+    *tail = c;
+    
+    // then iterate back prepending to linked list
+    // (order reversed because using c->next)
     nextc = c;
-
-    //continue iterating along list
-    it++; i++; //first take into account that one has already been added
-    for( ; it; it++, i++ ){
-      c = new EST_VTCandidate;
-      CHECK_PTR(c);
-      c->s = (*it);
-      //      c->name = i; //c->name is an EST_Val;
-      
-      // probably an abuse (will become unnecessary with a more general candidate class)
-      DiphoneVoiceModulePtr *p2 = new DiphoneVoiceModulePtr( this ); //deleted by EST_Val c->name 
-      c->name = est_val( p2 ); // used later to get synthesis parameters
-      
-      c->score = tc( item(target.f("ph1")), (*it) );
+    it++; i++;
+    for( ; (it && i<count); it++, i++ ){
+      c = makeCandidate( target_ph1, (*it), tc, tcd, tcdatahash, tc_weight, dvm_p );
       c->next = nextc;
       nextc = c;
     }
-    
-    *head = c; // keep hold of last one set up
 
-    nfound = i;
+    *head = c; // keep hold of last one set up
   }
-  
+
+  return;
+}
+
+int DiphoneVoiceModule::getCandidateList( const EST_Item& target, 
+					  const EST_TargetCost* tc,
+					  const TCDataHash *tcdh,
+					  float tc_weight,
+					  EST_VTCandidate **head,
+					  EST_VTCandidate **tail ) const
+{ 
+  int nfound = 0;
+  const EST_Item *target_ph1 = item(target.f("ph1"));
+
+  int found = 0;
+  const ItemList *candidateItemList = catalogue->val( target.S("name"), found );
+  if( found != 0 ){
+    nfound = candidateItemList->length();
+    
+    ItemList::Entries it = ItemList::Entries(*candidateItemList);
+
+    itemListToCandidateList( it,
+			     head, tail, 
+			     target_ph1, 
+			     tc, tcdh, tcdatahash, tc_weight,
+			     nfound, this );
+  }
+
   return nfound;
 }
+
 
 int DiphoneVoiceModule::getPhoneList( const EST_String &phone, ItemList &list )
 {
@@ -389,8 +538,6 @@ int DiphoneVoiceModule::getPhoneList( const EST_String &phone, ItemList &list )
 
   return n;
 }
- 
-
 
 bool DiphoneVoiceModule::getUtterance( EST_Utterance** utt, int n ) const
 {
@@ -423,6 +570,13 @@ bool DiphoneVoiceModule::getUtterance( EST_Utterance **utt,
 
   return false;
 } 
+
+void DiphoneVoiceModule::getDiphoneCoverageStats(EST_DiphoneCoverage *dc) const
+{
+  for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=next(it) )
+    dc->add_stats((*utt_dbase)(it));
+}
+
 
 
 unsigned int DiphoneVoiceModule::numUnitTypes() const

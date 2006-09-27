@@ -40,10 +40,10 @@
 /*                                    2003/06/11 by Heiga Zen        */
 /*  ---------------------------------------------------------------  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 #include "festival.h"
 #include "misc.h"
 

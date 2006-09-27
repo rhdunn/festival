@@ -44,14 +44,19 @@
 /*                                                                       */
 /*************************************************************************/
 
-#include <iostream.h>
+#include <iostream>
 #include "festival.h"
 #include "ling_class/EST_Item.h"
 #include "EST_TargetCost.h"
+#include "siod.h"
 
-static const EST_String simple_pos(const EST_String s);
+static const EST_String simple_pos(const EST_String &s);
+static const EST_Utterance *tc_get_utt(const EST_Item *seg);
 static const EST_Item* tc_get_syl(const EST_Item *seg);
 static const EST_Item* tc_get_word(const EST_Item *seg);
+static EST_String ff_tobi_accent(const EST_Item *s);
+static EST_String ff_tobi_endtone(const EST_Item *s);
+static bool threshold_equal(float a, float b, float threshold);
 
 /*
  *  BASE CLASS:  EST_TargetCost
@@ -60,14 +65,30 @@ static const EST_Item* tc_get_word(const EST_Item *seg);
 
 /* Individual cost functions */
 
-float EST_TargetCost::stress_cost() const
-{
-  int cand_stress;
-  int targ_stress;
-  const EST_Item *tsyl, *csyl;
 
-  if( ph_is_vowel(targ->S("name")) && 
-      !ph_is_silence(targ->S("name")) )
+// This is really designed only for apml!
+float EST_TargetCost::apml_accent_cost() const
+{
+  // Check if target is an apml utterance. If not return 0 as we don't
+  // trust its accent specification.
+
+  if( !tc_get_utt(targ)->relation_present("SemStructure"))
+      return 0.0;
+
+  // Check if candidate is an apml utterance. If not return 1
+  // (as we want to use apml if available)
+
+  if( !tc_get_utt(cand)->relation_present("SemStructure"))
+     return 1.0;
+
+  // As they are both apml match accents.
+
+  const EST_Item *tsyl, *csyl;
+  EST_String targ_accent, cand_accent, targ_boundary, cand_boundary;
+
+
+  if( ph_is_vowel(targ->features().val("name").String()) && 
+      !ph_is_silence(targ->features().val("name").String()) )
     {
       tsyl = tc_get_syl(targ);
       csyl = tc_get_syl(cand);
@@ -75,17 +96,74 @@ float EST_TargetCost::stress_cost() const
       // Can't assume candidate and target identities are the same
       // (because of backoff to a silence for example)
       if( csyl == 0 )
+	return 1.0;
+
+      targ_accent = ff_tobi_accent(tsyl);
+      cand_accent = ff_tobi_accent(csyl);
+      targ_boundary = ff_tobi_endtone(tsyl);
+      cand_boundary = ff_tobi_endtone(csyl);
+
+      if( (cand_accent != targ_accent) || (cand_boundary != targ_boundary) )
+	return 1.0;
+    }
+
+  if( ph_is_vowel(targ->next()->features().val("name").String()) && 
+      !ph_is_silence(targ->next()->features().val("name").String()) )
+    {
+      tsyl = tc_get_syl(targ->next());
+      csyl = tc_get_syl(cand->next());
+      
+      // Can't assume candidate and target identities are the same
+      // (because of backoff to a silence for example)
+      if( csyl == 0 )
+	return 1.0;
+
+      targ_accent = ff_tobi_accent(tsyl);
+      cand_accent = ff_tobi_accent(csyl);
+      targ_boundary = ff_tobi_endtone(tsyl);
+      cand_boundary = ff_tobi_endtone(csyl);
+
+      if( (cand_accent != targ_accent) || (cand_boundary != targ_boundary) )
+	return 1.0;
+    }
+
+  return 0.0;
+
+}
+
+
+float EST_TargetCost::stress_cost() const
+{
+  int cand_stress;
+  int targ_stress;
+  const EST_Item *tsyl, *csyl;
+
+  if( ph_is_vowel(targ->features().val("name").String()) && 
+      !ph_is_silence(targ->features().val("name").String()) )
+    {
+      tsyl = tc_get_syl(targ);
+      csyl = tc_get_syl(cand);
+      
+      // Can't assume candidate and target identities are the same
+      // (because of backoff to a silence for example)
+      if( csyl == 0 )
+	{
+	  //cout << "SC: 1 returning 1\n";
 	return 1;
+	}
 
       targ_stress = (tsyl->I("stress") > 0) ? 1 : 0;
       cand_stress = (csyl->I("stress") > 0) ? 1 : 0;
 
       if( cand_stress != targ_stress)
+	{
+	  //cout << "SC: 2 returning 1\n";
 	return 1;
+	}
     }
   
-  if( ph_is_vowel(targ->next()->S("name")) &&
-      !ph_is_silence(targ->next()->S("name")) )
+  if( ph_is_vowel(targ->next()->features().val("name").String()) &&
+      !ph_is_silence(targ->next()->features().val("name").String()) )
     {
       tsyl = tc_get_syl(targ->next());
       csyl = tc_get_syl(cand->next());
@@ -93,14 +171,21 @@ float EST_TargetCost::stress_cost() const
       // Can't assume candidate and target identities are the same
       // (because of backoff to a silence for example)
       if( csyl == 0 )
+	{
+	  //cout << "SC: 3 returning 1\n";
 	return 1;
+	}
 
       targ_stress = (tsyl->I("stress") > 0) ? 1 : 0;
       cand_stress = (csyl->I("stress") > 0) ? 1 : 0;
       if( cand_stress != targ_stress)
+	{
+	  //cout << "SC: 4 returning 1\n";
  	return 1;
+	}
     }
   
+  //cout << "SC: 5 returning 0\n";
   return 0;
 }
 
@@ -178,7 +263,39 @@ float EST_TargetCost::position_in_phrase_cost() const
   if (!targ_word || !cand_word)
     return 1;
 
-  return (targ_word->S("pbreak") == cand_word->S("pbreak")) ? 0 : 1;
+  return (targ_word->features().val("pbreak").String() == cand_word->features().val("pbreak").String()) ? 0 : 1;
+}
+
+float EST_TargetCost::punctuation_cost() const
+{
+
+  const EST_Item *targ_word = tc_get_word(targ);
+  const EST_Item *cand_word = tc_get_word(cand);
+  const EST_Item *next_targ_word = tc_get_word(targ->next());
+  const EST_Item *next_cand_word = tc_get_word(cand->next());
+
+  float score = 0.0;
+
+  if ( (targ_word && !cand_word) || (!targ_word && cand_word) )
+    score += 0.5;
+  else
+    if (targ_word && cand_word)
+      if ( parent(targ_word,"Token")->features().val("punc","NONE").String()
+	   != parent(cand_word,"Token")->features().val("punc","NONE").String() )
+	score += 0.5;
+  
+
+  if ( (next_targ_word && !next_cand_word) || (!next_targ_word && next_cand_word) )
+    score += 0.5;
+  else
+    if(next_targ_word && next_cand_word)
+      if ( parent(next_targ_word,"Token")->features().val("punc","NONE").String()
+	   != parent(next_cand_word,"Token")->features().val("punc","NONE").String() )
+	score += 0.5;
+  
+
+  return score;
+
 }
 
 
@@ -193,8 +310,8 @@ float EST_TargetCost::partofspeech_cost() const
   if(!targ_left_word || !cand_left_word)
     return 1;
 
-  const EST_String targ_left_pos  = simple_pos(targ_left_word->S("pos"));
-  const EST_String cand_left_pos  = simple_pos(cand_left_word->S("pos"));
+  const EST_String targ_left_pos( simple_pos(targ_left_word->features().val("pos").String()) );
+  const EST_String cand_left_pos( simple_pos(cand_left_word->features().val("pos").String()) );
 
   if( targ_left_pos != cand_left_pos )
     return 1;
@@ -208,8 +325,8 @@ float EST_TargetCost::partofspeech_cost() const
   if(!targ_right_word || !cand_right_word)
     return 1;
 
-  const EST_String targ_right_pos = simple_pos(targ_right_word->S("pos"));
-  const EST_String cand_right_pos = simple_pos(cand_right_word->S("pos"));
+  const EST_String targ_right_pos( simple_pos(targ_right_word->features().val("pos").String()) );
+  const EST_String cand_right_pos( simple_pos(cand_right_word->features().val("pos").String()) );
 
   if( targ_right_pos != cand_right_pos )
     return 1;
@@ -228,7 +345,7 @@ float EST_TargetCost::left_context_cost() const
   if ( !targ_context  || !cand_context)
     return 1;
 
-  return (targ_context->S("name") == cand_context->S("name")) ? 0 : 1;
+  return (targ_context->features().val("name").String() == cand_context->features().val("name").String()) ? 0 : 1;
 }
 
 float EST_TargetCost::right_context_cost() const
@@ -242,7 +359,7 @@ float EST_TargetCost::right_context_cost() const
   if ( !targ_context  || !cand_context)
     return 1;
   
-  return (targ_context->S("name") == cand_context->S("name")) ? 0 : 1;
+  return (targ_context->features().val("name").String() == cand_context->features().val("name").String()) ? 0 : 1;
 }
 
 float EST_TargetCost::bad_duration_cost() const
@@ -257,19 +374,29 @@ float EST_TargetCost::bad_duration_cost() const
   if( cand->next()->f_present(bad_dur_feat) 
       != targ->next()->f_present(bad_dur_feat) )
     return 1.0;
+  // If the segments next to these segments are bad, then these ones are probably wrong too!
+  if( cand->prev() && targ->prev() && ( cand->prev()->f_present(bad_dur_feat) 
+					!= targ->prev()->f_present(bad_dur_feat) ) )
+    return 1.0;
+  
+  if( cand->next()->next() && targ->next()->next() && ( cand->next()->next()->f_present(bad_dur_feat) 
+							!= targ->next()->next()->f_present(bad_dur_feat) ) )
+    return 1.0;
+
   
   return 0.0;
 }
 
-//////////////////////////////////////////////////////////////////////
-// (Should be fixed not to have hardcoded FVector indicies)
 float EST_TargetCost::bad_f0_cost() const
 {
+  // by default, the last element of join cost coef vector is
+  // the f0 (i.e. fv->a_no_check( fv->n()-1 ) )
+
   const EST_Item *cand_left = cand;
   const EST_Item *cand_right = cand_left->next();
 
-  EST_String left_phone(  cand_left->S("name")  );
-  EST_String right_phone( cand_right->S("name") );  
+  const EST_String &left_phone(  cand_left->features().val("name").String()  );
+  const EST_String &right_phone( cand_right->features().val("name").String() );  
 
   EST_FVector *fv = 0;
   float penalty = 0.0;
@@ -279,7 +406,7 @@ float EST_TargetCost::bad_f0_cost() const
       || ph_is_liquid( left_phone )
       || ph_is_nasal( left_phone ) ){
     fv = fvector( cand_left->f("midcoef") );
-    if( (*fv)[13] == -1.0 ) // means unvoiced
+    if( fv->a_no_check(fv->n()-1) == -1.0 ) // means unvoiced
       penalty += 0.5;
   }
   
@@ -288,7 +415,7 @@ float EST_TargetCost::bad_f0_cost() const
       || ph_is_liquid( right_phone )
       || ph_is_nasal( right_phone ) ){
     fv = fvector( cand_right->f("midcoef") );
-    if( (*fv)[13] == -1.0 ) // means unvoiced 
+    if( fv->a_no_check(fv->n()-1) == -1.0 ) // means unvoiced 
       penalty += 0.5;
   }
 
@@ -313,14 +440,195 @@ float EST_DefaultTargetCost::operator()(const EST_Item* targ, const EST_Item* ca
   score += add_weight(5.0)*position_in_syllable_cost();
   score += add_weight(5.0)*position_in_word_cost();
   score += add_weight(6.0)*partofspeech_cost();
-  score += add_weight(7.0)*position_in_phrase_cost();
+  score += add_weight(15.0)*position_in_phrase_cost();
   score += add_weight(4.0)*left_context_cost();
   score += add_weight(3.0)*right_context_cost();
-  score += add_weight(10.0)*bad_duration_cost();
-  score += add_weight(25.0)*bad_f0_cost();
+
+  score /= weight_sum;
+
+  // These are considered really bad, and will result in a score > 1.
+  score += 10.0*bad_duration_cost(); // see also join cost.
+  score += 10.0*bad_f0_cost();
+  score += 10.0*punctuation_cost();
+
+
+  return score ;
+}
+
+/*
+ *  DERIVED CLASS: EST_APMLTargetCost
+ *
+ *  This is CSTR's proposed default target cost. Nothing special, if you think you can
+ *  do better derive your own class.
+ */
+
+float EST_APMLTargetCost::operator()(const EST_Item* targ, const EST_Item* cand) const 
+{ 
+  set_targ_and_cand(targ,cand);
+  score = 0.0;
+  weight_sum = 0.0;
+
+  score += add_weight(10.0)*stress_cost();
+  score += add_weight(20.0)*apml_accent_cost(); // APML only!
+  score += add_weight(5.0)*position_in_syllable_cost();
+  score += add_weight(5.0)*position_in_word_cost();
+  score += add_weight(6.0)*partofspeech_cost();
+  score += add_weight(4.0)*position_in_phrase_cost();
+  score += add_weight(10.0)*punctuation_cost();
+  score += add_weight(4.0)*left_context_cost();
+  score += add_weight(3.0)*right_context_cost();
 
   return score / weight_sum;
 }
+
+/*
+ *  DERIVED CLASS: EST_SingingTargetCost
+ *
+ *  Mostly default stuff, but tries to match pitch and duration
+ *  specified on Tokens from the xxml
+ *  
+ */
+
+float EST_SingingTargetCost::pitch_cost() const
+{
+
+  const EST_Item *targ_word = tc_get_word(targ);
+  const EST_Item *cand_word = tc_get_word(cand);
+  const EST_Item *next_targ_word = tc_get_word(targ->next());
+  const EST_Item *next_cand_word = tc_get_word(cand->next());
+  const float threshold = 0.1;
+  float targ_pitch, cand_pitch;
+  LISP l_tmp;
+
+  float score = 0.0;
+
+  if ( (targ_word && !cand_word) || (!targ_word && cand_word) )
+    {
+      cout << "PITCH PENALTY WORD NON-WORD MISMATCH\n";		    
+      score += 0.5;
+    }
+  else
+    if (targ_word && cand_word)
+      {
+	
+	l_tmp = lisp_val(parent(targ_word,"Token")->f("freq",est_val(0)));
+
+	// This currently assumes one syllable words, need to process
+	// the list more for multiple syllable words, or move the info
+	// to the syllable.
+	if(CONSP(l_tmp))
+	  targ_pitch = get_c_float(car(l_tmp));
+	else
+	  targ_pitch = get_c_float(l_tmp);
+	cand_pitch = parent(cand_word,"Token")->F("freq",0.0);
+
+	if ( ! threshold_equal(targ_pitch,cand_pitch,threshold))
+	  {
+	    cout << "PP: " << targ_pitch << " " << cand_pitch << endl;
+	    score += 0.5;
+	  }
+      }
+
+  if ( (next_targ_word && !next_cand_word) || (!next_targ_word && next_cand_word) )
+    {
+      cout << "PITCH PENALTY NEXT WORD NON-WORD MISMATCH\n";		    
+      score += 0.5;
+    }
+  else
+    if(next_targ_word && next_cand_word)
+      {
+	l_tmp = lisp_val(parent(next_targ_word,"Token")->f("freq",est_val(0)));
+	if(CONSP(l_tmp))
+	  targ_pitch = get_c_float(car(l_tmp));
+	else
+	  targ_pitch = get_c_float(l_tmp);
+	cand_pitch = parent(next_cand_word,"Token")->F("freq",0.0);
+
+	if ( ! threshold_equal(targ_pitch,cand_pitch,threshold))
+	  {
+	    cout << "NP: "  << targ_pitch << " " << cand_pitch << endl;
+	    score += 0.5;
+	  }
+      }
+  
+  if (score == 0.0)
+    cout << "NO PITCH PENALTY\n";
+
+  return score;
+}
+
+float EST_SingingTargetCost::duration_cost() const
+{
+
+  const EST_Item *targ_word = tc_get_word(targ);
+  const EST_Item *cand_word = tc_get_word(cand);
+  const EST_Item *next_targ_word = tc_get_word(targ->next());
+  const EST_Item *next_cand_word = tc_get_word(cand->next());
+  float targ_dur, cand_dur;
+  LISP l_tmp;
+
+  float score = 0.0;
+
+  if ( (targ_word && !cand_word) || (!targ_word && cand_word) )
+    score += 0.5;
+  else
+    if (targ_word && cand_word)
+      {
+	l_tmp = lisp_val(parent(targ_word,"Token")->f("dur",est_val(0)));
+	if(CONSP(l_tmp))
+	  targ_dur = get_c_float(car(l_tmp));
+	else
+	  targ_dur = get_c_float(l_tmp);
+
+	cand_dur = parent(cand_word,"Token")->F("dur",0.0);
+
+	if ( targ_dur != cand_dur )
+	  score += 0.5;
+      }
+
+  if ( (next_targ_word && !next_cand_word) || (!next_targ_word && next_cand_word) )
+    score += 0.5;
+  else
+    if(next_targ_word && next_cand_word)
+      {
+	l_tmp = lisp_val(parent(next_targ_word,"Token")->f("dur",est_val(0)));
+	if(CONSP(l_tmp))
+	   targ_dur = get_c_float(car(l_tmp));
+	else
+	  targ_dur = get_c_float(l_tmp);
+	cand_dur = parent(next_cand_word,"Token")->F("dur",0.0);
+
+	if ( targ_dur != cand_dur )
+	  score += 0.5;
+      }
+  
+  return score;
+}
+
+
+
+float EST_SingingTargetCost::operator()(const EST_Item* targ, const EST_Item* cand) const 
+{ 
+  set_targ_and_cand(targ,cand);
+  score = 0.0;
+  weight_sum = 0.0;
+
+  score += add_weight(50.0)*pitch_cost();
+  score += add_weight(50.0)*duration_cost();
+  score += add_weight(5.0)*stress_cost();
+  score += add_weight(5.0)*position_in_syllable_cost();
+  score += add_weight(5.0)*position_in_word_cost();
+  score += add_weight(5.0)*partofspeech_cost();
+  score += add_weight(5.0)*position_in_phrase_cost();
+  score += add_weight(5.0)*punctuation_cost();
+  score += add_weight(4.0)*left_context_cost();
+  score += add_weight(3.0)*right_context_cost();
+  score += add_weight(2.0)*bad_duration_cost(); // see also join cost.
+
+  return score / weight_sum;
+}
+
+
 
 /*
  *  DERIVED CLASS: EST_SchemeTargetCost
@@ -357,7 +665,7 @@ float EST_SchemeTargetCost::operator()( const EST_Item* targ, const EST_Item* ca
  */
 
 
-static const EST_String simple_pos(const EST_String s)
+static const EST_String simple_pos(const EST_String &s)
 {
   if( s == "nn" || s == "nnp" || s == "nns" || s == "nnps" || s == "fw" || s == "sym" || s == "ls")
     return "n";
@@ -367,6 +675,11 @@ static const EST_String simple_pos(const EST_String s)
       s == "rp" || s == "rbr" || s == "rbs")
     return "other";
   return "func";
+ }
+ 
+static const EST_Utterance *tc_get_utt(const EST_Item *seg)
+{
+  return seg->relation()->utt();
 }
 
 static const EST_Item *tc_get_syl(const EST_Item *seg)
@@ -388,3 +701,41 @@ static const EST_Item *tc_get_word(const EST_Item *seg)
    else
      return 0;
  }
+
+
+/* adapted from base/ff.cc */
+static EST_String ff_tobi_accent(const EST_Item *s)
+{
+    // First tobi accent related to syllable
+    EST_Item *nn = as(s,"Intonation");
+    EST_Item *p;
+
+    for (p=daughter1(nn); p; p=next(p))
+	if (p->name().contains("*"))
+	    return p->name();
+    return "NONE";
+}
+
+static EST_String ff_tobi_endtone(const EST_Item *s)
+{
+    // First tobi endtone (phrase accent or boundary tone)
+    EST_Item *nn = as(s,"Intonation");
+    EST_Item *p;
+
+    for (p=daughter1(nn); p; p=next(p))
+    {
+	EST_String l = p->name();
+	if ((l.contains("%")) || (l.contains("-")))
+	    return p->name();
+    }
+
+    return "NONE";
+}
+
+static bool threshold_equal(float a, float b, float threshold)
+{
+  if ( ( (a-b) < threshold ) && ( (a-b) > -threshold ) )
+    return true;
+  else
+    return false;
+}

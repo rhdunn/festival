@@ -41,10 +41,13 @@
 /*                                                                       */
 /* Actually this doesn't use anything in Festival, only the speech_tools */
 /*=======================================================================*/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <signal.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <csignal>
+
+using namespace std;
+
 #include "EST.h"
 #include "EST_unix.h"
 

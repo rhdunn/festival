@@ -37,7 +37,7 @@
 /* A front end to the letter to sound rule system(s)                     */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 #include "lts.h"

@@ -37,7 +37,7 @@
 /* A simple interpreter for Linear Regression models                     */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
 #include "festival.h"
 

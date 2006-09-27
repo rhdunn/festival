@@ -38,7 +38,7 @@
 /*                                                                       */
 /*=======================================================================*/
 
-#include <math.h>
+#include <cmath>
 #include "festival.h"
 #include "us_duration.h"
 
