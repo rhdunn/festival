@@ -34,6 +34,8 @@
 ;;;                         Date:   December 1997
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  
+;;;   THIS IS EXPERIMENTAL AND DOES *NOT* WORK
+;;;
 ;;;  Koskenniemi-style context rewrite rules for English Morphographemics
 ;;;  Basically splits words into their (potential) morphemes.
 ;;;

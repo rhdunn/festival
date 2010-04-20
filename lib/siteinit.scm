@@ -41,7 +41,7 @@
 ;; your local program that can play files
 
 ;(Parameter.set 'Audio_Required_Format 'riff)
-;(Parameter.set 'Audio_Command "play $FILE")
+;(Parameter.set 'Audio_Command "afplay $FILE")
 ;(Parameter.set 'Audio_Method 'Audio_Command)
 
 ;; If you want a voice different from the system installed default 

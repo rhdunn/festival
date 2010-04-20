@@ -1,9 +1,8 @@
 #!/bin/sh
-###########################################################################
+#####################################################-*-mode:shell-script-*-
 ##                                                                       ##
-##                  Language Technologies Institute                      ##
-##                     Carnegie Mellon University                        ##
-##                         Copyright (c) 2004                            ##
+##                    Carnegie Mellon University 
+##                        Copyright (c) 2005                             ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -31,21 +30,18 @@
 ##  THIS SOFTWARE.                                                       ##
 ##                                                                       ##
 ###########################################################################
-##
-##  Test hts voices modes
+##                   Author: Alan W Black                                ##
+##                   Date:   Nov 2008                                    ##
+###########################################################################
+##  Run a festival script with an explicit libpath so an implementation  ##
+##  can be moved from where it was compiled and the scripts can still be ##
+##  be used                                                              ##
+###########################################################################
 
-FESTIVAL=$TOP/bin/festival
-HOME=$TOP/testsuite/data
-export HOME
-
-do_hts () {
-   echo "HTS voices " >&2
-
-   $FESTIVAL -b data/htstest.scm || exit 1
-}
-
-echo >$OUTPUT
-
-do_hts 2>&1 >> $OUTPUT
-
-exit 0
+FESTIVAL=$1
+FESTLIBDIR=$2
+SCRIPT=$3
+shift
+shift
+shift
+exec $FESTIVAL --libdir $FESTLIBDIR --script $3 $*

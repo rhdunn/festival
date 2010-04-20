@@ -747,7 +747,8 @@ void festival_clunits_init(void)
 {
     // Initialization for clunits selection
 
-    proclaim_module("clunits");
+    proclaim_module("clunits",
+            "Copyright (C) University of Edinburgh and CMU 1997-2010\n");
 
     gc_protect(&clunits_params);
     gc_protect(&selection_trees);

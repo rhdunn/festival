@@ -60,7 +60,7 @@ void tts_file_user_mode(LISP filename, LISP params)
 {
 
     volatile EST_String tmpname = make_tmp_filename();
-    volatile EST_String inname = get_c_string(filename);
+    volatile EST_String inname = (EST_String)get_c_string(filename);
     volatile EST_String filter;
     volatile EST_TokenStream ts;
     volatile LISP func;

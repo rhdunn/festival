@@ -174,7 +174,7 @@ Add voice modules to a voice."
   (du_voice.set_ob_pruning_beam voice 0.25)
   (du_voice.set_pruning_beam voice 0.25)
   (du_voice.setDiphoneBackoff voice backoff_rules)
-  voice))
+voice))
 
 
 

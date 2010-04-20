@@ -51,6 +51,19 @@ to choose the appropriate token to word module."
      (t
       (Token_Any utt)))))
 
+(define (remove_leadtrail_underscores name)
+  "(remove_leadtrail_underscores name)
+Get rid of leading and trailing underscores that may be used for emphasis,
+not this is called when there are underscores at the beginning and end but
+there may not be an equal number of them."
+  (let ((se (symbolexplode name)))
+    (while (string-equal "_" (car se))
+      (set! se (cdr se)))
+    (set! se (reverse se))
+    (while (string-equal "_" (car se))
+      (set! se (cdr se)))
+    (apply string-append (reverse se))))
+
 (define (english_token_to_words token name)
 "(english_token_to_words TOKEN NAME)
 Returns a list of words for NAME from TOKEN.  This allows the
@@ -179,6 +192,11 @@ rules are not used unless explicitly called. [see Token to word rules]"
   ((member_string name english_homographs)
    (list (list (list 'name name)
 	       (list 'hg_pos (item.feat token "token_pos")))))
+  ((string-matches name "__*[^_][^_]*_*_") ;; _emphasis_
+   (english_token_to_words
+    token
+    (remove_leadtrail_underscores name)
+   ))
   ((string-matches name "[0-9]?[0-9][:\\.][0-9][0-9][AaPp][Mm]")  ;; time
    ;;  must be am/pm present for . to be acceptable separator
    (let (hours mins half sep (ttime (downcase name)))

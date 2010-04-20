@@ -72,7 +72,10 @@ class EST_JoinCost {
  public:
   
   EST_JoinCost() 
-    : defCost(1)
+    : defCost(1),
+    f0_weight (1.0),
+    power_weight(1.0),
+    spectral_weight(1.0)
     {};
   
   ~EST_JoinCost();
@@ -86,7 +89,11 @@ class EST_JoinCost {
   // original join cost, retained because it's still used by cost calculations for
   // caching (and for posterity, and comparison)
   inline float operator()( const EST_Item *left, const EST_Item *right ) const;
-  
+
+  inline void set_f0_weight(float val) { f0_weight = val; }
+  inline void set_power_weight(float val) { power_weight = val; }
+  inline void set_spectral_weight(float val) { spectral_weight = val; }
+
  private: 
   // member data all used by the older implementation (taking EST_Item* not
   // DiphoneCandidate*)
@@ -97,6 +104,10 @@ class EST_JoinCost {
   mutable unsigned int cached_jccindex;
   mutable bool costIsCached;
   mutable bool diphoneJoin; //would definitely be better somewhere else...
+  float f0_weight;
+  float power_weight;
+  float spectral_weight;
+
 
   EST_TSimpleVector<EST_JoinCostCache *> costCaches;
   
@@ -251,8 +262,9 @@ inline float EST_JoinCost::calcDistance( const EST_FVector *l, const EST_FVector
     d += pow((float)(l->a_no_check(i) - r->a_no_check(i)), (float)2.0);
   d_spectral = sqrt( d );
   
-  // equal weighting (should allow setting weights at runtime in future)
-  d_overall = (d_f0 + d_power + d_spectral)/3.0;
+  // equal weighting by default
+  d_overall = (d_f0*f0_weight + d_power*power_weight + d_spectral*spectral_weight) / 3;
+
   
   return d_overall;
 }

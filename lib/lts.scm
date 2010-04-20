@@ -71,12 +71,19 @@
 (define (lts_predict word rules)
   "(lts_predict word rules)
 Return list of phones related to word using CART trees."
-  (let ((utt (make_let_utt (enworden (symbolexplode word)))))
+  (let ((utt (make_let_utt (enworden (wordexplode word)))))
     (predict_phones utt rules)
     (cdr (reverse (cdr (reverse ;; remove #'s
-      (mapcar item.name (utt.relation.items utt 'PHONE))))))
+      (mapcar 
+       (lambda (p) (intern (item.name p)))
+       (utt.relation.items utt 'PHONE))))))
     )
 )
+
+(define (wordexplode lets)
+  (if (consp lets)
+      lets
+      (symbolexplode lets)))
 
 (define (make_let_utt letters)
 "(make_let_utt letters)
@@ -100,7 +107,7 @@ Predict phones using CART."
   (add_new_phone utt (utt.relation.first utt 'LETTER) '#)
   (mapcar
    (lambda (lsi)
-     (let ((tree (car (cdr (assoc (intern (item.name lsi)) rules)))))
+     (let ((tree (car (cdr (assoc_string (item.name lsi) rules)))))
        (if (not tree)
 	   (format t "failed to find tree for %s\n" (item.name lsi))
 	   (let ((p (wagon_predict lsi tree)))

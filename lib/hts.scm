@@ -61,7 +61,8 @@
   (let ((featfile (make_tmp_filename))
 	(mcepfile (make_tmp_filename))
 	(f0file (make_tmp_filename))
-	(wavfile (make_tmp_filename)))
+	(wavfile (make_tmp_filename))
+	(labfile (make_tmp_filename)))
 
     (apply_hooks hts_synth_pre_hooks utt)
 
@@ -70,7 +71,9 @@
 	   (list "-labelfile" featfile)
 	   (list "-om" mcepfile)
 	   (list "-of" f0file)
-	   (list "-or" wavfile)))
+	   (list "-or" wavfile)
+		 (list "-od" labfile))
+		)
 
     (hts_dump_feats utt hts_feats_list featfile)
 
@@ -80,6 +83,7 @@
     (delete-file mcepfile)
     (delete-file f0file)
     (delete-file wavfile)
+    (delete-file labfile)
 
     (apply_hooks hts_synth_post_hooks utt)
     utt)
@@ -108,7 +112,7 @@
   (format ofd "+%s" (if (string-equal "0" (item.feat s "n.name"))
 			"x" (item.feat s "n.name")))
 ;  nn.name
-  (format ofd "+%s" (if (string-equal "0" (item.feat s "n.n.name"))
+  (format ofd "=%s" (if (string-equal "0" (item.feat s "n.n.name"))
 			"x" (item.feat s "n.n.name")))
 
 ;  position in syllable (segment)
@@ -299,7 +303,7 @@
 	      (item.feat s "R:SylStructure.parent.parent.R:Word.content_words_out")))
 
 ;  distance from content word in phrase
-  (format ofd ";%s" 
+  (format ofd "#%s" 
 	  (if (string-equal "pau" (item.feat s "name"))
 	      "x"
 	      (item.feat s "R:SylStructure.parent.parent.R:Word.lisp_distance_to_p_content")))
@@ -377,7 +381,7 @@
 	      (item.feat s "R:SylStructure.parent.parent.R:Phrase.parent.n.lisp_num_syls_in_phrase")))
 
 ;  length of next phrase (word)
-  (format ofd "=:%s" 
+  (format ofd "=%s" 
 	  (if (string-equal "pau" (item.feat s "name"))
 	      (item.feat s "n.R:SylStructure.parent.parent.R:Phrase.parent.lisp_num_words_in_phrase")
 	      (item.feat s "R:SylStructure.parent.parent.R:Phrase.parent.n.lisp_num_words_in_phrase")))

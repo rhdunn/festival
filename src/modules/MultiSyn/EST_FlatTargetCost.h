@@ -51,7 +51,7 @@
 
 enum tcdata_t 
 {
-  VOWEL, SIL,BAD_DUR, NBAD_DUR, BAD_F0,
+  VOWEL, SIL, BAD_DUR, NBAD_DUR, BAD_OOL, NBAD_OOL, BAD_F0,
   SYL, SYL_STRESS, N_SIL, N_VOWEL,
   NSYL, NSYL_STRESS,
   RC, NNBAD_DUR, NNSYL, LC, PBAD_DUR,
@@ -101,6 +101,7 @@ class EST_FlatTargetCost : public EST_TargetCost {
   inline float right_context_cost() const
   { return ( t->a_no_check(RC) == c->a_no_check(RC) ) ? 0 : 1; }
   float bad_duration_cost() const;
+  float out_of_lex_cost() const;
   inline float bad_f0_cost() const
   { return float(c->a_no_check(BAD_F0)) / 2.0; }
 

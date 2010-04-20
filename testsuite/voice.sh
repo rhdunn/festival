@@ -44,18 +44,16 @@ do_voices () {
 	
 	$FESTIVAL -b data/voices.scm || exit 1
 
-        if cmp tmp/rab1.wav tmp/rab2.wav
-		then echo rab voice: pass
-		else echo rab voice: fail
-	fi
-        if cmp tmp/ked1.wav tmp/ked2.wav
-		then echo ked voice: pass
-		else echo ked voice: fail
-	fi
-        if cmp tmp/don1.wav tmp/don2.wav
-		then echo don voice: pass
-		else echo don voice: fail
-	fi
+        for i in rab kal slt
+        do
+           if cmp tmp/${i}1.wav tmp/${i}2.wav
+		then echo $i voice: pass
+		else echo $i voice: fail
+   	   fi
+        done
+  
+        # CG voices have some randomness in them so they wont be the same
+
 }
 
 echo >$OUTPUT

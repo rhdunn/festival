@@ -59,18 +59,17 @@ Aligns all possible ways for these strings."
 (define (valid-pair phone letter)
   "(valid-pair phone letter)
 If predefined to be valid."
-  (let ((entry1 (assoc letter pl-table)))
+  (let ((entry1 (assoc_string letter pl-table)))
     (if entry1
-	(assoc phone (cdr entry1))
+	(assoc_string phone (cdr entry1))
 	nil)))
-
 
 (define (valid-pair-e phone nphone letter)
   "(valid-pair-e phone letter)
 Special cases for when epsilon may be inserted before letter."
-  (let ((ll (assoc letter pl-table))
+  (let ((ll (assoc_string letter pl-table))
 	(pp (intern (string-append phone "-" nphone))))
-    (assoc pp (cdr ll))))
+    (assoc_string pp (cdr ll))))
 
 (define (find-aligns phones letters)
   "(find-aligns phones letters)
@@ -122,13 +121,13 @@ record the alignment of this phone and letter."
   (if (or (equal? phone letter)
 	  (and (not (equal? phone '#))
 	       (not (equal? letter '#))))
-  (let ((entry1 (assoc letter pl-table))
+  (let ((entry1 (assoc_string letter pl-table))
 	score)
     (if (equal? phone '_epsilon_)
 	(set! score 0.1)
 	(set! score 1))
     (if entry1
-	(let ((entry2 (assoc phone (cdr entry1))))
+	(let ((entry2 (assoc_string phone (cdr entry1))))
 	  (if entry2
 	      (set-cdr! entry2 (+ score (cdr entry2)))
 	      (set-cdr! entry1 (cons (cons phone 1) (cdr entry1)))))
@@ -142,9 +141,9 @@ record the alignment of this phone and letter."
 (define (score-pair phone letter)
 "(score-pair phone letter)
 Give score for this particular phone letter pair."
-  (let ((entry1 (assoc letter pl-table)))
+  (let ((entry1 (assoc_string letter pl-table)))
     (if entry1
-	(let ((entry2 (assoc phone (cdr entry1))))
+	(let ((entry2 (assoc_string phone (cdr entry1))))
 	  (if entry2
 	      (cdr entry2)
 	      0))
@@ -185,6 +184,7 @@ Build cummulatation table from allowable alignments in trainfile."
 	     (enworden (car (cdr (cdr entry))))
 	     (enworden (wordexplode (car entry)))))
 	   (set! allaligns (+ 1 allaligns))
+           (format t "aligned %d\n" allaligns)
 	   (set! c (+ 1 c)))
     (fclose fd)
     (format t "failedaligns %d/%d\n" failedaligns allaligns)
@@ -291,9 +291,9 @@ in a simpler format."
   (mapcar
    (lambda (l) 
      (if (not (string-equal "#" (cdr l)))
-	 (format ofd "%s " (cdr l))))
+	 (format ofd "%l " (cdr l))))
    bp)
-  (format ofd ") %s" pos)
+  (format ofd ") %l" pos)
   (mapcar
    (lambda (l)
      (if (not (string-equal "#" (car l)))
@@ -336,6 +336,7 @@ file contain predicted phone, and letter with 3 preceding and
 	(pn)
 	(sylpos 1))
     (while (not (equal? (set! entry (readfp fd)) (eof-val)))
+;;           (format t "read: %l\n" entry)
 	   (set! lets (append '(0 0 0 0 #) (wordexplode (car entry))
 			      '(# 0 0 0 0)))
 	   (set! phones (cdr (cdr entry)))
@@ -354,7 +355,12 @@ file contain predicted phone, and letter with 3 preceding and
 		      (nth (+ pn 2) lets)
 		      (nth (+ pn 3) lets)
 		      (nth (+ pn 4) lets)
-		      (car (cdr entry)) ;; pos
+                      (cond
+                       ((not (consp (car (cdr entry))))
+                        (car (cdr entry)))
+                       ((not (consp (caar (cdr entry))))
+                        (caar (cdr entry)))
+                       (t nil))
 		      ;; sylpos
 		      ;; numsyls
 		      ;; num2end
@@ -378,16 +384,18 @@ named by name, in filename."
           (begin
             (format t "%s\n" (car lets))
             (set! tree (car (load (format nil "lts.%s.tree" (car lets)) t)))
-            (set! tree (cart_simplify_tree tree nil))
+            (set! tree (cart_simplify_tree2 tree nil))
             (set! trees
                   (cons (list (car lets) tree) trees))))
       (set! lets (cdr lets)))
     (set! trees (reverse trees))
     (set! fd (fopen filename "w"))
     (format fd ";; LTS rules \n")
-    (format fd "(set! %s '\n" name)
-    (pprintf trees fd)
-    (format fd ")\n")
+    (format fd "(set! %s '(\n" name)
+    (mapcar
+     (lambda (tree) (pprintf tree fd))
+     trees)
+    (format fd "))\n")
     (fclose fd))
 )
 
@@ -409,8 +417,11 @@ the structure as saved by merge_models."
 		 (pphones))
 	     (set! wordcount (+ 1 wordcount))
 	     (set! pphones (gen_cartlts letters (car (cdr entry)) cartmodels))
-;	     (set! pphones (gen_vilts letters (car (cdr entry))
-;				      cartmodels wfstname))
+;	     (set! pphones 
+;                   (or ; unwind-protect
+;                    (gen_vilts letters (car (cdr entry))
+;                               cartmodels wfstname)
+;                    nil))
 	     (if (equal? (ph-normalize pphones) (ph-normalize phones))
 		 (set! correctwords (+ 1 correctwords))
 		 (or nil
@@ -471,7 +482,7 @@ is a per letter table."
   ((and (null (cdr lets)) (null (cdr phs)) (null (cdr pphs)))
    nil)  ;; omit final #
   (t
-   (let ((letinfo (assoc (car lets) correct_letter_table)))
+   (let ((letinfo (assoc_string (car lets) correct_letter_table)))
      (if (not letinfo)
 	 (set! correct_letter_table
 	       (append correct_letter_table
@@ -522,7 +533,8 @@ Use cart plus ngrams in viterbi search."
 	   (list 'return_feat "phone")
 	   (list 'p_word "#")
 	   (list 'pp_word "0")
-	   (list 'wfstname ngram)
+           (list 'ngramname ngram)
+;	   (list 'wfstname ngram)
 	   (list 'cand_function 'lts_cand_function)))
     (Gen_Viterbi utt)
     (mapcar 
@@ -579,34 +591,102 @@ model, if appropriate)."
 	    wordcount correctwords (/ (* correctwords 100) wordcount))
     ))
 
-(define (dump-flat-entries infile outfile)
+(define (dump-flat-entries infile outfile ltype)
   (let ((ifd (fopen infile "r"))
         (ofd (fopen outfile "w"))
+        clength
         entry)
-    (readfp ifd) ;; skip "MNCL"
+;    (set! entry (readfp ifd))
+;    (if (or (consp entry) (not (string-equal entry "MNCL")))
+;        (begin 
+;          (format t "Expected MNCL at start of file: not a compiled lexicon\n")
+;          (exit)))
     (while (not (equal? (set! entry (readfp ifd)) (eof-val)))
-     (if (string-matches (car entry) "...*")
+       (cond
+        ((not (consp entry))
+         t) ;; not an entry
+        ((string-equal ltype "utf8")
+         (set! clength (length (utf8explode (car entry)))))
+        (t
+         (set! clength (length (car entry)))))
+       (cond
+        ((not (consp entry))
+         t) ;; not an entry
+        ((and ;(string-matches (car entry) "...*")
+              ;(< clength 14)
+              (not (string-matches (car entry) ".*'.*")) ;; no quotes
+              (car (cddr entry))) ;; non-nil pronounciation
          (begin
-           (format ofd
-                   "( \"%s\" %s ("
-                   (downcase (car entry))
-                   (cadr entry))
-           (mapcar
-            (lambda (syl)
-              (mapcar
-               (lambda (seg)
-                 (cond
-;                 ((string-equal seg "ax")
-;                    (format ofd "%s " seg))
-                  ((string-matches seg "[aeiouAEIOU@].*")
-                     (format ofd "%s " (string-append seg (cadr syl))))
-                  (t
-                   (format ofd "%s " seg))))
-               (car syl)))
-            (car (cddr entry)))
-           (format ofd "))\n"))))
+           (cond
+            ((string-equal ltype "utf8")
+             (format ofd
+                       "( %l %l ("
+                       (utf8explode (car entry))
+                       (cadr entry)))
+            ((string-equal ltype "asis")
+             (format ofd
+                     "( \"%s\" %l ("
+                     (car entry)
+                     (cadr entry)))
+            (t
+             (format ofd
+                     "( \"%s\" %l ("
+                     (downcase (car entry))
+                     (cadr entry))))
+           (if (consp (car (car (cddr entry))))
+               (begin ;; it is syllabified)
+                 (mapcar
+                  (lambda (syl)
+                    (mapcar
+                     (lambda (seg)
+                       (cond
+                        ((string-matches seg "[aeiouAEIOU@].*")
+                         (format ofd "%s " (string-append seg (cadr syl))))
+                        (t
+                         (format ofd "%s " seg))))
+                     (car syl)))
+                  (car (cddr entry))))
+               (begin ;; it is already flat
+                 (mapcar
+                  (lambda (p)
+                    (format ofd "%s " p))
+                  (car (cddr entry)))
+                 ))
+           (format ofd "))\n")))
+        (t nil)))
     (fclose ifd)
     (fclose ofd)))
+
+(define (dump-lets-phones infile)
+  "(dump-lets-phones infile)
+Dump all the letters to alllets.out and phones to allphones.out for processing.
+This expects an external script to sort and uniquify them.  This is done
+in scheme so we can get utf8/non-utf8 to be easy."
+  (let ((ifd (fopen infile "r"))
+        (lfd (fopen "alllets.out" "w"))
+        (apfd (fopen "allphones.out" "w"))
+        (pfd (fopen "let2phones.out" "w"))
+        entry)
+    (while (not (equal? (set! entry (readfp ifd)) (eof-val)))
+       (mapcar
+        (lambda (l) 
+          (format lfd "%s\n" l)
+          (format pfd "%s " l)
+          (mapcar 
+           (lambda (p) (format pfd "%s " p))
+           (car (cddr entry)))
+          (format pfd "\n"))
+        (wordexplode (car entry)))
+       (mapcar
+        (lambda (p) (format apfd "%s " p))
+        (car (cddr entry)))
+       (format apfd "\n")
+       )
+    (fclose ifd)
+    (fclose lfd)
+    (fclose pfd)
+    (fclose apfd)
+    t))
 
 (define (dump-flat-entries-all infile outfile)
   "(dump-flat-entries-all infile outfile)

@@ -7,6 +7,12 @@
 ;;; 11-752 - "Speech: Phonetics, Prosody, Perception and Synthesis"
 ;;; Spring 2001
 ;;;
+;;; Extended by Milan Zamazal <pdm@brailcom.org>, 2006:
+;;; - Slur support.
+;;; - Czech support.
+;;; - Some cleanup.
+;;; - Print debugging information only when singing-debug is true.
+;;;
 ;;; This code is public domain; anyone may use it freely.
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14,12 +20,15 @@
 (require_module 'rxp)
 
 (xml_register_id "-//SINGING//DTD SINGING mark up//EN"
-		(path-append libdir "Singing.v0_1.dtd")
+		(path-append xml_dtd_dir "Singing.v0_1.dtd")
 		)
 
 (xml_register_id "-//SINGING//ENTITIES Added Latin 1 for SINGING//EN"
-		 (path-append libdir  "sable-latin.ent")
+		 (path-append xml_dtd_dir  "sable-latin.ent")
 		 )
+
+;; Set this to t to enable debugging messages:
+(defvar singing-debug nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -39,53 +48,54 @@
 ;;
 
 (defvar singing_xml_elements
-'(
-  ("(SINGING" (ATTLIST UTT)
-   (set! singing_pitch_att_list nil)
-   (set! singing_dur_att_list nil)
-   (set! singing_global_time 0.0)
-   (set! singing_bpm (get-bpm ATTLIST))
-   (set! singing_bps (/ singing_bpm 60.0))
-   nil
-  )
+  '(
+    ("(SINGING" (ATTLIST UTT)
+     (set! singing_pitch_att_list nil)
+     (set! singing_dur_att_list nil)
+     (set! singing_global_time 0.0)
+     (set! singing_bpm (get-bpm ATTLIST))
+     (set! singing_bps (/ singing_bpm 60.0))
+     nil)
 
-  (")SINGING" (ATTLIST UTT)
-    (xxml_synth UTT)  ;;  Synthesize the remaining tokens
-    nil
-  )
+    (")SINGING" (ATTLIST UTT)
+     (xxml_synth UTT)  ;;  Synthesize the remaining tokens
+     nil)
 
-  ("(PITCH" (ATTLIST UTT)
-   (set! singing_pitch_att_list ATTLIST)
-   UTT)
+    ("(PITCH" (ATTLIST UTT)
+     (set! singing_pitch_att_list ATTLIST)
+     UTT)
 
-  (")PITCH" (ATTLIST UTT)
-   (let ((freq (get-freqs singing_pitch_att_list)))
-	 (print "freqs")
-	 (print freq)
-	 (maptail (lambda (item) (item.set_feat item 'freq freq))
-			  (utt.relation.items UTT 'Token)))
-   UTT)
+    (")PITCH" (ATTLIST UTT)
+     (let ((freq (get-freqs singing_pitch_att_list)))
+       (if singing-debug
+           (begin
+             (print "freqs")
+             (print freq)))
+       (singing-append-feature! UTT 'freq freq))
+     UTT)
+    
+    ("(DURATION" (ATTLIST UTT)
+     (set! singing_dur_att_list ATTLIST)
+     UTT)
 
-  ("(DURATION" (ATTLIST UTT)
-   (set! singing_dur_att_list ATTLIST)
-   UTT)
-
-  (")DURATION" (ATTLIST UTT)
-   (let ((dur (get-durs singing_dur_att_list)))
-	 (print "durs")
-	 (print dur)
-	 (maptail (lambda (item) (item.set_feat item 'dur dur))
-			  (utt.relation.items UTT 'Token)))
-   UTT)
-
-  ("(REST" (ATTLIST UTT)
-   (let ((dur (get-durs ATTLIST)))
-	 (print "rest durs")
-	 (print dur)
-	 (maptail (lambda (item) (item.set_feat item 'rest (car dur)))
-			  (utt.relation.items UTT 'Token)))
-   UTT)
-))
+    (")DURATION" (ATTLIST UTT)
+     (let ((dur (get-durs singing_dur_att_list)))
+       (if singing-debug
+           (begin
+             (print "durs")
+             (print dur)))
+       (singing-append-feature! UTT 'dur dur))
+     UTT)
+    
+    ("(REST" (ATTLIST UTT)
+     (let ((dur (get-durs ATTLIST)))
+       (if singing-debug
+           (begin
+             (print "rest durs")
+             (print dur)))
+       (singing-append-feature! UTT 'rest (caar dur)))
+     UTT)
+    ))
 
 ;;
 ;; get-bpm
@@ -110,13 +120,14 @@
 ;;
 
 (define (get-durs atts)
-  (set! seconds (car (car (cdr (assoc 'SECONDS atts)))))
-  (set! beats (car (car (cdr (assoc 'BEATS atts)))))
-  (if (equal? beats 'X)
-	  (mapcar (lambda (x) (parse-number x))
-			  (string2list seconds))
-	  (mapcar (lambda (x) (/ (parse-number x) singing_bps))
-			  (string2list beats))))
+  (let ((seconds (car (car (cdr (assoc 'SECONDS atts)))))
+        (beats (car (car (cdr (assoc 'BEATS atts))))))
+    (if (equal? beats 'X)
+        (mapcar (lambda (lst) (mapcar parse-number lst))
+                (string->list seconds))
+        (mapcar (lambda (lst)
+                  (mapcar (lambda (x) (/ (parse-number x) singing_bps)) lst))
+                (string->list beats)))))
 
 ;;
 ;; get-freqs
@@ -131,55 +142,58 @@
 ;;
 
 (define (get-freqs atts)
-  (set! freqs (car (car (cdr (assoc 'FREQ atts)))))
-  (set! notes (car (car (cdr (assoc 'NOTE atts)))))
-  (if (equal? notes 'X)
-	  (mapcar (lambda (x) (parse-number x))
-			  (string2list freqs))
-	  (mapcar (lambda (x) (note2freq x))
-			  (string2list notes))))
+  (let ((freqs (car (car (cdr (assoc 'FREQ atts)))))
+        (notes (car (car (cdr (assoc 'NOTE atts))))))
+    (if (equal? notes 'X)
+        (mapcar (lambda (lst) (mapcar parse-number lst))
+                (string->list freqs))
+        (mapcar (lambda (lst) (mapcar note->freq lst))
+                (string->list notes)))))
 
 ;;
-;; note2freq
+;; note->freq
 ;;
 ;; Converts a string representing a MIDI note such as "C4" and
 ;; turns it into a frequency.  We use the convention that
 ;; A5=440 (some call this note A3).
 ;;
 
-(define (note2freq note)
-  (format t "note is %l\n" note)
-  (set! note (print_string note))
-  (set! l (string-length note))
-  (set! octave (substring note (- l 2) 1))
-  (set! notename (substring note 1 (- l 3)))
-  (set! midinote (+ (* 12 (parse-number octave))
-					(notename2midioffset notename)))
-  (set! thefreq (midinote2freq midinote))
-  (format t "note %s freq %f\n" note thefreq)
-  thefreq)
+(define (note->freq note)
+  (if singing-debug
+      (format t "note is %l\n" note))
+  (set! note (format nil "%s" note))
+  (if singing-debug
+      (print_string note))
+  (let (l octave notename midinote thefreq)
+    (set! l (string-length note))
+    (set! octave (substring note (- l 1) 1))
+    (set! notename (substring note 0 (- l 1)))
+    (set! midinote (+ (* 12 (parse-number octave))
+                      (notename->midioffset notename)))
+    (set! thefreq (midinote->freq midinote))
+    (if singing-debug
+        (format t "note %s freq %f\n" note thefreq))
+    thefreq))
 
 ;;
-;; midinote2freq
+;; midinote->freq
 ;;
 ;; Converts a MIDI note number (1 - 127) into a frequency.  We use
 ;; the convention that 69 = "A5" =440 Hz.
 ;;
 
-(define (midinote2freq midinote)
+(define (midinote->freq midinote)
   (* 440.0 (pow 2.0 (/ (- midinote 69) 12))))
 
 ;;
-;; notename2midioffset
+;; notename->midioffset
 ;;
 ;; Utility function that looks up the name of a note like "F#" and
 ;; returns its offset from C.
 ;;
 
-(define (notename2midioffset notename)
-  (set! ans (parse-number (car (cdr (assoc_string notename note_names)))))
-  ans
-)
+(define (notename->midioffset notename)
+  (parse-number (car (cdr (assoc_string notename note_names)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -197,17 +211,42 @@
 ;; and end f0 target.  Really straightforward!
 ;;
 
+(defvar singing-last-f0 nil)
 (define (singing_f0_targets utt syl)
   "(singing_f0_targets utt syl)"
-
-  (let ((freq (parse-number (syl2freq syl)))
-		(start (item.feat syl 'syllable_start))
-		(end (item.feat syl 'syllable_end)))
-	(list (list start freq)
-		  (list end freq))))
+  (let ((start (item.feat syl 'syllable_start))
+        (end (item.feat syl 'syllable_end))
+        (freqs (mapcar parse-number (syl->freq syl)))
+        (durs (syl->durations syl)))
+    (let ((total-durs (apply + durs))
+          (total-time (- end start))
+          (time start)
+          (prev-segment (item.prev (item.relation (item.daughter1 (item.relation syl 'SylStructure)) 'Segment)))
+          (last-f0 singing-last-f0))
+      (if freqs
+          (begin
+            (set! singing-last-f0 (car (last freqs)))
+            (append (if (and last-f0
+                             prev-segment
+                             (item.prev prev-segment)
+                             (string-equal (item.feat prev-segment 'name)
+                                           (car (car (cdr (car (PhoneSet.description '(silences))))))))
+                        (let ((s (item.feat prev-segment "p.end"))
+                              (e (item.feat prev-segment "end")))
+                          (list (list (+ s (* (- e s) 0.8)) last-f0)
+                                (list (+ s (* (- e s) 0.9)) (car freqs)))))
+                    (apply append
+                           (mapcar (lambda (d f)
+                                     (let ((range (* (/ d total-durs) total-time))
+                                           (old-time time))
+                                       (set! time (+ time range))
+                                       (let ((range-fraction (* 0.1 range)))
+                                         (list (list (+ old-time range-fraction) f)
+                                               (list (- time range-fraction) f)))))
+                                   durs freqs))))))))
 
 ;;
-;; syl2freq
+;; syl->freq
 ;;
 ;; Given a syllable, looks up the frequency in its token.  The token
 ;; stores a list of all of the frequencies associated with its
@@ -218,10 +257,10 @@
 ;; to work at all if either of these things are not true.)
 ;;
 
-(define (syl2freq syl)
-  (set! index (item.feat syl "R:Syllable.pos_in_word"))
-  (set! freqs (item.feat syl "R:SylStructure.parent.R:Token.parent.freq"))
-  (my_nth freqs index))
+(define (syl->freq syl)
+  (let ((index (item.feat syl "R:Syllable.pos_in_word"))
+        (freqs (singing-feat syl "R:SylStructure.parent.R:Token.parent.freq")))
+    (nth index freqs)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -238,7 +277,8 @@
 ;;
 
 (define (singing_duration_method utt)
-  (mapcar singing_adjcons_syllable (utt.relation.items utt 'Syllable))  
+  (mapcar singing_adjcons_syllable (utt.relation.items utt 'Syllable))
+  (singing_do_initial utt (car (utt.relation.items utt 'Token)))
   (mapcar singing_do_syllable (utt.relation.items utt 'Syllable))
   (mapcar singing_fix_segment (utt.relation.items utt 'Segment))
   utt)
@@ -261,32 +301,25 @@
 ;;
 
 (define (singing_adjcons_syllable syl)
-  (set! conslen 0.0)
-  (set! vowlen 0.0)
-  (set! numphones 0)
-  ;; sum up the length of all of the vowels and consonants in
-  ;; this syllable
-  (mapcar (lambda (s)
-			(set! slen (get_avg_duration (item.feat s "name")))
-			(set! numphones (+ 1 numphones))
-			(if (equal? "+" (item.feat s "ph_vc"))
-				(set! vowlen (+ vowlen slen))
-				(set! conslen (+ conslen slen))))
-		  (item.leafs (item.relation syl 'SylStructure)))
-  (set! totlen (+ conslen vowlen))
-  (set! syldur (syl2dur syl))
-  ;; figure out the offset of the first phone
-  (set! phone1 (item.daughter1 (item.relation syl 'SylStructure)))
-  (set! offset (get_duration_offset (item.feat phone1 "name")))
- (if (< syldur totlen)
-	  (set! offset (* offset (/ syldur totlen))))
-  (set! prevsyl (item.prev (item.relation syl 'Syllable)))
-  (format t "Want to adjust syl by %f\n" offset)
-  (if (equal? nil prevsyl)
-	  nil
-	  (let ()
-		(item.set_feat prevsyl 'subtractoffset offset)
-		(item.set_feat syl 'addoffset offset))))
+  (let ((totlen (apply + (mapcar (lambda (s)
+                                   (get_avg_duration (item.feat s "name")))
+                                 (item.leafs
+                                  (item.relation syl 'SylStructure)))))
+        (syldur (apply + (syl->durations syl)))
+        ;; figure out the offset of the first phone
+        (phone1 (item.daughter1 (item.relation syl 'SylStructure)))
+        (prevsyl (item.prev (item.relation syl 'Syllable))))
+    (let ((offset (get_duration_offset (item.feat phone1 "name"))))
+      (if singing-debug
+          (format t "offset: %f\n" offset) )
+      (if (< syldur totlen)
+          (set! offset (* offset (/ syldur totlen))))
+      (if singing-debug
+          (format t "Want to adjust syl by %f\n" offset))
+      (if prevsyl
+          (begin
+            (item.set_feat prevsyl 'subtractoffset offset)
+            (item.set_feat syl 'addoffset offset))))))
 
 ;;
 ;; singing_do_syllable
@@ -303,63 +336,110 @@
 ;; end of the previous token.
 ;;
 
+(defvar singing-max-short-vowel-length 0.11)
+
+(define (singing_do_initial utt token)
+  (if (equal? (item.name token) "")
+      (let ((restlen (car (item.feat token 'rest))))
+        (if singing-debug
+            (format t "restlen %l\n" restlen))
+        (if (> restlen 0)
+            (let ((silence (car (car (cdr (assoc 'silences (PhoneSet.description)))))))
+              (set! singing_global_time restlen)
+              (item.relation.insert (utt.relation.first utt 'Segment) 'Segment
+                                    (list silence (list (list "end" singing_global_time)))
+                                    'before))))))
+
 (define (singing_do_syllable syl)
-  (set! conslen 0.0)
-  (set! vowlen 0.0)
-  (set! numphones 0)
-  ;; sum up the length of all of the vowels and consonants in
-  ;; this syllable
-  (mapcar (lambda (s)
-			(set! slen (get_avg_duration (item.feat s "name")))
-			(set! numphones (+ 1 numphones))
-			(if (equal? "+" (item.feat s "ph_vc"))
-				(set! vowlen (+ vowlen slen))
-				(set! conslen (+ conslen slen))))
-		  (item.leafs (item.relation syl 'SylStructure)))
-  (set! totlen (+ conslen vowlen))
-  (format t "Vowlen: %f conslen: %f totlen: %f\n" vowlen conslen totlen)
-  (set! syldur (syl2dur syl))
-  (set! addoffset (item.feat syl 'addoffset))
-  (set! subtractoffset (item.feat syl 'subtractoffset))
-  (set! offset (- subtractoffset addoffset))
-  (if (< offset (/ syldur 2.0))
-	  (let ()
-		(set! syldur (- syldur offset))
-		(format t "Offset: %f\n" offset)))
-  (format t "Syldur: %f\n" syldur)
-  (if (> totlen syldur)
+  (let ((conslen 0.0)
+        (vowlen 0.0)
+        (segments (item.leafs (item.relation syl 'SylStructure))))
+    ;; if there are no vowels, turn a middle consonant into a vowel;
+    ;; hopefully this works well for languages where syllables may be
+    ;; created by some consonants too
+    (let ((segments* segments)
+          (vowel-found nil))
+      (while (and segments* (not vowel-found))
+        (if (equal? "+" (item.feat (car segments*) "ph_vc"))
+            (set! vowel-found t)
+            (set! segments* (cdr segments*))))
+      (if (not vowel-found)
+          (item.set_feat (nth (nint (/ (- (length segments) 1) 2))
+                              segments)
+                         "singing-vc" "+")))
+    ;; sum up the length of all of the vowels and consonants in
+    ;; this syllable
+    (mapcar (lambda (s)
+              (let ((slen (get_avg_duration (item.feat s "name"))))
+                (if (or (equal? "+" (item.feat s "ph_vc"))
+                        (equal? "+" (item.feat s "singing-vc")))
+                    (set! vowlen (+ vowlen slen))
+                    (set! conslen (+ conslen slen)))))
+            segments)
+    (let ((totlen (+ conslen vowlen))
+          (syldur (apply + (syl->durations syl)))
+          (addoffset (item.feat syl 'addoffset))
+          (subtractoffset (item.feat syl 'subtractoffset))
+          offset)
+      (set! offset (- subtractoffset addoffset))
+      (if singing-debug
+          (format t "Vowlen: %f conslen: %f totlen: %f\n" vowlen conslen totlen))
+      (if (< offset (/ syldur 2.0))
+	  (begin
+            (set! syldur (- syldur offset))
+            (if singing-debug
+                (format t "Offset: %f\n" offset))))
+      (if singing-debug
+          (format t "Syldur: %f\n" syldur))
+      (if (> totlen syldur)
 	  ;; if the total length of the average durations in the syllable is
 	  ;; greater than the total desired duration of the syllable, stretch
 	  ;; the time proportionally for each phone
 	  (let ((stretch (/ syldur totlen)))
-		(mapcar (lambda (s)
-				  (set! slen (get_avg_duration (item.feat s "name")))
-				  (set! slen (* stretch slen))
-				  (set! singing_global_time (+ slen singing_global_time))
-				  (item.set_feat s 'end singing_global_time))
-				(item.leafs (item.relation syl 'SylStructure))))
-
+            (mapcar (lambda (s)
+                      (let ((slen (* stretch (get_avg_duration (item.feat s "name")))))
+                        (set! singing_global_time (+ slen singing_global_time))
+                        (item.set_feat s 'end singing_global_time)))
+                    (item.leafs (item.relation syl 'SylStructure))))
 	  ;; otherwise, stretch the vowels and not the consonants
 	  (let ((voweltime (- syldur conslen)))
-		(let ((vowelstretch (/ voweltime vowlen)))
-		  (mapcar (lambda (s)
-					(set! slen (get_avg_duration (item.feat s "name")))
-					(if (equal? "+" (item.feat s "ph_vc"))
-						(set! slen (* vowelstretch slen)))
-					(set! singing_global_time (+ slen singing_global_time))
-					(item.set_feat s 'end singing_global_time))
-				  (item.leafs (item.relation syl 'SylStructure))))))
-  (set! restlen (car (syl2rest syl)))
-  (format t "restlen %l\n" restlen)
-  (if (> restlen 0)
-	  (let (nil)
-		(set! lastseg (item.daughtern (item.relation syl 'SylStructure)))
-		(set! SIL (car (car (cdr (assoc 'silences (PhoneSet.description))))))
-		(set! singing_global_time (+ restlen singing_global_time))
-		(set! pau_item_desc (list SIL
-								  (list
-								   (list "end" singing_global_time))))
-		(item.insert (item.relation lastseg 'Segment) pau_item_desc 'after))))
+            (let ((vowelstretch (/ voweltime vowlen))
+                  (phones (mapcar car (car (cdar (PhoneSet.description '(phones)))))))
+              (mapcar (lambda (s)
+                        (let ((slen (get_avg_duration (item.feat s "name"))))
+                          (if (or (equal? "+" (item.feat s "ph_vc"))
+                                  (equal? "+" (item.feat s "singing-vc")))
+                              (begin
+                                (set! slen (* vowelstretch slen))
+                                ;; If the sound is long enough, better results
+                                ;; may be achieved by using longer versions of
+                                ;; the vowels.
+                                (if (> slen singing-max-short-vowel-length)
+                                    (let ((sname (string-append (item.feat s "name") ":")))
+                                      (if (member_string sname phones)
+                                          (item.set_feat s "name" sname))))))
+                          (set! singing_global_time (+ slen singing_global_time))
+                          (item.set_feat s 'end singing_global_time)))
+                      segments))))))
+  (let ((restlen (car (syl->rest syl))))
+    (if singing-debug
+        (format t "restlen %l\n" restlen))
+    (if (> restlen 0)
+        (let ((lastseg (item.daughtern (item.relation syl 'SylStructure)))
+              (silence (car (car (cdr (assoc 'silences (PhoneSet.description))))))
+              (singing_global_time* singing_global_time))
+          (let ((seg (item.relation lastseg 'Segment))
+                (extra-pause-length 0.00001))
+            (set! singing_global_time (+ restlen singing_global_time))
+            (item.insert seg (list silence (list (list "end" singing_global_time))) 'after)
+            ;; insert a very short extra pause to avoid after-effects, especially
+            ;; after vowels
+            (if (and seg
+                     (equal? (item.feat seg "ph_vc") "+")
+                     (< extra-pause-length restlen))
+                (item.insert seg (list silence (list (list "end" (+ singing_global_time*
+                                                                extra-pause-length))))
+                             'after)))))))
 
 ;;
 ;; singing_fix_segment
@@ -371,28 +451,26 @@
 
 (define (singing_fix_segment seg)
   (if (equal? 0.0 (item.feat seg 'end))
-	  (if (equal? nil (item.prev seg))
-		  (item.set_feat seg 'end 0.0)
-		  (item.set_feat seg 'end (item.feat (item.prev seg) 'end)))
-	  (format t "segment: %s end: %f\n" (item.name seg) (item.feat seg 'end))))
+      (if (equal? nil (item.prev seg))
+          (item.set_feat seg 'end 0.0)
+          (item.set_feat seg 'end (item.feat (item.prev seg) 'end)))
+      (if singing-debug
+          (format t "segment: %s end: %f\n" (item.name seg) (item.feat seg 'end)))))
   
 ;; returns the duration of a syllable (stored in its token)
-(define (syl2dur syl)
-  (set! index (item.feat syl "R:Syllable.pos_in_word"))
-  (set! durs (item.feat syl "R:SylStructure.parent.R:Token.parent.dur"))
-  (my_nth durs index))
+(define (syl->durations syl)
+  (let ((index (item.feat syl "R:Syllable.pos_in_word"))
+        (durs (singing-feat syl "R:SylStructure.parent.R:Token.parent.dur")))
+    (mapcar parse-number (nth index durs))))
 
 ;; returns the duration of the rest following a syllable
-(define (syl2rest syl)
-  (set! index (item.feat syl "R:Syllable.pos_in_word"))
-  (set! durs (item.feat syl "R:SylStructure.parent.R:Token.parent.dur"))
-  (set! numsyllables (length durs))
-  (set! pauselen (item.feat syl "R:SylStructure.parent.R:Token.parent.rest"))
-  (if (equal? index (- numsyllables 1))
-	  (if (equal? pauselen nil)
-		  (list 0.0)
-		  (list pauselen))
-	  (list 0.0)))
+(define (syl->rest syl)
+  (let ((index (item.feat syl "R:Syllable.pos_in_word"))
+        (durs (singing-feat syl "R:SylStructure.parent.R:Token.parent.dur"))
+        (pauselen (singing-feat syl "R:SylStructure.parent.R:Token.parent.rest")))
+    (if (equal? index (- (length durs) 1))
+        (list (or pauselen 0.0))
+        (list 0.0))))
 
 ;; get the average duration of a phone
 (define (get_avg_duration phone)
@@ -403,7 +481,7 @@
 
 ;; get the duration offset of a phone (see the description above)
 (define (get_duration_offset phone)
-  (parse-number (car (cdr (assoc_string phone phoneme_offsets)))))
+  (parse-number (car (cdr (assoc_string phone phoneme_offsets*)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -411,26 +489,39 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; turns the string "0.5,1.0,2.5" into the list (0.5 1.0 2.5)
-(define (string2list str)
-  (if (string-matches str ".+,.+")
-	  (cons (string-before str ",") (string2list (string-after str ",")))
-	  (list (string-append str ""))))
+(define (char-quote string)
+  (if (member string '("*" "+" "?" "[" "]" "."))
+      (string-append "[" string "]")
+      string))
 
-;; applies fn to the last element in l"
-(define (maptail fn l)
-  (if (equal? l nil)
-	  nil
-	  (if (equal? (cdr l) nil)
-		  (list (fn (car l)))
-		  (cons (car l) (maptail fn (cdr l))))))
+(define (split-string string separator)
+  (if (string-matches string (string-append ".+" (char-quote separator) ".+"))
+      (cons (string-before string separator)
+            (split-string (string-after string separator) separator))
+      ;; We have to convert the weird XML attribute value type to string
+      (list (string-append string ""))))
 
+(define (string->list string)
+  (mapcar (lambda (s) (split-string s "+")) (split-string string ",")))
 
-;; returns the nth element of list l, 0-based
-(define (my_nth l n)
-  (if (equal? n 0)
-	  (car l)
-	  (my_nth (cdr l) (- n 1))))
+(define (singing-append-feature! utt feature value)
+  (let ((tokens (utt.relation.items utt 'Token)))
+    (if tokens
+        ;; we have to wrap value into a list to work around a Festival bug
+        (item.set_feat (car (last tokens)) feature (list value))
+        (begin
+          (utt.relation.append utt 'Token '("" ((name "") (whitespace "")
+                                                (prepunctuation "") (punc ""))))
+          (item.set_feat (car (last (utt.relation.items utt 'Token))) feature (list value))))))
+
+(define (singing-feat item feature)
+  (let ((value (item.feat item feature)))
+    (if (equal? value 0)
+        nil
+        (car value))))
+
+(define (current-language)
+  (cadr (car (assoc 'language (voice.description current-voice)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -442,25 +533,26 @@
 ;; singing_init_func
 ;;
 
+(defvar singing_previous_eou_tree nil)
+
 (define (singing_init_func)
   "(singing_init_func) - Initialization for Singing mode"
-
-  ;; use mwm's voice, it's very nice (or tll for female)
-  (set! phoneme_durations  duration_ph_info)
-
-  ;; need to use OGI's phoneme_durations since that's what mwm uses
-;  (load (library_expand_filename "ogi_gswdurtreeZ_wb.scm"))
-
+  (if (not (symbol-bound? 'phoneme_durations))
+      (set! phoneme_durations '()))
   ;; use our intonation function
   (Parameter.set 'Int_Method 'General)
   (Parameter.set 'Int_Target_Method Int_Targets_General)
-  (set! int_general_params
-		(list 
-		 (list 'targ_func singing_f0_targets)))
-
+  (set! int_general_params `((targ_func ,singing_f0_targets)))
+  (set! singing-last-f0 nil)
   ;; use our duration function
   (Parameter.set 'Duration_Method singing_duration_method)
-
+  ;; set phoneme corrections for the current language
+  (let ((language (cadr (assoc 'language
+                               (cadr (voice.description current-voice))))))
+    (set! phoneme_offsets* (cdr (assoc language phoneme_offsets))))
+  ;; avoid splitting to multiple utterances with insertion of unwanted pauses
+  (set! singing_previous_eou_tree eou_tree)
+  (set! eou_tree nil)
   ;; use our xml parsing function
   (set! singing_previous_elements xxml_elements)
   (set! xxml_elements singing_xml_elements))
@@ -471,6 +563,7 @@
 
 (define (singing_exit_func)
   "(singing_exit_func) - Exit function for Singing mode"
+  (set! eou_tree singing_previous_eou_tree)
   (set! xxml_elements singing_previous_elements))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -479,29 +572,28 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(set! note_names
-	  '((C 0)
-		(C# 1)
-		(Db 1)
-		(D 2)
-		(D# 3)
-		(Eb 3)
-		(E 4)
-		(E# 5)
-		(Fb 4)
-		(F 5)
-		(F# 6)
-		(Gb 6)
-		(G 7)
-		(G# 8)
-		(Ab 8)
-		(A 9)
-		(A# 10)
-		(Bb 10)
-		(B 11)
-		(B# 12)
-		(Cb 11)))
-
+(defvar note_names
+  '((C 0)
+    (C# 1)
+    (Db 1)
+    (D 2)
+    (D# 3)
+    (Eb 3)
+    (E 4)
+    (E# 5)
+    (Fb 4)
+    (F 5)
+    (F# 6)
+    (Gb 6)
+    (G 7)
+    (G# 8)
+    (Ab 8)
+    (A 9)
+    (A# 10)
+    (Bb 10)
+    (B 11)
+    (B# 12)
+    (Cb 11)))
 
 ;;
 ;; The following list contains the offset into each phone that best
@@ -515,69 +607,65 @@
 ;; These were derived empically by looking at and listening to the
 ;; waveforms of each phone for mwm's voice.
 ;;
-(set! phoneme_offsets
-'(
-(t 0.050)
-(T 0.050)
-(d 0.090)
-(D 0.090)
-(p 0.080)
-(b 0.080)
-(k 0.090)
-(g 0.100)
-(9r 0.050) ;; r
-(l 0.030)
-(f 0.050)
-(v 0.050)
-(s 0.040)
-(S 0.040)
-(z 0.040)
-(Z 0.040)
-(n 0.040)
-(N 0.040)
-(m 0.040)
-(j 0.090)
-(E 0.0)
-(> 0.0)
-(>i 0.0)
-(aI 0.0)
-(& 0.0)
-(3r 0.0)
-(tS 0.0)
-(oU 0.0)
-(aU 0.0)
-(A 0.0)
-(ei 0.0)
-(iU 0.0)
-(U 0.0)
-(@ 0.0)
-(h 0.0)
-(u 0.0)
-(^ 0.0)
-(I 0.0)
-(dZ 0.0)
-(i: 0.0)
-(w 0.0)
-(pau 0.0)
-(brth 0.0)
-(h# 0.0)
-))
 
+(defvar phoneme_offsets
+  `((english (t 0.050)
+             (T 0.050)
+             (d 0.090)
+             (D 0.090)
+             (p 0.080)
+             (b 0.080)
+             (k 0.090)
+             (g 0.100)
+             (9r 0.050) ;; r
+             (l 0.030)
+             (f 0.050)
+             (v 0.050)
+             (s 0.040)
+             (S 0.040)
+             (z 0.040)
+             (Z 0.040)
+             (n 0.040)
+             (N 0.040)
+             (m 0.040)
+             (j 0.090)
+             (E 0.0)
+             (> 0.0)
+             (>i 0.0)
+             (aI 0.0)
+             (& 0.0)
+             (3r 0.0)
+             (tS 0.0)
+             (oU 0.0)
+             (aU 0.0)
+             (A 0.0)
+             (ei 0.0)
+             (iU 0.0)
+             (U 0.0)
+             (@ 0.0)
+             (h 0.0)
+             (u 0.0)
+             (^ 0.0)
+             (I 0.0)
+             (dZ 0.0)
+             (i: 0.0)
+             (w 0.0)
+             (pau 0.0)
+             (brth 0.0)
+             (h# 0.0)
+             )))
+
+(defvar phoneme_offsets* nil)
 
 ;;
 ;; Declare the new mode to Festival
 ;;
 
 (set! tts_text_modes
-   (cons
-    (list
-      'singing   ;; mode name
-      (list         
-       (list 'init_func singing_init_func)
-       (list 'exit_func singing_exit_func)
-       '(analysis_type xml)
-       ))
-    tts_text_modes))
+      (cons `(singing   ;; mode name
+              ((init_func ,singing_init_func)
+               (exit_func ,singing_exit_func)
+               (analysis_type xml)))
+            tts_text_modes))
 
 (provide 'singing-mode)
-

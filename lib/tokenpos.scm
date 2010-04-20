@@ -250,12 +250,15 @@ Returns 1 if King like title is within 3 tokens before or 2 after."
 (define (tok_rex_names sc)
   "(tok_rex sc)
 Returns 1 if this is a King-like name."
-  (if (member_string
-       (downcase (item.name sc))
-       '(louis henry charles philip george edward pius william richard
-	       ptolemy john paul peter nicholas
-	       alexander frederick james alfonso ivan napolean leo 
-	       gregory catherine alexandria pierre elizabeth mary))
+  (if (and
+       (member_string
+        (downcase (item.name sc))
+        '(louis henry charles philip george edward pius william richard
+                ptolemy john paul peter nicholas
+                alexander frederick james alfonso ivan napolean leo 
+                gregory catherine alexandria pierre elizabeth mary))
+       (or (string-equal "" (item.feat sc "punc"))
+           (string-equal "0" (item.feat sc "punc"))))
       "1"
       "0"))
 

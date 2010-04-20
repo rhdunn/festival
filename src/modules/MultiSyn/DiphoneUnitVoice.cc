@@ -95,19 +95,19 @@ static void my_parse_diphone_times(EST_Relation &diphone_stream,
     dur1 = pm->t(mid_frame);
     dur_u = pm->t(end_frame);
     
-    s->set("source_end", (p_time+dur1) );
+    s->set("end", (p_time+dur1) );
     
     p_time += dur_u;
     u->set("end", p_time);
     
     if( u->f_present("extendRight") ){//because diphone squeezed out (see above)
       s = s->next();
-      s->set("source_end", p_time );
+      s->set("end", p_time );
     }
   }
 
   if(s)
-    s->set("source_end", (p_time));
+    s->set("end", (p_time));
 }
 
 // temporary hack necessary because decoder can only take a 
@@ -132,6 +132,9 @@ DiphoneUnitVoice::DiphoneUnitVoice( const EST_StrList& basenames,
     tc_rescoring_weight( 0.0 ),
     tc_weight( 1.0 ),
     jc_weight( 1.0 ),
+    jc_f0_weight( 1.0 ),
+    jc_power_weight( 1.0 ),
+    jc_spectral_weight( 1.0 ),
     prosodic_modification( 0 ),
     wav_srate( sr ),
     jc( 0 ),
@@ -495,9 +498,9 @@ void DiphoneUnitVoice::getUnitSequence( EST_Utterance  *utt )
 
 	  cout << "Missing diphone: "<< diphone_name << endl;
 
-	  if(s1 = parent(it,"SylStructure"))
+	  if((s1 = parent(it,"SylStructure")))
 	    w1= parent(s1,"SylStructure");
-	  if( s2 = parent(it->next(),"SylStructure"))
+	  if( (s2 = parent(it->next(),"SylStructure")))
 	    w2= parent(s2,"SylStructure");
 
 	  if( w1 && w2 && (w1 != w2) )
@@ -554,7 +557,8 @@ void DiphoneUnitVoice::getUnitSequence( EST_Utterance  *utt )
       
       if( !this->unitAvailable( diphone_name ) ){
 	missing_diphones.append( diphone_name );
-	units->tail()->set( "extendRight", 1 );
+	if(units->tail())
+	  units->tail()->set( "extendRight", 1 );
 	extendLeftFlag = true; // trigger for next unit to make up second half of missing diphone
       }
       else{
@@ -821,8 +825,8 @@ void DiphoneUnitVoice::getCopyUnitUtterance( const EST_String &utt_fname,
     my_parse_diphone_times( *units, *segs );
     
     // this is for copy synthesis, so copy actual timings
-    for( EST_Item *seg = segs->head(); it!=0; it=it->next() )
-      seg->set( "end", seg->F("source_end") );
+    //for( EST_Item *seg = segs->head(); it!=0; it=it->next() )
+      //seg->set( "end", seg->F("source_end") );
   }  
 }
 

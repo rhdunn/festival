@@ -56,9 +56,11 @@ SYSTEMS =					\
 	ix86_CYGWIN1.3.mak			\
 	ix86_CYGWIN1.4.mak			\
 	ix86_CYGWIN1.5.mak			\
+	ix86_CYGWIN1.7.mak			\
 	ix86_CYGWIN20.1.mak			\
 	ix86_CYGWIN32.mak			\
 	ix86_CYGWIN324.0.mak			\
+	ix86_Darwin.mak			\
 	ix86_FreeBSD.mak			\
 	ix86_FreeBSD2.1.mak			\
 	ix86_FreeBSD2.2.mak			\
@@ -95,7 +97,9 @@ SYSTEMS =					\
 	unknown_Linux.mak			\
 	unknown_RedHatLinux.mak			\
 	power_macintosh_Darwin.mak		\
-	unknown_unknown.mak
+	unknown_unknown.mak				\
+	x86_64_Darwin.mak			\
+	
 
 FILES = Makefile default.mak $(SYSTEMS) 
 

@@ -43,7 +43,14 @@ INCLUDE_LINUX16_AUDIO=1
 
 MOD_DESC_LINUX16_AUDIO=(from EST) Native audio module for Linux systems
 
-AUDIO_DEFINES += -DSUPPORT_LINUX16
+ifeq ($(LINUXAUDIO),alsa)
+   AUDIO_DEFINES += -DSUPPORT_ALSALINUX
+   MODULE_LIBS += -lasound
+endif
+
+ifeq ($(LINUXAUDIO),none)
+   AUDIO_DEFINES += -DSUPPORT_VOXWARE
+endif
 
 ifdef INCLUDE_JAVA_CPP
     MODULE_LIBS += -lpthread

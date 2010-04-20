@@ -145,6 +145,39 @@ is best in class (as from cart leaf node)."
     (cons 
      (car pdf)
      (cart_remove_zero_probs (cdr pdf))))))
+
+(define (cart_interpret_debug i tree)
+  "(cart_interpret_debug i tree)
+In comparing output between different implementations (flite vs festival)
+This prints out the details as it interprets the tree."
+  (cond
+   ((cdr tree) ;; question
+    (format t "%s %s %s\n" (car (car tree)) (upcase (cadr (car tree)))
+            (car (cddr (car tree))))
+    (set! a (item.feat i (car (car tree))))
+    (format t "%s\n" a)
+    (cond
+     ((string-equal "is" (cadr (car tree)))
+      (if (string-equal a (car (cddr (car tree))))
+          (begin
+            (format t "   YES\n")
+            (cart_interpret_debug i (car (cdr tree))))
+          (begin
+            (format t "   NO\n")
+            (cart_interpret_debug i (car (cddr tree))))))
+     ((string-equal "<" (cadr (car tree)))
+      (if (< (parse-number a) (parse-number (car (cddr (car tree)))))
+          (begin
+            (format t "   YES\n")
+            (cart_interpret_debug i (car (cdr tree))))
+          (begin
+            (format t "   NO\n")
+            (cart_interpret_debug i (car (cddr tree))))))
+     (t
+      (format t "unknown q type %l\n" (car tree)))))
+   (t ;; leaf
+    (car tree)
+    )))
     
 (provide 'cart_aux)
 	

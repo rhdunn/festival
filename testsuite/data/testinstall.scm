@@ -37,15 +37,14 @@
 These tests *require* ked, don and rab to be installed."
   (unwind-protect
    (begin
+     (voice_kal_diphone)
+     (SynthText "hello world")
      (voice_rab_diphone)
      (SynthText "hello world")
-     (voice_ked_diphone)
-     (SynthText "hello world")
-     (voice_don_diphone)
-     (SynthText "hello world"))
+     )
    (begin
      (format stderr "\n")
-     (format stderr "The festival tests require the rab, don and ked diphone voices to be\n")
+     (format stderr "The festival tests require the kal and rab diphone voices to be\n")
      (format stderr "installed.  Festival may work without that diphone set, but the results of\n")
      (format stderr "these tests aren't relevant.\n")
      (exit -1))))

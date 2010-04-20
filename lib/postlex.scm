@@ -484,17 +484,77 @@ is no word-final /r/.
                          (or(not(equal? "NB" (item.feat word 'pbreak)))
                             (equal? "-" (item.feat following_phone 'ph_vc))))
                      (begin
-                        (format t "\t\t\t/r/ in \"%s %s\"  deleted\n"
+                        (format t "postlex_intervoc_r: /r/ in \"%s %s\"  deleted\n"
                                   (item.name word)(item.name next_word))
                         (item.delete last_phone))))))
             (if(and last_phone (equal? "r" (item.name last_phone)))
                (begin
-                  (format t "\t\t\tutt-final /r/ deleted\n")
+                  (format t "postlex_intervoc_r: utterance-final /r/ deleted\n")
                   (item.delete last_phone)))
          )
 
-      (set! word (item.next word)))))
+      (set! word (item.next word))))
+   utt)
 
 
+(define (postlex_stop_deletion utt)
+"(postlex_stop_deletion utt)
+
+Delete any stop or affricative (phone which has a closure) 
+immediately followed by another stop or affricative.
+
+Also save the identity of the deleted phone for the 
+context cost functions.  Consider:
+
+backtrack /b a k t r a k/ -> /b a t r a k/
+(actually Jenny reduces : /b a k_cl k t_cl t r a k/ -> /b a k_cl t r a k/)
+If we then look for a diphone /a t/ we want to favour
+candidates coming from the same context i.e. which 
+are actually a reduced /a k t/.  In the data base, 
+the 1st /a/ gets the feature right_context=k and the 
+/t/ gets the fearture left_context=k.
+
+"
+(let(seg next_seg prev_seg)
+   (set! seg (utt.relation.first utt 'Segment))
+   (while seg
+      (set! prev_seg (item.prev seg))
+      (if prev_seg
+         (begin
+           ;(format t "%s %s %s\n" (item.name seg)
+           ;                       (item.feat seg 'ph_ctype)
+           ;                       (item.feat seg 'p.ph_ctype))
+            (if(and(or(equal? "s" (item.feat seg 'ph_ctype))
+                      (equal? "a" (item.feat seg 'ph_ctype)))
+                   (or(equal? "s" (item.feat seg 'p.ph_ctype))
+                      (equal? "a" (item.feat seg 'p.ph_ctype)))
+                    ; When there are 3 stops in a row, and after the 1st has been
+                    ; deleted, this prevents the 2nd to be deleted as well:
+                   (equal? 0 (item.feat prev_seg 'left_context)))
+               (begin
+                  (set! prev_prev_seg (item.prev prev_seg))
+                  (format t "postlex_stop_deletion: %s in %s\n"
+                            (item.name prev_seg)
+                            (item.name(item.parent(item.relation.parent prev_seg
+                                                                'SylStructure))))
+                  (if prev_prev_seg 
+                     (begin
+                       ;(format t "setting left_context of %s and right context of %s to %s\n"
+                       ;              (item.name seg)
+                       ;              (item.name prev_prev_seg)
+                       ;              (item.name prev_seg))
+                        (item.set_feat seg 'left_context (item.name prev_seg))
+                        (item.set_feat prev_prev_seg 'right_context (item.name prev_seg))))
+                  (if(and(item.next seg)
+                         (equal? (item.name seg) (item.name prev_seg)))
+                     (begin
+                       ;(format t "setting left_context of %s to %s\n"
+                       ;              (item.name (item.next seg)
+                       ;              (item.name prev_seg))
+                         
+                        (item.set_feat (item.next seg) 'left_context (item.name prev_seg))))
+                  (item.delete prev_seg)))))
+      (set! seg (item.next seg))))
+utt)
 
 (provide 'postlex)

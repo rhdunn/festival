@@ -196,7 +196,7 @@
 A reverse assoc list of predicted pos tags to some other tag set.  Note
 using this changes the pos tag loosing the actual predicted value.  Rather
 than map here you may find it more appropriate to map tags sets locally
-in the module sthat use them (e.g. phrasing and lexicons).")
+in the modules that use them (e.g. phrasing and lexicons).")
 
 ;;(setq pos_map_remap
 ;;      '(

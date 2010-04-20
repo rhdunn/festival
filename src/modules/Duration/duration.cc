@@ -162,7 +162,7 @@ LISP FT_Duration_Tree_ZScores_Utt(LISP utt)
         }
 	if ((pdur > 3) || (pdur < -3))
 	{
-	    cwarn << "Duration tree extreme for " << s->name() << 
+	    cerr << "Duration tree extreme for " << s->name() << 
 		" " << pdur << endl;
 	    pdur = ((pdur < 0) ? -3 : 3);
 	}

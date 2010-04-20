@@ -154,6 +154,43 @@ static LISP wave_info(LISP w1)
 			       NIL))));
 }
 
+static LISP wave_set(LISP lwave,LISP lx, LISP ly, LISP lv)
+{
+    EST_Wave *t = wave(lwave);
+
+    t->a(get_c_int(lx),get_c_int(ly)) = (short)get_c_float(lv);
+    return lv;
+}
+
+static LISP wave_set_sample_rate(LISP lwave,LISP lsr)
+{
+    EST_Wave *t = wave(lwave);
+
+    t->set_sample_rate(get_c_int(lsr));
+    return lsr;
+}
+
+static LISP wave_get(LISP lwave,LISP lx, LISP ly)
+{
+    EST_Wave *t = wave(lwave);
+
+    return flocons(t->a(get_c_int(lx),get_c_int(ly)));
+}
+
+static LISP wave_resize(LISP lwave,LISP lsamples, LISP lchannels)
+{
+    EST_Wave *t;
+
+    if (lwave)
+	t = wave(lwave);
+    else
+	t = new EST_Wave;
+
+    t->resize(get_c_int(lsamples),get_c_int(lchannels));
+    
+    return siod(t);
+}
+
 static LISP wave_resample(LISP w1,LISP newrate)
 {
     EST_Wave *w = wave(w1);
@@ -588,6 +625,21 @@ void festival_wave_init(void)
     init_subr_1("wave.play",wave_play,
   "(wave.play WAVE)\n\
   Play wave of selected audio");
+    init_subr_3("wave.resize",wave_resize,
+ "(wave.resize WAVE NEWSAMPLES NEWCHANNELS)\n\
+ Resize WAVE to have NEWSAMPLES number of frames and NEWCHANNELS\n\
+ number of channels.  If WAVE is nil a new wave is made of the\n\
+ requested size.");
+    init_subr_4("wave.set",wave_set,
+ "(wave.set WAVE X Y V)\n\
+ Set position X Y to V in WAVE.")
+;    init_subr_3("wave.get",wave_get,
+ "(wave.get WAVE X Y)\n\
+ Get value of X Y in WAVE.");
+    init_subr_2("wave.set_sample_rate",wave_set_sample_rate,
+ "(wave.set_sample_rate WAVE SR)\n\
+set sample rate to SR.");
+
 
     init_subr_3("track.save",track_save,
  "(track.save TRACK FILENAME FILETYPE)\n\
