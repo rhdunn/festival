@@ -153,7 +153,7 @@ static EST_Item *next_token(EST_TokenStream &ts,
 	append_token(ps,ts.get());
     remove_item(ps.first(),"Token");
 
-    return next(s);
+    return s->next();
 }
 
 static void append_token(EST_Relation &ps, const EST_Token &t)

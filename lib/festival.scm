@@ -492,7 +492,7 @@ Getting Help
   C-c               return to top level
   C-d or (quit)     Exit Festival
 (If compiled with editline)
-  M-h               desplays help on current symbol  
+  M-h               displays help on current symbol  
   M-s               speaks help on current symbol  
   M-m               displays relevant manula page in local netscape
   TAB               Command, symbol and filename completion

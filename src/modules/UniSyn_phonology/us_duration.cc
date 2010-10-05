@@ -52,7 +52,7 @@ float phone_z_score(const EST_String &p, float dur)
 
 void clear_feature(EST_Relation &r, const EST_String &name)
 {
-    for (EST_Item *p = r.head(); p ; p = next(p))
+    for (EST_Item *p = r.head(); p ; p = p->next())
 	p->f_remove(name);
 }
 
@@ -63,7 +63,7 @@ void end_to_dur(EST_Relation &r)
 {
     float prev_end = 0;
 
-    for (EST_Item *p = r.head(); p ; p = next(p))
+    for (EST_Item *p = r.head(); p ; p = p->next())
     {
 	p->set("dur", p->F("end") - prev_end);
 	prev_end = p->F("end");
@@ -76,7 +76,7 @@ void assign_phone_z_scores(EST_Utterance &u, const EST_String &seg_name)
 
     end_to_dur(*u.relation(seg_name));
 
-    for (s = u.relation(seg_name)->head(); s; s = next(s))
+    for (s = u.relation(seg_name)->head(); s; s = s->next())
 	s->set("z_score", phone_z_score(s->f("name"), s->F("dur")));
 }
 
@@ -87,7 +87,7 @@ void promote_mean_z_score(EST_Utterance &u, const EST_String &st_name,
     float z, n;
 
 
-    for (s = u.relation(syl_name)->head(); s; s = next(s))
+    for (s = u.relation(syl_name)->head(); s; s = s->next())
     {
 	p = s->as_relation(st_name);
 	z = 0.0;
@@ -112,7 +112,7 @@ void promote_vowel_z_score(EST_Utterance &u, const EST_String &st_name,
 {
     EST_Item *n, *s;
 
-    for (s = u.relation(syl_name)->head(); s; s = next(s))
+    for (s = u.relation(syl_name)->head(); s; s = s->next())
     {
 	n = named_daughter(s->as_relation(st_name), "sylval", "Rhyme");
 	n = daughter1(named_daughter(n, "sylval", "Nucleus"));
@@ -131,7 +131,7 @@ LISP FT_met_dur_predict_1(LISP lutt, LISP lrel)
     clear_feature(*utt->relation(rel), "dur");
     clear_feature(*utt->relation(rel), "end");
 
-    for (p = utt->relation(rel)->head(); p ; p = next(p))
+    for (p = utt->relation(rel)->head(); p ; p = p->next())
 	p->set("dur", met_duration.val(p->f("name")).F("mean"));
 
     cout << "dur end\n";
@@ -149,7 +149,7 @@ LISP FT_met_dur_predict_2(LISP lutt, LISP lrel)
     clear_feature(*utt->relation(rel), "dur");
     clear_feature(*utt->relation(rel), "end");
 
-    for (EST_Item *p = utt->relation(rel)->head(); p ; p = next(p))
+    for (EST_Item *p = utt->relation(rel)->head(); p ; p = p->next())
 	p->set("dur", 0.2);
 
     dur_to_end(*utt->relation(rel));

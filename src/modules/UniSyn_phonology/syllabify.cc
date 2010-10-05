@@ -47,7 +47,7 @@ extern EST_Features phone_def;
 static int nucleus_count(EST_Relation &phone)
 {
     int v = 0;
-    for (EST_Item *l = phone.head(); l; l = next(l))
+    for (EST_Item *l = phone.head(); l; l = l->next())
 	if (l->S("df.syllabic") == "+")
 	    ++v;
 
@@ -123,7 +123,7 @@ EST_Item *make_onset(EST_Item *syl_struct_root, EST_Item *nucleus, int flat)
 	}
 	// tmpeorary hack because of lack of prepend daughter fn.
 	EST_Item *s;
-	for (s = prev(nucleus); prev(s); s = prev(s));
+	for (s = nucleus->prev(); prev(s); s = s->prev());
 	for (c1 = s; c1 != nucleus; c1 = next(c1))
 	    onset->append_daughter(c1);
 	return 0;
@@ -222,7 +222,7 @@ static void make_coda(EST_Item *first_coda, EST_Item *first_onset,
     }
 
     for (; (first_coda != 0) && (first_coda != first_onset); 
-	 first_coda = next(first_coda))
+	 first_coda = first_coda->next())
 	m->append_daughter(first_coda);
 }
 
@@ -247,7 +247,7 @@ int syllabify_word(EST_Item *w, EST_Relation &phone,
     if (count < 1)
 	return 0;
 
-    for (prev_syl = 0, l = phone.head(); l; l = next(l))
+    for (prev_syl = 0, l = phone.head(); l; l = l->next())
     {
 //	cout << "type " << l->S("name") << ": " << l->S("df.type") << endl;
 	if (l->S("df.syllabic") == "+")
@@ -272,7 +272,7 @@ int syllabify_word(EST_Item *w, EST_Relation &phone,
 
 	    prev_syl = this_syl;
 	    prev_struct = this_struct;
-	    first_coda = next(l);
+	    first_coda = l->next();
 	}
     }
 
@@ -341,7 +341,7 @@ void lex_to_phones(const EST_String &name, const EST_String &pos,
     else
 	siod_list_to_strlist(car(lpos), lex_def);
     
-    for (EST_Litem *sl = lex_def.head(); sl; sl = next(sl))
+    for (EST_Litem *sl = lex_def.head(); sl; sl = sl->next())
     {
 	p = phone.append();
 	lex_phone = lex_def(sl);
@@ -381,7 +381,7 @@ void lex_to_phones(const EST_String &name, const EST_String &pos,
     int v = 0;
     EST_Litem *l;
 
-    for (l = full.head(); l; l = next(l))
+    for (l = full.head(); l; l = l->next())
 	if (ph_is_stress_vowel(full(l)))
 	    ++v;
     return v;
@@ -468,7 +468,7 @@ static bool ph_is_s(EST_String c1)
 static int vowel_count(EST_Relation &phone)
 {
     int v = 0;
-    for (EST_Item *l = phone.head(); l; l = next(l))
+    for (EST_Item *l = phone.head(); l; l = l->next())
 	if (ph_is_vowel(l->name()))
 	    ++v;
     return v;
@@ -489,7 +489,7 @@ static int vowel_count(EST_Relation &phone)
 	festival_error();
     }
 
-    for (prev_syl = 0, l = word.relation("Phone")->head(); l; l = next(l))
+    for (prev_syl = 0, l = word.relation("Phone")->head(); l; l = l->next())
     {
 	cout << "syl: " << l->S("name") << ": " << l->S("df.syllabic", 1) 
 	    << endl;
@@ -508,7 +508,7 @@ static int vowel_count(EST_Relation &phone)
 		      prev_syl->as_relation("SylStructure"));
 
 	    prev_syl = this_syl;
-	    first_coda = next(l);
+	    first_coda = l->next();
 	}
     }
 
@@ -558,7 +558,7 @@ static int vowel_count(EST_Relation &phone)
     // make phone relation
     siod_list_to_strlist(car(lpos), lex_def);
     
-    for (EST_Litem *sl = lex_def.head(); sl; sl = next(sl))
+    for (EST_Litem *sl = lex_def.head(); sl; sl = sl->next())
     {
 	p = word.relation("Phone")->append();
 	lex_phone = lex_def(sl);
@@ -615,7 +615,7 @@ static int vowel_count(EST_Relation &phone)
     
     // absorb initial unstressed syllables
     for (s = word.relation("Syllable")->head(); 
-	 s && (s->f("stress_num") == 0); s = next(s))
+	 s && (s->f("stress_num") == 0); s = s->next())
     {
 	//	cout << "**1 syl:" << *s << endl;
 	new_leaf = word.relation("MetricalTree")->append(s);

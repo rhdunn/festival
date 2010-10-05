@@ -56,7 +56,7 @@ int num_daughters(EST_Item *s)
     dn = daughtern(s);
     
     int n = 1;
-    for (d = d1; d != dn; d = next(d))
+    for (d = d1; d != dn; d = d->next())
 	++n;
     return n;
 }

@@ -98,7 +98,7 @@ LISP Intonation_Accent_Tree_Utt(LISP utt)
 
     accent_tree = siod_get_lval("int_accent_cart_tree","no accent tree");
 
-    for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
+    for (s=u->relation("Syllable")->first(); s != 0; s=s->next())
     {
 	if ((paccent = accent_specified(s)) == "0") // check if pre-specified
 	    paccent = (EST_String)wagon_predict(s,accent_tree);
@@ -119,7 +119,7 @@ LISP Intonation_Endtone_Tree_Utt(LISP utt)
 
     endtone_tree = siod_get_lval("int_tone_cart_tree","no tone cart tree");
 
-    for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
+    for (s=u->relation("Syllable")->first(); s != 0; s=s->next())
     {
 	if ((ptone = tone_specified(s)) == "0")
 	    ptone = (EST_String)wagon_predict(s,endtone_tree);
@@ -149,7 +149,7 @@ static EST_String accent_specified(EST_Item *s)
     if (ffeature(s,"stress") == "1")
     {   // only goes on first stressed syllable
 	EST_Item *p;
-	for (p=prev(s,"SylStructure"); p != 0; p=prev(p))
+	for (p=as(s,"SylStructure")->prev(); p != 0; p=p->prev())
 	    if (ffeature(s,"stress") == "1")
 		return "NONE";  // specified but not on this syllable
 	return paccent;  // first stressed syl in word
@@ -178,7 +178,7 @@ static EST_String tone_specified(EST_Item *s)
 	if (ptone == "0")
 	    return ptone;
     }
-    if (next(ss) == 0)  // final syllable in word
+    if (ss->next() == 0)  // final syllable in word
 	return ptone;
     else
 	return "NONE";  // pre-specified but inappropriate syllable in word
@@ -203,7 +203,7 @@ LISP FT_Int_Targets_LR_Utt(LISP utt)
     EST_FVector feats;
     feats.resize(siod_llength(start_lr));
 
-    for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
+    for (s=u->relation("Syllable")->first(); s != 0; s=s->next())
     {
 	find_feat_values(s,start_lr,feats);
 	pstart = apply_lr_model(start_lr,feats);
@@ -250,7 +250,7 @@ LISP FT_Int_Targets_LR_5_Utt(LISP utt)
     EST_FVector feats;
     feats.resize(siod_llength(start_lr));
 
-    for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
+    for (s=u->relation("Syllable")->first(); s != 0; s=s->next())
     {
 	find_feat_values(s,start_lr,feats);
 	pstart = apply_lr_model(start_lr,feats);
@@ -376,10 +376,10 @@ static int after_pause(EST_Item *s)
 {
     // TRUE if segment immediately previous to this is a silence
     EST_Item *p;
-    if (prev(s) == 0)
+    if (s->prev() == 0)
 	return TRUE;
     EST_Item *ss = s->as_relation("SylStructure");
-    if (prev(s) == prev(ss))
+    if (s->prev() == ss->prev())
 	return FALSE;
 
     p = daughter1(ss)->as_relation("Segment")->prev();
@@ -394,7 +394,7 @@ static int after_pause(EST_Item *s)
 static int before_pause(EST_Item *s)
 {
     // TRUE is segment immediately after this is a silence
-    if (next(s) == 0)
+    if (s->next() == 0)
 	return TRUE;
     EST_Item *ss = s->as_relation("SylStructure");
     EST_Item *n = daughtern(ss)->as_relation("Segment")->next();
@@ -409,7 +409,7 @@ static EST_Item *vowel_seg(EST_Item *syl)
     // return related to vowel segment
     EST_Item *p;
 
-    for (p=daughter1(syl,"SylStructure"); p != 0; p=next(p))
+    for (p=daughter1(syl,"SylStructure"); p != 0; p=p->next())
 	if (ph_is_vowel(p->name()))
 	    return p;
 

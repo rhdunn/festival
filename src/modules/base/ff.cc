@@ -67,10 +67,10 @@ static EST_Val ff_segment_duration(EST_Item *s)
 	    << endl;
 	festival_error();
     }
-    if (prev(n) == 0)
+    if (n->prev() == 0)
 	return EST_Val(s->F("end", 0));
     else
-	return EST_Val(s->F("end", 0)-(prev(n)->F("end",0)));
+	return EST_Val(s->F("end", 0)-(n->prev()->F("end",0)));
 }
 
 static EST_Val ff_syllable_duration(EST_Item *s)
@@ -89,7 +89,7 @@ static EST_Val ff_syllable_duration(EST_Item *s)
 
 	if (ld == 0)
 	    return val_int0;
-	EST_Item *ps = prev(as(fd,"Segment"));
+	EST_Item *ps = as(fd,"Segment")->prev();
 	if (ps == 0)
 	    return ld->F("end",0);
 	else
@@ -119,7 +119,7 @@ static EST_Val ff_word_duration(EST_Item *s)
 
 	if (ld == 0)
 	    return val_int0;
-	EST_Item *ps = prev(as(fd,"Segment"));
+	EST_Item *ps = as(fd,"Segment")->prev();
 	if (ps == 0)
 	    return ld->F("end",0);
 	else
@@ -135,10 +135,10 @@ static EST_Val ff_word_duration(EST_Item *s)
 static EST_Val ff_seg_start(EST_Item *s)
 {
     EST_Item *n = as(s,"Segment");
-    if (prev(n) == 0)
+    if (n->prev() == 0)
 	return default_val_float;
     else
-	return prev(n)->F("end",0);
+	return n->prev()->F("end",0);
 }
 
 static EST_Val ff_syl_start(EST_Item *s)
@@ -194,14 +194,14 @@ static EST_Val ff_position_type(EST_Item *s)
 
     if (nn == 0)  // its not really a syllable
 	return EST_Val("single");
-    else if (next(nn) == 0)
+    else if (nn->next() == 0)
     {
-	if (prev(nn) == 0)
+	if (nn->prev() == 0)
 	    return EST_Val("single");
 	else
 	    return EST_Val("final");
     }
-    else if (prev(nn) == 0)
+    else if (nn->prev() == 0)
 	return EST_Val("initial");
     else
 	return EST_Val("mid");
@@ -215,7 +215,7 @@ static EST_Val ff_word_break(EST_Item *w)
     static EST_Val val3 = EST_Val(3);
     static EST_Val val2 = EST_Val(2);
 
-    if ((nn == 0) || (next(nn) != 0))
+    if ((nn == 0) || (nn->next() != 0))
 	return val_int1;
     else 
     {
@@ -244,7 +244,7 @@ static EST_Val ff_syl_break(EST_Item *s)
 
     if (nn == 0)
 	return val_int1;  // no sylstructure so maybe its standalone
-    else if (next(nn) != 0)  // word internal
+    else if (nn->next() != 0)  // word internal
 	return val_int0;
     else if (parent(nn) == 0)  // not in a word -- strange
 	return val_int1;
@@ -261,7 +261,7 @@ static EST_Val ff_old_syl_break(EST_Item *s)
 
     if (nn == 0)
 	return val_int1;  // no sylstructure so maybe its standalone
-    else if (next(nn) != 0)  // word internal
+    else if (nn->next() != 0)  // word internal
 	return val_int0;
     else if (parent(nn) == 0)  // not in a word -- strange
 	return val_int1;
@@ -292,7 +292,7 @@ static EST_Val ff_tobi_accent(EST_Item *s)
     EST_Item *nn = as(s,"Intonation");
     EST_Item *p;
 
-    for (p=daughter1(nn); p; p=next(p))
+    for (p=daughter1(nn); p; p=p->next())
 	if (p->name().contains("*"))
 	    return EST_Val(p->name());
     return EST_Val("NONE");
@@ -304,7 +304,7 @@ static EST_Val ff_tobi_endtone(EST_Item *s)
     EST_Item *nn = as(s,"Intonation");
     EST_Item *p;
 
-    for (p=daughter1(nn); p; p=next(p))
+    for (p=daughter1(nn); p; p=p->next())
     {
 	EST_String l = p->name();
 	if ((l.contains("%")) || (l.contains("-")))
@@ -350,7 +350,7 @@ static EST_Val ff_syl_onsetsize(EST_Item *s)
     EST_Item *p;
     int size;
 
-    for (p=daughter1(nn),size=0; p; p=next(p),size++)
+    for (p=daughter1(nn),size=0; p; p=p->next(),size++)
 	if (ph_is_vowel(p->name()))
 	    return EST_Val(size);
     
@@ -365,7 +365,7 @@ static EST_Val ff_syl_vowel(EST_Item *s)
     EST_Item *p;
     int size;
 
-    for (p=daughter1(nn),size=0; p; p=next(p),size++)
+    for (p=daughter1(nn),size=0; p; p=p->next(),size++)
 	if (ph_is_vowel(p->name()))
 	    return EST_Val(p->name());
 
@@ -380,7 +380,7 @@ static EST_Val ff_syl_codasize(EST_Item *s)
     EST_Item *p;
     int size;
 
-    for (p=daughter1(nn)->last(),size=1; p; p=prev(p),size++)
+    for (p=daughter1(nn)->last(),size=1; p; p=p->prev(),size++)
 	if (ph_is_vowel(p->name()))
 	    return EST_Val(size);
     
@@ -396,11 +396,11 @@ static EST_Val ff_syl_pc_unvox(EST_Item *s)
 
     if (daughter1(nn) == 0)
 	return val_int0;  // no segments in syllable
-    else if ((ps = prev(daughter1(nn),"Segment")) != 0)
+    else if ((ps = as(daughter1(nn),"Segment")->prev()) != 0)
 	start = ps->F("end",0);
     unvox = start;
 
-    for (p=daughter1(nn); p != 0; p=next(p))
+    for (p=daughter1(nn); p != 0; p=p->next())
     {
 	if ((ph_is_vowel(p->name())) ||
 	    (ph_is_voiced(p->name())))
@@ -418,7 +418,7 @@ static EST_Val ff_syl_vowel_start(EST_Item *s)
     EST_Item *nn = as(s,"SylStructure");
     EST_Item *p;
 
-    for (p=daughter1(nn); p != 0; p=next(p))
+    for (p=daughter1(nn); p != 0; p=p->next())
     {
 	if (ph_is_vowel(p->name()))
 	    return EST_Val(ff_seg_start(p));
@@ -433,7 +433,7 @@ static EST_Val ff_seg_onsetcoda(EST_Item *s)
     EST_Item *nn = as(s,"SylStructure");
     EST_Item *p;
 
-    for (p=next(nn); p; p=next(p))
+    for (p=nn->next(); p; p=p->next())
 	if (ph_is_vowel(p->name()))
 	    return EST_Val("onset");
     return EST_Val("coda");
@@ -442,9 +442,9 @@ static EST_Val ff_seg_onsetcoda(EST_Item *s)
 static EST_Val ff_seg_onset_stop(EST_Item *s)
 {
     // 1 if onset of the syllable attached to this segment has a stop
-    EST_Item *nn = first(as(s,"SylStructure"));
+    EST_Item *nn = as(s,"SylStructure")->first();
 
-    for ( ; nn ; nn=next(nn))
+    for ( ; nn ; nn=nn->next())
     {
 	if (ph_is_vowel(nn->name()))
 	    return val_string0;
@@ -457,9 +457,9 @@ static EST_Val ff_seg_onset_stop(EST_Item *s)
 static EST_Val ff_seg_coda_fric(EST_Item *s)
 {
     // 1 if coda of the syllable attached to this segment has a fricative
-    EST_Item *nn = last(as(s,"SylStructure"));
+    EST_Item *nn = as(s,"SylStructure")->last();
 
-    for ( ; nn ; nn=prev(nn))
+    for ( ; nn ; nn=nn->prev())
     {
 	if (ph_is_vowel(nn->name()))
 	    return val_string0;
@@ -476,7 +476,7 @@ static EST_Val ff_seg_pos_in_syl(EST_Item *s)
     EST_Item *p;
     int pos=0;
 
-    for (p=first(nn); p; p=next(p),pos++)
+    for (p=nn->first(); p; p=p->next(),pos++)
 	if (p == nn)
 	    return EST_Val(pos);
     // don't think you can get here
@@ -488,7 +488,7 @@ static EST_Val ff_seg_syl_initial(EST_Item *s)
     // 1 if seg is syllable initial, 0 otherwise.
     EST_Item *nn = as(s,"SylStructure");
 
-    if (prev(nn) == 0)
+    if (nn->prev() == 0)
 	return val_string1;
     else
 	return val_string0;
@@ -499,7 +499,7 @@ static EST_Val ff_seg_syl_final(EST_Item *s)
     // 1 if seg is syllable initial, 0 otherwise.
     EST_Item *nn = as(s,"SylStructure");
 
-    if (next(nn) == 0)
+    if (nn->next() == 0)
 	return val_string1;
     else
 	return val_string0;
@@ -512,7 +512,7 @@ static EST_Val ff_syl_pos_in_word(EST_Item *s)
     EST_Item *p;
     int pos=0;
 
-    for (p=first(nn); p; p=next(p),pos++)
+    for (p=nn->first(); p; p=p->next(),pos++)
 	if (p == nn)
 	    return EST_Val(pos);
     // don't think you can get here
@@ -526,7 +526,7 @@ static EST_Val ff_pos_in_phrase(EST_Item *s)
     EST_Item *p;
     int pos=0;
 
-    for (p=first(nn); p; p=next(p),pos++)
+    for (p=nn->first(); p; p=p->next(),pos++)
 	if (p == nn)
 	    return EST_Val(pos);
     // don't think you can get here
@@ -539,9 +539,9 @@ static EST_Val ff_num_break(EST_Item *s)
     // a new number group
     EST_Item *nn = as(s,"Token");
 
-    if ((next(nn) == 0) &&
+    if ((nn->next() == 0) &&
 	(parent(nn)->name().matches(RXdouble)) &&
-	(next(parent(nn))->name().matches(RXdouble)))
+	(parent(nn)->next()->name().matches(RXdouble)))
 	return val_string1;
     else
 	return val_string0;
@@ -558,7 +558,7 @@ static EST_Val ff_syl_midpitch(EST_Item *s)
     EST_Item *nn = as(s,"SylStructure");
     EST_Item *p;
 
-    for (p=daughter1(nn); p; p = next(p))
+    for (p=daughter1(nn); p; p = p->next())
     {
 	if (ph_is_vowel(p->name()))
 	    return ffeature(p,"R:Target.daughter1.f0");
@@ -638,12 +638,12 @@ static EST_Val ff_syl_in(EST_Item *s)
     EST_Item *nn = as(s,"Syllable");
     // The first syllable in the phrase
     EST_Item *fsyl = 
-	as(daughter1(first(parent(s,"SylStructure"),"Phrase"),"SylStructure"),
+	as(daughter1(as(parent(s,"SylStructure"),"Phrase")->first(),"SylStructure"),
 	   "Syllable");
     EST_Item *p;
     int count;
 
-    for (count=0,p=nn; p != 0; p=prev(p),count++)
+    for (count=0,p=nn; p != 0; p=p->prev(),count++)
 	if (p == fsyl)
 	    return EST_Val(count);
     return EST_Val(count);
@@ -655,12 +655,12 @@ static EST_Val ff_syl_out(EST_Item *s)
     EST_Item *nn = as(s,"Syllable");
     // The last syllable in the phrase
     EST_Item *lsyl = 
-	as(daughtern(last(parent(s,"SylStructure"),"Phrase"),"SylStructure"),
+	as(daughtern(as(parent(s,"SylStructure"),"Phrase")->last(),"SylStructure"),
 	   "Syllable");
     EST_Item *p;
     int count;
 
-    for (count=0,p=nn; p != 0; p=next(p),count++)
+    for (count=0,p=nn; p != 0; p=p->next(),count++)
 	if (p == lsyl)
 	    return EST_Val(count);
     return EST_Val(count);
@@ -671,13 +671,13 @@ static EST_Val ff_ssyl_in(EST_Item *s)
     // Number of stressed syllables since last phrase break 
     EST_Item *nn = as(s,"Syllable");
     EST_Item *fsyl = 
-	as(daughter1(first(parent(s,"SylStructure"),"Phrase"),"SylStructure"),
+	as(daughter1(as(parent(s,"SylStructure"),"Phrase")->first(),"SylStructure"),
 	   "Syllable");
     EST_Item *p;
     int count;
 
     if (nn == fsyl) return val_int0;
-    for (count=0,p=prev(nn); (p != 0) && (p != fsyl); p = prev(p))
+    for (count=0,p=nn->prev(); (p != 0) && (p != fsyl); p = p->prev())
 	if (p->F(stressname,0) == 1)
 	    count ++;
     return EST_Val(count);
@@ -689,13 +689,13 @@ static EST_Val ff_ssyl_out(EST_Item *s)
     EST_Item *nn = as(s,"Syllable");
     // The last syllable in the phrase
     EST_Item *lsyl = 
-	as(daughtern(last(parent(s,"SylStructure"),"Phrase"),"SylStructure"),
+	as(daughtern(as(parent(s,"SylStructure"),"Phrase")->last(),"SylStructure"),
 	   "Syllable");
     EST_Item *p;
     int count;
 
     if (nn == lsyl) return val_int0;
-    for (count=0,p=next(nn); (p != 0); p=next(p))
+    for (count=0,p=nn->next(); (p != 0); p=p->next())
     {
 	if (p->F(stressname,0) == 1)
 	    count ++;
@@ -710,13 +710,13 @@ static EST_Val ff_asyl_in(EST_Item *s)
     EST_Item *nn = as(s,"Syllable");
     // The first syllable in the phrase
     EST_Item *fsyl = 
-	as(daughter1(first(parent(s,"SylStructure"),"Phrase"),"SylStructure"),
+	as(daughter1(as(parent(s,"SylStructure"),"Phrase")->first(),"SylStructure"),
 	   "Syllable");
     EST_Item *p;
     int count;
 
     if (nn == fsyl) return val_int0;
-    for (count=0,p=prev(nn); (p != 0) && (p != fsyl); p = prev(p))
+    for (count=0,p=nn->prev(); (p != 0) && (p != fsyl); p = p->prev())
 	if (ff_syl_accented(p) == 1)
 	    count ++;
     return EST_Val(count);
@@ -728,13 +728,13 @@ static EST_Val ff_asyl_out(EST_Item *s)
     EST_Item *nn = as(s,"Syllable");
     // The last syllable in the phrase
     EST_Item *lsyl = 
-	as(daughtern(last(parent(s,"SylStructure"),"Phrase"),"SylStructure"),
+	as(daughtern(as(parent(s,"SylStructure"),"Phrase")->last(),"SylStructure"),
 	   "Syllable");
     EST_Item *p;
     int count;
 
     if (nn == lsyl) return val_int0;
-    for (count=0,p=next(nn); (p != 0); p=next(p))
+    for (count=0,p=nn->next(); (p != 0); p=p->next())
     {
 	if (ff_syl_accented(p) == 1)
 	    count ++;
@@ -750,7 +750,7 @@ static EST_Val ff_last_accent(EST_Item *s)
     EST_Item *p;
     int count;
 
-    for (count=0,p=prev(nn); p != 0; p=prev(p),count++)
+    for (count=0,p=nn->prev(); p != 0; p=p->prev(),count++)
 	if (ff_syl_accented(p) == 1)
 	    return EST_Val(count);
 
@@ -764,7 +764,7 @@ static EST_Val ff_next_accent(EST_Item *s)
     EST_Item *p;
     int count;
 
-    for (count=0,p=next(nn); p != 0; p=next(p),count++)
+    for (count=0,p=nn->next(); p != 0; p=p->next(),count++)
 	if (ff_syl_accented(p) == 1)
 	    return EST_Val(count);
 
@@ -778,7 +778,7 @@ static EST_Val ff_sub_phrases(EST_Item *s)
     EST_Item *p;
     int count;
 
-    for (count=0,p=prev(nn); p != 0; p=prev(p))
+    for (count=0,p=nn->prev(); p != 0; p=p->prev())
     {
 	if (p->name() == "BB")
 	    return EST_Val(count);

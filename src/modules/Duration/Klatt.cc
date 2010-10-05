@@ -90,7 +90,7 @@ LISP FT_Duration_Klatt_Utt(LISP utt)
     klatt_params = siod_get_lval("duration_klatt_params",
 				 "no klatt duration params");
 
-    for (s=u->relation("Segment")->first(); s != 0; s = next(s))
+    for (s=u->relation("Segment")->first(); s != 0; s = s->next())
 	klatt_seg_dur(s);
 
     return utt;
@@ -158,7 +158,7 @@ static int word_final(EST_Item *seg)
     // True if this segment is the last in a word
     EST_Item *nn = seg->as_relation("SylStructure");
 
-    if (next(nn) || (next(parent(nn))))
+    if (nn->next() || (parent(nn)->next()))
 	return FALSE;
     else
 	return TRUE;
@@ -169,7 +169,7 @@ static int syl_final(EST_Item *seg)
     // True if this segment is the last in a syllable
     EST_Item *nn = seg->as_relation("SylStructure");
 
-    if (next(nn))
+    if (nn->next())
 	return FALSE;
     else
 	return TRUE;
@@ -180,7 +180,7 @@ static int word_initial(EST_Item *seg)
     // True if this segment is the first in a word
     EST_Item *nn = seg->as_relation("SylStructure");
 
-    if (prev(nn) || prev(parent(nn)))
+    if (nn->prev() || parent(nn)->prev())
 	return FALSE;
     else
 	return TRUE;
@@ -193,7 +193,7 @@ static int phrase_initial(EST_Item *seg)
     if (word_initial(seg))
     {
 	EST_Item *nn = parent(parent(seg,"SylStructure"));
-	if (prev(nn,"Phrase"))
+	if (as(nn,"Phrase")->prev())
 	    return FALSE;
 	else
 	    return TRUE;
@@ -331,10 +331,10 @@ static float rule9a(EST_Item *seg)
     {
 	if (syl_final(seg))
 	    return 1.2;
-	s_next = next(seg);
+	s_next = seg->next();
 	if ((s_next) && (syl_final(s_next)))
 	    return sub_rule9a(s_next->name());
-	s_next_next = next(s_next);
+	s_next_next = s_next->next();
 	if ((ph_is_sonorant(s_next->name())) &&
 	    (s_next_next) &&
 	    (ph_is_obstruent(s_next_next->name())))
@@ -346,7 +346,7 @@ static float rule9a(EST_Item *seg)
     {
 	if (syl_final(seg))
 	    return 1.2;
-	s_next = next(seg);
+	s_next = seg->next();
 	if (ph_is_obstruent(s_next->name()))
 	    return sub_rule9a(s_next->name());
     }
@@ -386,22 +386,22 @@ static float rule10(EST_Item *seg)
     {
 	if (ph_is_vowel(seg->name()))
 	{
-	    if (ph_is_vowel(next(seg)->name()))
+	    if (ph_is_vowel(seg->next()->name()))
 		return 1.20;
 	    else if ((!phrase_initial(seg)) &&
-		     (ph_is_vowel(prev(seg)->name())))
+		     (ph_is_vowel(seg->prev()->name())))
 		return 0.70;
 	    else
 		return 1.0;
 	}
-	else if (ph_is_consonant(next(seg)->name()))
+	else if (ph_is_consonant(seg->next()->name()))
 	    if (!phrase_initial(seg) &&
-		(ph_is_consonant(prev(seg)->name())))
+		(ph_is_consonant(seg->prev()->name())))
 		return 0.5;
 	    else
 		return 0.7;
 	else if (!phrase_initial(seg) &&
-		(ph_is_consonant(prev(seg)->name())))
+		(ph_is_consonant(seg->prev()->name())))
 	    return 0.7;
     }
 

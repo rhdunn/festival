@@ -165,7 +165,7 @@ LISP FT_us_get_copy_wave(LISP lutt, LISP l_sig_file,  LISP l_pm_file,
     {
 	EST_Item *n = seg.tail()->insert_after();
 	n->set("name", ph_silence());
-	n->set("end", prev(seg.tail())->F("end") + 0.1);
+	n->set("end", seg.tail()->prev()->F("end") + 0.1);
     }
 
     us_get_copy_wave(*utt, *sig, *pm, seg);
@@ -354,7 +354,7 @@ LISP FT_us_load_utt_segments(LISP l_utt, LISP l_filename)
 
     u->relation("Segment")->clear();
 
-    for (s = tu.relation("Segment")->head(); s; s = next(s))
+    for (s = tu.relation("Segment")->head(); s; s = s->next())
       {
 	t = u->relation("Segment")->append();
 	t->fset("name", s->fS("name"));

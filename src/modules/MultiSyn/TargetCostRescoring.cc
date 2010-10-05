@@ -86,14 +86,14 @@ void rescoreCandidates( EST_VTCandidate *candidates, float beam_width, float mul
   int n = 0;
 
   if( beam_width < 0 ){ // just average all of them
-    for( EST_Litem *li = scores.head(); li != 0; li = next(li) ){
+    for( EST_Litem *li = scores.head(); li != 0; li = li->next() ){
       meandur += scores(li)._dur;
       n++;
     }
   }
   else{
     float score_cutoff = scores.first()._score + beam_width;
-    for( EST_Litem *li = scores.head(); li != 0; li = next(li) ){
+    for( EST_Litem *li = scores.head(); li != 0; li = li->next() ){
       if( scores(li)._score > score_cutoff )
 	break;
       else{
@@ -106,7 +106,7 @@ void rescoreCandidates( EST_VTCandidate *candidates, float beam_width, float mul
   meandur /= n;
 
   // then tweak the scores based on that
-  for( EST_Litem *li = scores.head(); li != 0; li = next(li) ){
+  for( EST_Litem *li = scores.head(); li != 0; li = li->next() ){
     float cand_dur = scores(li)._dur; 
     //    cerr << scores(li)._cand->score << " ";
     scores(li)._cand->score += (mult * abs( cand_dur - meandur ) );

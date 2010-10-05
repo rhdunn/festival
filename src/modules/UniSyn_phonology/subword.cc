@@ -68,7 +68,7 @@ void subword_list(EST_Item *w, EST_Relation &syllable,
     if (next(syllable.head()) == 0)
 	return;
 
-    for (s = syllable.head(); s ; s = next(s))
+    for (s = syllable.head(); s ; s = s->next())
     {
 	cout << "appending syl\n";
 	n->append_daughter(s);
@@ -89,7 +89,7 @@ void subword_metrical_tree(EST_Item *w, EST_Relation &syllable,
     }
     
     // absorb initial unstressed syllables
-    for (s = syllable.head(); s && (s->f("stress_num") == 0); s = next(s))
+    for (s = syllable.head(); s && (s->f("stress_num") == 0); s = s->next())
     {
 	new_leaf = metricaltree.append(s);
 	new_leaf->set("MetricalValue", "w");
@@ -191,7 +191,7 @@ static void all_stress(EST_Relation &syllable, EST_Relation &mettree)
     EST_Item *n, *s;
     int stress_num = -1;
     
-    for (s = syllable.head(); s; s = next(s))
+    for (s = syllable.head(); s; s = s->next())
 	if (s->I("stress_num",0) > stress_num)
 	    stress_num = s->I("stress_num");
     
@@ -199,7 +199,7 @@ static void all_stress(EST_Relation &syllable, EST_Relation &mettree)
     
     for (; stress_num > 0; --stress_num)
     {
-	for (s = syllable.head(); s; s = next(s))
+	for (s = syllable.head(); s; s = s->next())
 	    if (s->I("stress_num",0) == stress_num)
 		break;
 	

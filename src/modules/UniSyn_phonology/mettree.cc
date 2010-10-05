@@ -133,9 +133,9 @@ void subword_metrical_tree(EST_Item *w, EST_Relation &syllable,
 
 //    cout << "trans: " << trans << endl;
 
-    for (s = trans.head(); s; s = next(s))
+    for (s = trans.head(); s; s = s->next())
     {
-	n = next(s);
+	n = s->next();
 //	cout << *s;
 	if (s->S("name").contains("cl"))
 	{
@@ -161,7 +161,7 @@ void subword_metrical_tree(EST_Item *w, EST_Relation &syllable,
 
 EST_Item *prev_match(EST_Item *n)
 {
-    EST_Item *p = prev(n);
+    EST_Item *p = n->prev();
     if (p == 0)
 	return 0;
 
@@ -237,7 +237,7 @@ void add_even_segment_times(EST_Item *w, EST_Relation &phone)
     n = (float)phone.length();
     div = dur/n;
 
-    for (i = 0, s = phone.head(); s; s = next(s), ++i)
+    for (i = 0, s = phone.head(); s; s = s->next(), ++i)
     {
 	s->set("start", start + div * (float) i);
 	s->set("end", start + div * (float) (i + 1));
@@ -258,7 +258,7 @@ static void add_trans_phrase_phrase(EST_Utterance &utt)
 
     utt.create_relation("IntonationPhrase");
 
-    for (s = utt.relation("MetricalTree", 1)->head(); s; s = next(s))
+    for (s = utt.relation("MetricalTree", 1)->head(); s; s = s->next())
 	{
 	    for (r = first_leaf_in_tree(s); 
 		 r != next_leaf(last_leaf_in_tree(s)); r = next_leaf(r))
@@ -279,7 +279,7 @@ static void add_trans_phrase_phrase(EST_Utterance &utt)
 	    if (first_accent)
 		{
 		    cout << "first accent: " << *first_accent << endl;
-		    a = prev(first_accent);
+		    a = first_accent->prev();
 
 		    if (a->S("name","") != "phrase_start")
 			a = first_accent->insert_before();
@@ -308,7 +308,7 @@ static void add_trans_phrase_phrase(EST_Utterance &utt)
 	    if (last_accent)
 		{
 		    cout << "last accent: " << *last_accent << endl;
-		    a = next(last_accent);
+		    a = last_accent->next();
 		    if (a->S("name","") != "phrase_end")
 			a = last_accent->insert_after();
 		}
@@ -332,7 +332,7 @@ static void add_trans_phrase_phrase(EST_Utterance &utt)
     // now join any other marked phrase_start/ends to intermediate
     // nodes in metrical tree.
 
-    /*    for (s = u.relation("Intonation", 1)->head(); s; s = next(s))
+    /*    for (s = u.relation("Intonation", 1)->head(); s; s = s->next())
 	{
 	    if (!s->in_relation("IntonationPhrase") && 
 		!s->in_relation("IntonationSyllable"))
@@ -356,7 +356,7 @@ void add_single_phrase(EST_Utterance &utt, EST_Item *t)
     pos = t->F("time");
     max = 100000.0;
 
-    for (p = utt.relation("Syllable")->head(); p; p = next(p))
+    for (p = utt.relation("Syllable")->head(); p; p = p->next())
     {
 	if (t->S("name") == "phrase_end")
 	    d = fabs(pos - p->F("end"));
@@ -408,7 +408,7 @@ void add_times(EST_Relation &lexical, EST_Relation &surface,
 
 //    cout << "surface: " << surface << endl;
 
-    for (s = lexical.head(); s; s = next(s))
+    for (s = lexical.head(); s; s = s->next())
     {
 	if ((t = daughter1(s->as_relation("Match"))) != 0)
 	{
@@ -433,12 +433,12 @@ void add_times(EST_Relation &lexical, EST_Relation &surface,
 	 lexical.tail()->set("start", last_end);
      }
 
-    for (s = lexical.head(); s; s = next(s))
+    for (s = lexical.head(); s; s = s->next())
     {
 	if (!s->f_present("end"))
 	{
 //	    cout << "missing end feature for " << *s << endl;
-	    for (i = 1, p = s; p; p = next(p), ++i)
+	    for (i = 1, p = s; p; p = p->next(), ++i)
 		if (p->f_present("end"))
 		    break;
 	    inc = (p->F("end") - prev_end) / ((float) i);
@@ -446,7 +446,7 @@ void add_times(EST_Relation &lexical, EST_Relation &surface,
 
 //	    cout << "stop phone is " << *p << endl;
 
-	    for (i = 1; s !=p ; s = next(s), ++i)
+	    for (i = 1; s !=p ; s = s->next(), ++i)
 	    {
 		s->set("end", (prev_end + ((float) i * inc)));
 		s->set("start", (prev_end + ((float) (i - 1 )* inc)));
@@ -519,7 +519,7 @@ void binaryize_tree(EST_Item *t)
 	move_sub_tree(d, t);
     }
 
-    for (EST_Item *p = daughter1(t); p; p = next(p))
+    for (EST_Item *p = daughter1(t); p; p = p->next())
 	binaryize_tree(p);
 }
 
@@ -529,7 +529,7 @@ void binaryize_tree(EST_Utterance &utt, const EST_String &base_tree,
     utt.create_relation(new_tree);
     copy_relation(*utt.relation(base_tree), *utt.relation(new_tree));
 
-    for (EST_Item *p = utt.relation(new_tree)->head(); p; p = next(p))
+    for (EST_Item *p = utt.relation(new_tree)->head(); p; p = p->next())
 	binaryize_tree(p);
 }
 
@@ -555,7 +555,7 @@ void add_metrical_functions(EST_Utterance &utt)
     add_feature_function(*utt.relation("Syllable"), 
 			 "start", "standard+unisyn_leaf_start");
 
-    for (EST_Item *s = utt.relation("Syllable")->head(); s; s = next(s))
+    for (EST_Item *s = utt.relation("Syllable")->head(); s; s = s->next())
 	s->set("time_path", "SylStructure");
     
     EST_Features tf;
@@ -617,7 +617,7 @@ void extend_tree(EST_Item *m, EST_Item *p, const EST_String &terminal,
 	m = m->as_relation(second_tree); // swap to a new tree
     }
 
-    for (d = daughter1(m); d; d = next(d))
+    for (d = daughter1(m); d; d = d->next())
     {
 	e = p->append_daughter(d);
         extend_tree(d, e, terminal, second_tree);
@@ -651,7 +651,7 @@ static void apply_nsr(EST_Utterance &u, const EST_String &tree)
 {
     EST_Item *n;
     
-    for (n = u.relation(tree)->head(); n; n = next(n))
+    for (n = u.relation(tree)->head(); n; n = n->next())
 	nsr(n);
 }
 
@@ -801,12 +801,12 @@ void stress_factor2(EST_Utterance &u, const EST_String &base_stream,
     
     // normalise values
     sv = 0;
-    for (s = u.relation(base_stream)->head(); s; s = next(s))
+    for (s = u.relation(base_stream)->head(); s; s = s->next())
 	sv = Lof(s->I("StressVal"), sv);
     
     cout << "Max Stress: " << sv << endl;
     
-    for (s = u.relation(base_stream)->head(); s; s = next(s))
+    for (s = u.relation(base_stream)->head(); s; s = s->next())
     {
 	b = (float)(s->I("StressVal") - sv + 1);
 	if (s->f("MetricalValue") == "s")
@@ -848,7 +848,7 @@ static void remove_punctuation(EST_Utterance &u)
     EST_Item *w;
     EST_Item *a, *b, *c, *od;
     
-    for (w = u.relation("Word")->head(); w != 0; w = next(w))
+    for (w = u.relation("Word")->head(); w != 0; w = w->next())
     {
 	if (w->f("pos") == "punc")
 	{
@@ -870,7 +870,7 @@ static void add_intonation(EST_Utterance &u, const EST_String &base_stream,
     
     cout << "Threshold = " << threshold << endl;
     
-    for (s = u.relation(base_stream)->head(); s; s = next(s))
+    for (s = u.relation(base_stream)->head(); s; s = s->next())
     {
 	if (s->F("StressFactor") > threshold)
 	{
@@ -929,7 +929,7 @@ static void mettree_add_words(EST_Utterance &u)
     word.create_relation("Syllable");
     word.create_relation("WordStructure");
     
-    for (w = u.relation("Word")->head(); w != 0; w = next(w))
+    for (w = u.relation("Word")->head(); w != 0; w = w->next())
     {
 	word.clear_relations();
 	
@@ -1092,7 +1092,7 @@ LISP FT_metrical_data(LISP lf_word, LISP lf_seg, LISP lf_int)
    
    for (w = u->relation("Word")->head(); w != 0; w = n)
    {
-   n = next(w);
+   n = w->next();
    //	w->set("start", prev_end);
    w->f_remove("end");
    //	prev_end = w->F("end");
@@ -1145,7 +1145,7 @@ LISP FT_metrical_data(LISP lf_word, LISP lf_seg, LISP lf_int)
    
    if (segfile != "dummy")
    {
-   for (s = u->relation("Segment")->head(); s; s = next(s))
+   for (s = u->relation("Segment")->head(); s; s = s->next())
    {
    s->set("start", phone_start);
    phone_start = s->F("end");
@@ -1164,7 +1164,7 @@ LISP FT_metrical_data(LISP lf_word, LISP lf_seg, LISP lf_int)
    
    //    cout <<"Surface 1:" << *u->relation("SurfacePhone") << endl;
    
-   for (i = 0, w = u->relation("Word")->head(); w != 0; w = next(w), ++i)
+   for (i = 0, w = u->relation("Word")->head(); w != 0; w = w->next(), ++i)
    {
    word.clear_relations();
    

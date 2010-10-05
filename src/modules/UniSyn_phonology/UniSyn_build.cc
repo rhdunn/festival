@@ -127,10 +127,10 @@ void trans_to_phones(EST_Item *w, EST_Relation &trans, EST_Relation &phone)
     EST_Item *t, *p;
     int r;
 
-    prev_phone = prev(w) ? prev(w)->I("phon_ref") : -1;
+    prev_phone = w->prev() ? prev(w)->I("phon_ref") : -1;
     r = w->I("phon_ref");
 
-    for (t = trans.head(); t; t = next(t))
+    for (t = trans.head(); t; t = t->next())
     {
 	if ((t->f("name") == "sil") || (t->f("name") == "pau"))
 	    continue;
@@ -163,7 +163,7 @@ void add_trans_intonation(EST_Utterance &utt, const EST_String &i_name,
     if (add_words)
 	utt.create_relation("IntonationWord");
 
-    for (t = utt.relation(i_name, 1)->head(); t; t = next(t))
+    for (t = utt.relation(i_name, 1)->head(); t; t = t->next())
 	{
 	    t->f_remove("end");
 	    if (!t->f_present("word_ref"))
@@ -173,7 +173,7 @@ void add_trans_intonation(EST_Utterance &utt, const EST_String &i_name,
 		    w_num = t->S("word_ref");
 		    s_num = t->I("syl_num");
 
-		    for (w = utt.relation("Word", 1)->head(); w; w = next(w))
+		    for (w = utt.relation("Word", 1)->head(); w; w = w->next())
 		    {
 			if (w->S("id") == w_num)
 			    break;
@@ -242,7 +242,7 @@ void syl_to_word_intonation(EST_Utterance &utt)
 
     utt.create_relation("IntonationWord");
 
-    for (s = utt.relation("Syllable", 1)->head(); s; s = next(s))
+    for (s = utt.relation("Syllable", 1)->head(); s; s = s->next())
     {
 	if (!s->in_relation("IntonationSyllable"))
 	    continue;
@@ -260,7 +260,7 @@ void syl_to_word_intonation(EST_Utterance &utt)
 	else
 	    b = w->as_relation("IntonationWord");
 
-	for (t = daughter1(s->as_relation("IntonationSyllable")); t; t = next(t))
+	for (t = daughter1(s->as_relation("IntonationSyllable")); t; t = t->next())
 	    b->append_daughter(t);
     }
 }
@@ -282,7 +282,7 @@ void intonation_diagnostics(EST_Utterance &ref, EST_Utterance &test,
     EST_String iname = "Intonation" + rel;
 
     for (r = ref.relation(rel, 1)->head(), t = test.relation(rel, 1)->head(); r && t; 
-	 r = next(r), t = next(t))
+	 r = r->next(), t = t->next())
     {
 	if (legal_daughter(r, iname, valid) && legal_daughter(t, iname, valid))
 	    t->set("i_status", "COR");
@@ -303,7 +303,7 @@ static void add_trans_phrase(EST_Utterance &utt, const EST_String &i_name,
     float pos, max, d;
     EST_String is_name = i_name + s_name;
 
-    for (t = utt.relation(i_name, 1)->head(); t; t = next(t))
+    for (t = utt.relation(i_name, 1)->head(); t; t = t->next())
 	{
 	    if (t->in_relation(is_name))
 		continue;
@@ -312,7 +312,7 @@ static void add_trans_phrase(EST_Utterance &utt, const EST_String &i_name,
 
 	    cout << "here 1\n";
 
-	    for (p = utt.relation(s_name)->head(); p; p = next(p))
+	    for (p = utt.relation(s_name)->head(); p; p = p->next())
 		{
 		    if (t->S("name","0") == "phrase_end")
 			d = fabs(pos - p->end());
@@ -342,7 +342,7 @@ LISP FT_add_trans_intonation(LISP l_utt, LISP lf_int, LISP l_add_words)
     if (lab.load(int_file) != format_ok)
 	EST_error("Couldn't load file %s\n", (const char *) int_file);
 
-    for (s = lab.head(); s; s = next(s))
+    for (s = lab.head(); s; s = s->next())
       {
 	n = u->relation("Intonation")->append();
 	merge_features(n, s, 1);
@@ -379,7 +379,7 @@ LISP FT_add_trans_word(LISP l_utt, LISP lf_word, LISP keep_times)
     if (lab.load(word_file) != format_ok)
 	EST_error("Couldn't load file %s\n", (const char *) word_file);
 
-    for (s = lab.head(); s; s = next(s))
+    for (s = lab.head(); s; s = s->next())
     {
 	s->set("start", p_end);
 	p_end = s->F("end");
@@ -408,11 +408,11 @@ LISP FT_add_f0_points(LISP l_utt, LISP lf_f0)
     if (f0.load(f0_file) != format_ok)
 	EST_error("Couldn't load file %s\n", (const char *) f0_file);
 
-    for (s = u->relation("Segment")->head(); s; s = next(s))
+    for (s = u->relation("Segment")->head(); s; s = s->next())
     {
-	prev_mid = prev(s) ? 
+	prev_mid = s->prev() ? 
 	    (prev(s)->F("end") + prev(s)->F("start"))/2.0 : 0.0;
-	next_mid = next(s) ? 
+	next_mid = s->next() ? 
 	    (next(s)->F("end") + next(s)->F("start"))/2.0 : 0.0;
 
 	s->set("prev_mid_f0", f0.a(f0.index(prev_mid)));
@@ -443,11 +443,11 @@ LISP FT_add_coefs(LISP l_utt, LISP lf_coef)
     frame = new EST_FVector;
     frame->fill(0.0); // special case for first frame.
 
-    for (s = u->relation("Segment")->head(); s; s = next(s))
+    for (s = u->relation("Segment")->head(); s; s = s->next())
     {
-	prev_mid = prev(s) ? 
+	prev_mid = s->prev() ? 
 	    (prev(s)->F("end") + prev(s)->F("start"))/2.0 : 0.0;
-	next_mid = next(s) ? 
+	next_mid = s->next() ? 
 	    (next(s)->F("end") + next(s)->F("start"))/2.0 : 0.0;
 
 	frame = new EST_FVector;
@@ -517,7 +517,7 @@ void fix_syllables(EST_Item *nw, EST_Utterance &word)
 		word.relation("SurfaceSyllable")->length() <<
 		" surface syllables\n";
 
-    for (s = word.relation("Syllable")->head(); s; s = next(s))
+    for (s = word.relation("Syllable")->head(); s; s = s->next())
     {
 	t = s->as_relation("SylStructure");
 	n = syl_nucleus(t);
@@ -565,7 +565,7 @@ void add_trans_duration(EST_Utterance &utt, const EST_String &segfile)
     utt.create_relation("LabelSegment");
     utt.create_relation("Match");
 
-    for (s = lab.head(); s; s = next(s))
+    for (s = lab.head(); s; s = s->next())
     {
 	if (!phone_def.present(s->S("name")))
 	    EST_error("Phone %s is not defined in phone set\n", (const char *)
@@ -583,7 +583,7 @@ void add_trans_duration(EST_Utterance &utt, const EST_String &segfile)
     add_times(*utt.relation("Segment"), *utt.relation("LabelSegment"),
 	     *utt.relation("Match"));
 
-    for (s = utt.relation("Segment")->head(); s; s = next(s))
+    for (s = utt.relation("Segment")->head(); s; s = s->next())
     {
 	s->set("target_dur", (s->F("end") - s->F("start")));
 	s->f_remove("end");
@@ -613,7 +613,7 @@ static void add_silences(EST_Utterance &utt,EST_Item *w)
     cout << "Looking at inserting\n";
     // Intermeditate silences
     r = w->I("phon_ref");
-    for (s=utt.relation("LabelSegment")->head(); s; s=next(s))
+    for (s=utt.relation("LabelSegment")->head(); s; s=s->next())
     {
 	if (r == s->I("ref"))
 	{
@@ -655,7 +655,7 @@ void add_trans_seg(EST_Utterance &utt, const EST_String &segfile)
 
     phone_start = 0.0;
     
-    for (s = lab.head(); s; s = next(s))
+    for (s = lab.head(); s; s = s->next())
     {
 	if (!phone_def.present(s->S("name")))
 	    EST_error("Phone %s is not defined in phone set\n", (const char *)
@@ -671,7 +671,7 @@ void add_trans_seg(EST_Utterance &utt, const EST_String &segfile)
 //    phonemic_trans(*utt.relation("LabelSegment"));
 /*    for (w = utt.relation("Word")->head(); w != 0; w = n)
     {
-	n = next(w);
+	n = w->next();
 	w->f_remove("end");
 	if ((w->f("name") == "sil") || (w->f("name") == "pau"))
 	    utt.relation("Word")->remove_item(w);
@@ -706,7 +706,7 @@ void add_trans_seg(EST_Utterance &utt, const EST_String &segfile)
 
     add_silences(utt,0);
 
-    for (i = 0, w = utt.relation("Word")->head(); w != 0; w = next(w), ++i)
+    for (i = 0, w = utt.relation("Word")->head(); w != 0; w = w->next(), ++i)
     {
 	word.clear_relations();
 	word.f.set("max_id", 0);
@@ -782,7 +782,7 @@ void add_trans_seg(EST_Utterance &utt, const EST_String &segfile)
     // if silences aren't wanted we still have to build with them so that
     // start times before pauses are done properly.
     if (!siod_get_lval("unisyn_build_with_silences",NULL))
-	for (s = next(utt.relation("Segment")->head());s;s = next(s))
+	for (s = next(utt.relation("Segment")->head());s;s = s->next())
 	    if ((prev(s)->S("name") != "pau") && (prev(s)->S("name") != "sil"))
 	    	s->set_function("start", "standard+unisyn_start");
 	    else

@@ -413,7 +413,7 @@ static void merge_silences(EST_Utterance &u)
     
     for (s=u.relation("Segment")->first(); s != 0; s=ns)
     {
-	ns = next(s);
+	ns = s->next();
 	if ((ns != 0) &&
 	    (ph_is_silence(s->name())) &&
 	    (s->name() == ns->name())) // same *type* of silence
@@ -598,7 +598,7 @@ static DIPHONE_SPN *make_spn(EST_Utterance &u)
 	ps->t_sz++;
     }
     seg_end = 0;
-    for (i=0,s=seg->first(); s != 0; s=next(s),i++)
+    for (i=0,s=seg->first(); s != 0; s=s->next(),i++)
     {
 	seg_start = seg_end;
 	seg_end = s->F("end");
@@ -620,7 +620,7 @@ static DIPHONE_SPN *make_spn(EST_Utterance &u)
 	ps->cum_dur[i] += ps->duration[i];
 	for (rt = daughter1(s,"Target");
 	     rt != 0;
-	     rt = next(rt),ps->t_sz++)
+	     rt = rt->next(),ps->t_sz++)
 	{
 	    ps->targ_phon[ps->t_sz] = i;
 	    ps->targ_freq[ps->t_sz] = rt->I("f0");

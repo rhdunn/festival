@@ -215,7 +215,7 @@ void festival_banner(void)
 	if (sub_copyrights.length() > 0)
         {
             cout << "\n";
-	    for (t = sub_copyrights.head(); t != 0; t = next(t))
+	    for (t = sub_copyrights.head(); t != 0; t = t->next())
 		cout << sub_copyrights.item(t);
         }
 	cout << "For details type `(festival_warranty)'" << endl;

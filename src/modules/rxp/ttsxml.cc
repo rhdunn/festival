@@ -173,10 +173,10 @@ static LISP xml_registered_ids()
 
   EST_Litem *p;
 
-  for(p=ids.head(); p != NULL; p=next(p))
+  for(p=ids.head(); p != NULL; p=p->next())
     {
       EST_String pat = ids(p);
-      p=next(p);
+      p=p->next();
       EST_String res = ids(p);
       result = cons(
 		 cons(strcons(pat.length(), pat), 

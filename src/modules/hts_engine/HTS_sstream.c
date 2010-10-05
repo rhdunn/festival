@@ -42,6 +42,19 @@
 /* POSSIBILITY OF SUCH DAMAGE.                                       */
 /* ----------------------------------------------------------------- */
 
+#ifndef HTS_SSTREAM_C
+#define HTS_SSTREAM_C
+
+#ifdef __cplusplus
+#define HTS_SSTREAM_C_START extern "C" {
+#define HTS_SSTREAM_C_END   }
+#else
+#define HTS_SSTREAM_C_START
+#define HTS_SSTREAM_C_END
+#endif                          /* __CPLUSPLUS */
+
+HTS_SSTREAM_C_START;
+
 /* hts_engine libraries */
 #include "HTS_hidden.h"
 
@@ -62,8 +75,8 @@ static void HTS_set_duration(int *duration, double *mean, double *vari,
       rho = (frame_length - temp1) / temp2;
    }
    for (i = 0; i < size; i++) {
-      temp1 = mean[i] + rho * vari[i];
-      duration[i] = (int) (temp1 + *remain + 0.5);
+      temp1 = mean[i] + rho * vari[i] + *remain;
+      duration[i] = (int) (temp1 + 0.5);
       if (duration[i] < 1)
          duration[i] = 1;
       *remain = temp1 - (double) duration[i];
@@ -457,3 +470,7 @@ void HTS_SStreamSet_clear(HTS_SStreamSet * sss)
 
    HTS_SStreamSet_initialize(sss);
 }
+
+HTS_SSTREAM_C_END;
+
+#endif                          /* !HTS_SSTREAM_C */
