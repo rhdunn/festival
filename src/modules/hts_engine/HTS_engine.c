@@ -1,10 +1,10 @@
 /* ----------------------------------------------------------------- */
-/*           The HMM-Based Speech Synthesis System (HTS)             */
-/*           hts_engine API developed by HTS Working Group           */
+/*           The HMM-Based Speech Synthesis Engine "hts_engine API"  */
+/*           developed by HTS Working Group                          */
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2010  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2011  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -98,6 +98,9 @@ void HTS_Engine_initialize(HTS_Engine * engine, int nstream)
    /* volume */
    engine->global.volume = 1.0;
 
+   /* initialize audio */
+   HTS_Audio_initialize(&engine->audio, engine->global.sampling_rate,
+                        engine->global.audio_buff_size);
    /* initialize model set */
    HTS_ModelSet_initialize(&engine->ms, nstream);
    /* initialize label list */
@@ -267,6 +270,8 @@ void HTS_Engine_set_sampling_rate(HTS_Engine * engine, int i)
    if (i > 48000)
       i = 48000;
    engine->global.sampling_rate = i;
+   HTS_Audio_set_parameter(&engine->audio, engine->global.sampling_rate,
+                           engine->global.audio_buff_size);
 }
 
 /* HTS_Engine_get_sampling_rate: get sampling rate */
@@ -333,6 +338,8 @@ void HTS_Engine_set_audio_buff_size(HTS_Engine * engine, int i)
    if (i > 48000)
       i = 48000;
    engine->global.audio_buff_size = i;
+   HTS_Audio_set_parameter(&engine->audio, engine->global.sampling_rate,
+                           engine->global.audio_buff_size);
 }
 
 /* HTS_Engine_get_audio_buff_size: get audio buffer size */
@@ -429,6 +436,12 @@ int HTS_Engine_get_state_duration(HTS_Engine * engine, int state_index)
    return HTS_SStreamSet_get_duration(&engine->sss, state_index);
 }
 
+/* HTS_Engine_get_nstream: get number of stream */
+int HTS_Engine_get_nstream(HTS_Engine * engine)
+{
+   return HTS_ModelSet_get_nstream(&engine->ms);
+}
+
 /* HTS_Engine_get_nstate: get number of state */
 int HTS_Engine_get_nstate(HTS_Engine * engine)
 {
@@ -488,7 +501,7 @@ void HTS_Engine_create_gstream(HTS_Engine * engine)
                          engine->global.sampling_rate, engine->global.fperiod,
                          engine->global.alpha, engine->global.beta,
                          &engine->global.stop, engine->global.volume,
-                         engine->global.audio_buff_size);
+                         &engine->audio);
 }
 
 /* HTS_Engine_save_information: output trace information */
@@ -687,14 +700,13 @@ void HTS_Engine_save_label(HTS_Engine * engine, FILE * fp)
       for (j = 0, duration = 0; j < nstate; j++)
          duration += HTS_SStreamSet_get_duration(sss, state++);
       /* in HTK & HTS format */
-      fprintf(fp, "%d %d %s\n", (int) (frame * rate),
-              (int) ((frame + duration) * rate),
+      fprintf(fp, "%lu %lu %s\n", (unsigned long) (frame * rate),
+              (unsigned long) ((frame + duration) * rate),
               HTS_Label_get_string(label, i));
       frame += duration;
    }
 }
 
-#ifndef HTS_EMBEDDED
 /* HTS_Engine_save_generated_parameter: output generated parameter */
 void HTS_Engine_save_generated_parameter(HTS_Engine * engine, FILE * fp,
                                          int stream_index)
@@ -709,7 +721,6 @@ void HTS_Engine_save_generated_parameter(HTS_Engine * engine, FILE * fp,
          fwrite(&temp, sizeof(float), 1, fp);
       }
 }
-#endif                          /* !HTS_EMBEDDED */
 
 /* HTS_Engine_save_generated_speech: output generated speech */
 void HTS_Engine_save_generated_speech(HTS_Engine * engine, FILE * fp)
@@ -798,6 +809,7 @@ void HTS_Engine_clear(HTS_Engine * engine)
    HTS_free(engine->global.gv_weight);
 
    HTS_ModelSet_clear(&engine->ms);
+   HTS_Audio_clear(&engine->audio);
 }
 
 /* HTS_get_copyright: write copyright to string */
@@ -807,7 +819,7 @@ void HTS_get_copyright(char *str)
    char url[] = HTS_URL, version[] = HTS_VERSION;
    char *copyright[] = { HTS_COPYRIGHT };
 
-   sprintf(str, "\nThe HMM-based speech synthesis system (HTS)\n");
+   sprintf(str, "\nThe HMM-Based Speech Synthesis Engine \"hts_engine API\"\n");
    sprintf(str, "%shts_engine API version %s (%s)\n", str, version, url);
    for (i = 0; i < nCopyright; i++) {
       if (i == 0)

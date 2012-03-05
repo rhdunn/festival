@@ -1,10 +1,10 @@
 /* ----------------------------------------------------------------- */
-/*           The HMM-Based Speech Synthesis System (HTS)             */
-/*           hts_engine API developed by HTS Working Group           */
+/*           The HMM-Based Speech Synthesis Engine "hts_engine API"  */
+/*           developed by HTS Working Group                          */
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2010  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2011  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -121,17 +121,6 @@ void HTS_free(void *p);
 #define W2       1.0
 #define GV_MAX_ITERATION 5
 
-/*  -------------------------- audio ------------------------------  */
-
-/* HTS_Audio_open: open audio device */
-void HTS_Audio_open(HTS_Audio * as, int sampling_rate, int max_buff_size);
-
-/* HTS_Audio_write: send data to audio device */
-void HTS_Audio_write(HTS_Audio * as, short data);
-
-/* HTS_Audio_close: close audio device */
-void HTS_Audio_close(HTS_Audio * as);
-
 /*  -------------------------- vocoder ----------------------------  */
 
 #ifndef PI
@@ -160,6 +149,8 @@ void HTS_Audio_close(HTS_Audio * as);
 #define PADEORDER 5
 #define IRLENG    96
 #endif                          /* HTS_EMBEDDED */
+
+#define PULSELISTSIZE 512
 
 /* for MGLSA filter */
 #define NORMFLG1 TRUE
