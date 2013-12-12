@@ -1,8 +1,14 @@
 # Change Log
 
-## [2.1-1] - 2015-04-27 Maintenance
+## [2.1-1] - 2015-05-10 Maintenance
+
+Build fixes:
 
   * Build improvements from [1.4.1-1](#1.4.1-1).
+
+Improved configure script:
+
+  * Update configure.ac to comply with autoconf 2.69.
 
 ## [2.1] - 2010-10-05 Release
 
