@@ -9,6 +9,7 @@ Build fixes:
 Improved configure script:
 
   * Update configure.ac to comply with autoconf 2.69.
+  * Merge the output of `autoscan` into configure.ac.
 
 ## [2.1] - 2010-10-05 Release
 
