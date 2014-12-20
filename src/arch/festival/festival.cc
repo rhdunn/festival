@@ -51,6 +51,11 @@ void festival_lisp_vars(void);
 void festival_banner(void);
 void festival_load_default_files(void);
 
+// Visual studio 2012 needs this
+#ifdef SYSTEM_IS_WIN32
+#define snprintf _snprintf
+#endif
+
 #define _S_S_S(S) #S
 #define STRINGIZE(S) _S_S_S(S)
 
