@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.96-1] - 2015-04-27 Maintenance
+
+  * Build improvements from [1.4.1-1](#1.4.1-1).
+
 ## [1.96] - 2006-09-27 Beta
 
   * A new synthesis engine.

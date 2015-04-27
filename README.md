@@ -41,10 +41,6 @@ can be built using the following commands:
     make
     sudo make install
 
-__NOTE:__ This project was written for an older C++ compiler and as such
-requires the gcc 2.95 compiler to build. It has been successfully built in
-a Debian Woody chroot environment.
-
 ## Installation
 
 Festival should run on any standard Unix platform.  It has already run
