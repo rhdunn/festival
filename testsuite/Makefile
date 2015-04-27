@@ -36,16 +36,22 @@ ALL_DIRS = data correct
 
 TEST_SCRIPTS = fest text voice modes parse scherr
 TEST_MODULES = # not sure we'll need these
+SCRIPTS = $(TEST_SCRIPTS:%=%.sh) testinstall.sh
+FILES = Makefile \
+	$(SCRIPTS)
 
 ALL = 
 
 include $(TOP)/config/test_make_rules
 
-test: tmpdir tests
+test: tmpdir testinstall
+
+testinstall:
+	@ sh testinstall.sh $(TOP) && $(MAKE) --no-print-directory tests
 
 tmpdir:
-	rm -rf tmp
-	mkdir tmp
+	@ rm -rf tmp
+	@ mkdir tmp
 
 tests: test_modules test_scripts
 

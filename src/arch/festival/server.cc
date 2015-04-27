@@ -200,13 +200,13 @@ static int client_access_check(int fd,int client)
     LISP passwd, access_list, deny_list;
     int client_access = TRUE;
     struct sockaddr_in peer;
-    int addrlen=sizeof(peer);
+    socklen_t addrlen=sizeof(peer);
     struct hostent *clienthost;
     const char *client_hostname;
     const char *client_hostnum;
     const char *reason = "";
     
-    getpeername(fd,(struct sockaddr *)&peer,SOCKLEN_CAST &addrlen);
+    getpeername(fd,(struct sockaddr *)&peer,&addrlen);
     clienthost = gethostbyaddr((char *)&peer.sin_addr,
 			       sizeof(peer.sin_addr),AF_INET);
     client_hostnum = inet_ntoa(peer.sin_addr);

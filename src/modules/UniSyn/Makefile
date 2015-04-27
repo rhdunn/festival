@@ -35,8 +35,8 @@ TOP=../../..
 DIRNAME=src/modules/UniSyn
 H = UniSyn.h us_features.h us_synthesis.h
 
-TSRCS = ps_synthesis.cc
-CPPSRCS = UniSyn.cc us_prosody.cc us_unit.cc \
+TSRCS =
+CPPSRCS = UniSyn.cc us_prosody.cc us_unit.cc ps_synthesis.cc \
 	us_mapping.cc us_features.cc $(TSRCS)
 SRCS = $(CPPSRCS)
 OBJS = $(CPPSRCS:.cc=.o)

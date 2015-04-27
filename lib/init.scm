@@ -71,7 +71,7 @@
 (require 'synthesis)
 
 ;;;  Some default parameters
-(Parameter.def 'Wavefiletype 'nist)
+(Parameter.def 'Wavefiletype 'riff)
 
 ;;; Set default audio method
 (cond

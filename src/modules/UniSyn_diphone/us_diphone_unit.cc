@@ -112,7 +112,7 @@ void parse_diphone_times(EST_Relation &diphone_stream,
     float dur_1 = 0.0, dur_2 = 0.0, p_time;
     float t_time = 0.0, end;
     p_time = 0.0;
-    
+
     for (s = source_lab.head(), u = diphone_stream.head(); u; u = next(u), 
 	 s = next(s))
     {
@@ -125,6 +125,7 @@ void parse_diphone_times(EST_Relation &diphone_stream,
 	dur_2 = pm->t(e_frame) - dur_1;
 	
 	s->set("source_end", (dur_1 + p_time));
+	
 	p_time = s->F("source_end") + dur_2;
 
 	end = dur_1 + dur_2 + t_time;

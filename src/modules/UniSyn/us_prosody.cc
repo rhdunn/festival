@@ -84,8 +84,14 @@ void f0_to_pitchmarks(EST_Track &fz, EST_Track &pm, int num_channels,
     // Its impossible to guess the length of the pitchmark array before 
     // hand. Here we find the upper limit and resize at the end
     for (i = 0; i < fz.num_frames(); ++i)
+    {
+	if (fz.a_no_check(i) < 0)
+	    fz.a_no_check(i) = 0;
+	if (fz.a_no_check(i) > 500)
+	    fz.a_no_check(i) = fz.a_no_check(i-1);
 	if (fz.a_no_check(i) > max)
 	    max = fz.a_no_check(i);
+    }
 
     // Coefficients will also be placed in here, so its best allocate
     // space for their channels now

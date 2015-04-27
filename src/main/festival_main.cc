@@ -60,7 +60,7 @@ static void festival_main(int argc, char **argv)
     EST_Litem *p;
     EST_StrList files;
     int real_number_of_files = 0;
-    int heap_size = DEFAULT_HEAP_SIZE;
+    int heap_size = FESTIVAL_HEAP_SIZE;
 
     if (festival_check_script_mode(argc,argv) == TRUE)
     {   // Need to check this directly as in script mode args are 
@@ -223,7 +223,7 @@ static void festival_script_mode(int argc, char **argv)
     }
 
     // initialize without loading init files
-    festival_initialize(FALSE,DEFAULT_HEAP_SIZE);
+    festival_initialize(FALSE,FESTIVAL_HEAP_SIZE);
     
     for (args=NIL,i=3; i < argc; i++)
 	args = cons(rintern(argv[i]),args);

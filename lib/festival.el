@@ -95,7 +95,7 @@
 
 (defun festival-say-string (string)
    "Send string to festival and have it said"
-   (interactive)
+   (interactive "sSay: ")
    (festival-start-process)
    (process-send-string festival-process 
 			(concat "(SayText " (format "%S" string) ")

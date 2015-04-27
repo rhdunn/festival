@@ -145,6 +145,7 @@ rules are not used unless explicitly called. [see Token to word rules]"
 	    nil
 	    (list '((name "'s")(pos nnp)))))))))
   ((and (string-matches name "No")
+	(item.next token)
         (string-matches (item.feat token "n.name")
 			"[0-9]+"))
    (list

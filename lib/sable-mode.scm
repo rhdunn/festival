@@ -233,14 +233,14 @@ SABLE mode token specific analysis."
     ((equal? (car (xxml_attval "NAME" ATTLIST)) 'male3)
      (set! sable_current_speaker 'voice_ked_diphone)
      (voice_ked_diphone))
-    (t
-     (print "SABLE: selecting unknown voice")
-     (set! sable_current_speaker voice_rab_diphone)
-     (voice_rab_diphone)))
+   (t
+      (set! sable_current_speaker (intern (string-append "voice_" (car (xxml_attval "NAME" ATTLIST)))))
+      (eval (list sable_current_speaker))))
     (sable_setup_voice_params)
    nil)
   (")SPEAKER" (ATTLIST UTT)
    (xxml_synth UTT)
+   (set! sable_utt UTT)
    (set! sable_current_speaker (car sable_speaker_stack))
    (set! sable_speaker_stack (cdr sable_speaker_stack))
    (eval (list sable_current_speaker))

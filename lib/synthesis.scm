@@ -390,6 +390,11 @@
 TEXT, a string, is rendered as speech."
    (utt.play (utt.synth (eval (list 'Utterance 'Text text)))))
 
+(define (SynthText text)
+"(SynthText TEXT)
+TEXT, a string, is rendered as speech."
+   (utt.synth (eval (list 'Utterance 'Text text))))
+
 (define (SayPhones phones)
 "(SayPhones PHONES)
 PHONES is a list of phonemes.  This uses the Phones type utterance

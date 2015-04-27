@@ -1,8 +1,9 @@
 ###########################################################################
 ##                                                                       ##
+##                   Carnegie Mellon University and                      ##
 ##                Centre for Speech Technology Research                  ##
 ##                     University of Edinburgh, UK                       ##
-##                       Copyright (c) 1996,1997                         ##
+##                       Copyright (c) 1996-2000                         ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -19,29 +20,29 @@
 ##      derived from this software without specific prior written        ##
 ##      permission.                                                      ##
 ##                                                                       ##
-##  THE UNIVERSITY OF EDINBURGH AND THE CONTRIBUTORS TO THIS WORK        ##
-##  DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING      ##
-##  ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT   ##
-##  SHALL THE UNIVERSITY OF EDINBURGH NOR THE CONTRIBUTORS BE LIABLE     ##
-##  FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    ##
-##  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN   ##
-##  AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,          ##
-##  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF       ##
-##  THIS SOFTWARE.                                                       ##
+##  THE UNIVERSITY OF EDINBURGH, CARNEGIE MELLON UNIVERSITY AND THE      ##
+##  CONTRIBUTORS TO THIS WORK DISCLAIM ALL WARRANTIES WITH REGARD TO     ##
+##  THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY   ##
+##  AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF EDINBURGH, CARNEGIE ##
+##  MELLON UNIVERSITY NOR THE CONTRIBUTORS BE LIABLE FOR ANY SPECIAL,    ##
+##  INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER          ##
+##  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN  AN ACTION   ##
+##  OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF     ##
+##  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.       ##
 ##                                                                       ##
 ###########################################################################
 ##                                                                       ##
 ##                   Author: Alan W Black                                ##
 ##                   Date:   April 1998                                  ##
-##                                                                       ##
+##                           with substantial tidyup Spring 2000         ##
 ###########################################################################
 ##                                                                       ##
 ##  Implementation of Black, A. and Taylor, P. (1997). Automatically     ##
 ##  clustering similar units for unit selection in speech synthesis      ##
 ##  Proceedings of Eurospeech 97, vol2 pp 601-604, Rhodes, Greece.       ##
 ##                                                                       ##
-##  postscript: http://www.cstr.ed.ac.uk/~awb/papers/ES97units.ps        ##
-##  http://www.cstr.ed.ac.uk/~awb/papers/ES97units/ES97units.html        ##
+##  postscript: http://www.cs.cmu.edu/~awb/papers/ES97units.ps           ##
+##  http://www.cs.cmu.edu/~awb/papers/ES97units/ES97units.html           ##
 ##                                                                       ##
 ##  This also serves as an example unit selection algorithm within the   ##
 ##  the new festival unit selection/signal processing architecture       ##
@@ -49,17 +50,17 @@
 ###########################################################################
 TOP=../../..
 DIRNAME=src/modules/clunits
-SCMS = acost.scm ked_params.scm
+SCMS = acost.scm
 H = clunits.h
 TSRCS =
-SRCSCXX = acost.cc clunits.cc cldb.cc
+SRCSCXX = acost.cc clunits.cc cldb.cc cljoin.cc
 SRCS = $(SRCSCXX) $(TSRCS)
 
 OBJS = $(SRCSCXX:.cc=.o) 
 
 FILES=Makefile $(SRCS) $(H) $(SCMS) $(WORKINGON)
 
-LOCAL_INCLUDES = -I../include
+LOCAL_INCLUDES = -I../include -I../UniSyn
 
 INLIB = $(TOP)/src/lib/libFestival.a
 

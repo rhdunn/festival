@@ -44,7 +44,7 @@
   * This is a struct rather than a class so that it can be initialised
   * in the source of the module. 
   * @author Richard Caley <rjc@cstr,ed,ac,uk>
-  * @version $Id: ModuleDescription.h,v 1.9 1999/05/30 13:38:52 awb release $
+  * @version $Id: ModuleDescription.h,v 1.2 2001/04/04 13:12:35 awb Exp $
   */
 
 struct ModuleDescription {

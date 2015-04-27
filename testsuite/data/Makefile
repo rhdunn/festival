@@ -36,7 +36,7 @@ TOP=../..
 DIRNAME=testsuite/data
 
 TESTFILES = fest1.scm fest2.scm utt1.scm dump1.scm voices.scm modes.scm \
-            scherr.scm
+            scherr.scm testinstall.scm
 
 FILES = Makefile .festivalrc $(TESTFILES)
 

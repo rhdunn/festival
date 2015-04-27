@@ -53,6 +53,7 @@
   -otype <string> Output waveform type: ulaw, snd, aiff, riff, nist etc.
                   (default is riff)
   -F <int>        Output frequency.
+  -scale <float>  Volume factor
   -eval <string>  File or lisp s-expression to be evaluated before
                   synthesis.
 ")
@@ -67,6 +68,7 @@
 (defvar frequency nil)  ;; default is no frequency modification
 (defvar text_files '("-"))
 (defvar mode nil)
+(defvar volume "1.0")
 (defvar wavefiles nil)
 
 ;;; Get options
@@ -98,6 +100,11 @@
 	      (text2wave_error "no frequency specified"))
 	  (set! frequency (car (cdr o)))
 	  (set! o (cdr o)))
+	 ((string-equal "-scale" (car o))
+	  (if (not (cdr o))
+	      (text2wave_error "no scale specified"))
+	  (set! volume (car (cdr o)))
+	  (set! o (cdr o)))
 	 ((string-equal "-mode" (car o))
 	  (if (not (cdr o))
 	      (text2wave_error "no mode specified"))
@@ -105,7 +112,7 @@
 	  (set! o (cdr o)))
 	 ((string-equal "-eval" (car o))
 	  (if (not (cdr o))
-	      (dumpfeats_error "no file specified to load"))
+	      (text2wave_error "no file specified to load"))
 	  (if (string-matches (car (cdr o)) "^(.*")
 	      (eval (read-from-string (car (cdr o))))
 	      (load (car (cdr o))))
@@ -139,6 +146,10 @@ and delete the intermediate ones."
      (reverse wavefiles))
     (if frequency
 	(utt.wave.resample wholeutt (parse-number frequency)))
+    (if (not (equal? volume "1.0"))
+	(begin
+	  (format t "doing v\n")
+	  (utt.wave.rescale wholeutt (parse-number volume))))
     (utt.save.wave wholeutt outfile output_type)
     ))
 

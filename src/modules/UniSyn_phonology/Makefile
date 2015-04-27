@@ -30,24 +30,27 @@
 ##  THIS SOFTWARE.                                                       ##
 ##                                                                       ##
 ###########################################################################
-
-## Makefile for build utilities.
+##            Metrical Trees                    ##
+###########################################################################
 
 TOP=../../..
-DIRNAME=src/modules/utilities
-H = 
-SRCS =  find_inits.cc
-OBJS = $(SRCS:.cc=.o)
+DIRNAME=src/modules/UniSyn_phonology
+H = us_duration.h
+TSRCS = us_aux.cc
+CPPSRCS = UniSyn_phonology.cc mettree.cc syllabify.cc subword.cc \
+	UniSyn_build.cc us_duration.cc unisyn_tilt.cc $(TSRCS)
+SRCS = $(CPPSRCS)
 
-FILES = Makefile NoInit $(SRCS) $(H) extract_module_doc++.prl
+OBJS = $(CPPSRCS:.cc=.o) 
 
-ALL_EXECS = find_inits
+FILES=Makefile $(SRCS) $(H) unisyn_phonology.mak
 
-VCLIBS = $$(ESTLIBS) 
+LOCAL_INCLUDES = -I../include
 
-ALL =  $(ALL_EXECS) 
+INLIB = $(TOP)/src/lib/libFestival.a
+
+ALL = .buildlib
 
 include $(TOP)/config/common_make_rules
 
-find_inits: find_inits.o $(ESTOOLSLIBS)
-	$(strip $(LINK_COMMAND) -o $@ $@.o $(NON_PROJECT_LIBS) $($(@:=_LIBS)))
+

@@ -158,4 +158,6 @@ LISP ft_get_param(const EST_String &pname);
 
 class UnitDatabase *get_c_unitdatabase(LISP x);
 
+#define FESTIVAL_HEAP_SIZE 1000000
+
 #endif

@@ -35,8 +35,8 @@ TOP=../../..
 DIRNAME=src/modules/UniSyn_diphone
 H = us_diphone.h
 
-TSRCS = us_diphone_index.cc
-CPPSRCS = UniSyn_diphone.cc us_diphone_unit.cc $(TSRCS)
+TSRCS = 
+CPPSRCS = UniSyn_diphone.cc us_diphone_unit.cc us_diphone_index.cc $(TSRCS)
 
 SRCS = $(CPPSRCS)
 OBJS = $(CPPSRCS:.cc=.o)

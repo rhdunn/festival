@@ -102,10 +102,10 @@ LISP Lexicon::lookup(const EST_String &word, const LISP features)
     if (pre_hooks != NIL)
     {   // We could just call it and it wont do anything if NIL
 	// but this check may save some extra consing
-	hooked = apply_hooks(pre_hooks,
-			     cons(strintern(word),cons(features,NIL)));
+	hooked = apply_hooks_right(pre_hooks,
+				   cons(strintern(word),cons(features,NIL)));
 	sword = get_c_string(car(hooked));
-	mapped = map_pos(posmap,car(cdr(features)));
+	mapped = map_pos(posmap,car(cdr(hooked)));
     }
     else
     {
@@ -118,7 +118,12 @@ LISP Lexicon::lookup(const EST_String &word, const LISP features)
 	if ((entry = lookup_complex(sword,mapped)) == NIL)
 	    entry = lookup_lts(sword,mapped);
 
-    return apply_hooks(post_hooks,entry);
+    if (post_hooks != NIL)
+    {
+	return apply_hooks_right(post_hooks,cons(entry,NIL));
+    }
+    else
+	return entry;
 }
 
 LISP Lexicon::lookup_all(const EST_String &word)
@@ -197,14 +202,20 @@ void Lexicon::bl_lookup_cache(LISP cache, const EST_String &word,
 {
     // Look up word in the index cache to get a better idea where 
     // to look in the real file
+    int fc;
     
     if (cdr(cache) == NIL)  // hit bottom
     {
 	start = get_c_int(car(car(cache)));
 	end = get_c_int(cdr(car(cache)));
     }
-    else if (fcompare(word,get_c_string(car(cdr(cache))),NULL) < 0)
+    else if ((fc=fcompare(word,get_c_string(car(cdr(cache))),NULL)) < 0)
 	bl_lookup_cache(siod_nth(2,cache),word,start,end,++depth);
+    else if (fc == 0)
+    {
+	start = get_c_int(car(car(cache)));
+	end = get_c_int(cdr(car(cache)));
+    }
     else
 	bl_lookup_cache(siod_nth(3,cache),word,start,end,++depth);
 }
@@ -331,6 +342,11 @@ LISP Lexicon::bl_bsearch(const EST_String &word,LISP features,
 		     start,mid,end);
 
     compare = bl_match_entry(closest_entry,word);
+
+/*    printf("%s %s %d %d %d\n",
+	   (const char *)word,
+	   get_c_string(car(closest_entry)),
+	   start,mid,end); */
 
     if (compare == 0)
 	return bl_find_actual_entry(mid,word,features);

@@ -123,6 +123,8 @@ LISP l_audio_mode(LISP mode)
 		audsp_send(EST_String("rate ")+get_c_string(audio));
 	    if ((audio = ft_get_param("Audio_Required_Format")) != NIL)
 		audsp_send(EST_String("otype ")+get_c_string(audio));
+	    if ((audio = ft_get_param("Audio_Device")) != NIL)
+		audsp_send(EST_String("device ")+get_c_string(audio));
 	    audsp_mode = TRUE;
 	}
     }

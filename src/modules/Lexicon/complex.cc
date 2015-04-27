@@ -150,7 +150,7 @@ static LISP check_and_fix(LISP entry)
     // Check shape and that phones are in current phone set
     // Syllabify entry if required
     LISP syls;
-    
+
     if (siod_llength(entry) < 2)
     {
 	cerr << "Lexicon compile: entry: ";

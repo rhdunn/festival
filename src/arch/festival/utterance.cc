@@ -981,10 +981,10 @@ void festival_utterance_init(void)
   is not in RELATIONNAME then nil is return.");
 
     init_subr_1("item.relations",item_relations,
- "(item.relationnames ITEM)\n\
+ "(item.relations ITEM)\n\
   Return a list of names of the relations this item is in.");
     init_subr_1("item.relation.name",item_relation_name,
- "(item.relationname ITEM)\n\
+ "(item.relation.name ITEM)\n\
   Return the name of the relation this ITEM is currently being viewed\n\
   through.");
     init_subr_2("item.move_tree",item_move_tree,

@@ -64,17 +64,17 @@ animated face.")
     (mapcar
      (lambda (seg)
        (format fd "%s %2.4f %s %s" 
-	       (ling_item.feat seg "name")
-	       (ling_item.feat seg "segment_duration")
-	       (ling_item.feat seg "R:SylStructure.parent.stress")
-	       (ling_item.feat seg "R:Target.daughter1.name"))
+	       (item.feat seg "name")
+	       (item.feat seg "segment_duration")
+	       (item.feat seg "R:SylStructure.parent.stress")
+	       (item.feat seg "R:Target.daughter1.name"))
        ;; output word name and part of speech if start of word
-       (if (and (not (ling_item.relation.next seg "SylStructure"))
-		(not (ling_item.next
-		      (ling_item.relation.parent seg "SylStructure"))))
+       (if (and (not (item.relation.next seg "SylStructure"))
+		(not (item.next
+		      (item.relation.parent seg "SylStructure"))))
 	   (format fd " %s %s"
-		   (ling_item.feat seg "R:SylStructure.parent.parent.name")
-		   (ling_item.feat seg "R:SylStructure.parent.parent.pos")))
+		   (item.feat seg "R:SylStructure.parent.parent.name")
+		   (item.feat seg "R:SylStructure.parent.parent.pos")))
        (format fd "\n"))
      (utt.relation.items utt 'Segment))
     (fclose fd)
@@ -88,10 +88,10 @@ start and end with an asterisk."
     (format fd "#\n")
     (mapcar
      (lambda (tok_item)
-       (if (string-matches (ling_item.name tok_item) "\\*.+\\*")
+       (if (string-matches (item.name tok_item) "\\*.+\\*")
 	   (format fd "%2.4f 100 %s\n" 
 		   (find_com_time utt tok_item)
-		   (ling_item.name tok_item))))
+		   (item.name tok_item))))
      (utt.relation.items utt 'Token))
     (fclose fd)
     utt))
@@ -100,12 +100,12 @@ start and end with an asterisk."
 "Returns time of tok_item.  Looks backward for first token that
 is related to a word and returns the end time of that word."
   (cond
-   ((ling_item.daughtern tok_item)
-    (ling_item.feat (ling_item.daughtern tok_item) "word_end"))
-   ((not (ling_item.prev tok_item))  ;; start of stream
+   ((item.daughtern tok_item)
+    (item.feat (item.daughtern tok_item) "word_end"))
+   ((not (item.prev tok_item))  ;; start of stream
     0.0)
    (t
-    (find_com_time utt (ling_item.prev tok_item)))))
+    (find_com_time utt (item.prev tok_item)))))
 
 (define (th_output_info utt)
   "(th_output_info utt)

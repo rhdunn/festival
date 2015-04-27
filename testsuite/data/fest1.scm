@@ -46,7 +46,9 @@ regenerated."
    (utt.relationnames utt))
   utt)
 
-(set! utt1 (Utterance Text "On May 5 1985, around 1985 people joined Mr. Black's project."))
+(set! utt1 
+      (Utterance Text 
+       "On May 5 1985, around 1985 people joined Mr. Black's project."))
 
 (utt.synth utt1)
 (utt.save.words utt1 "-")

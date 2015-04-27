@@ -176,10 +176,10 @@ A variable whose value is a function name that is called on start up to
 the default voice. [see Site initialization]")
 
 (defvar default-voice-priority-list 
-  '(rab_diphone
-    kal_diphone
+  '(kal_diphone
     ked_diphone
     don_diphone
+    rab_diphone
     en1_mbrola
     us1_mbrola
     us2_mbrola
