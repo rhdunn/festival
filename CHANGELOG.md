@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.95-1] - 2015-04-27 Maintenance
+
+  * Build improvements from [1.4.1-1](#1.4.1-1).
+
+## [1.95] - 2004-07-12 Beta
+
+  * Two new synthesis engines.
+    * Multisyn - a general purpose unit selection engine.
+    * HTS - a compact HMM-based engine
+  * Various new gcc's support
+  * lots of wee bugs fixed
+
 ## [1.4.3-1] - 2015-04-27 Maintenance
 
   * Build improvements from [1.4.1-1](#1.4.1-1).
