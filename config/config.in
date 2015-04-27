@@ -10,7 +10,7 @@
 ###########################################################################
 ## Which speech tools to use
 
-EST=$(TOP)/../speech_tools
+EST=$(ESTDIR)
 
 ###########################################################################
 ## Where the festival tree will be installed.

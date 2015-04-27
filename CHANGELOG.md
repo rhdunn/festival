@@ -13,6 +13,11 @@ Add autotools support:
   * Link to the automake files needed to run the configure script.
   * Use `autoconf` to generate the configure script.
 
+Build system fixes:
+
+  * `config/config.in`: Use the `ESTDIR` environment variable instead of
+    hard-coding the Edinburgh Speech Tools location.
+
 ## [1.4.1]
 
 Upstream version 1.4.1.
