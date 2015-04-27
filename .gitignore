@@ -1,5 +1,7 @@
 .*.swp
 
+CHANGELOG.html
+
 *.o
 *.a
 

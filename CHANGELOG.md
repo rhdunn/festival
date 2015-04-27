@@ -7,6 +7,7 @@ Add and modernize the standard project files:
   * Added a CHANGELOG.md file to track the project changes.
   * Incorporate the NEWS history into CHANGELOG.md.
   * Added a .gitignore file to ignore the build output.
+  * Support building HTML versions of the markdown files with `kramdown`.
 
 Support the GNU standard project layout:
 

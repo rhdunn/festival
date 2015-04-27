@@ -73,5 +73,10 @@ time-stamp :
 test:
 	@ $(MAKE) --no-print-directory -C testsuite test
 
+%.html: %.md _layouts/webpage.html
+	kramdown --template _layouts/webpage.html $< > $@
+
+docs: CHANGELOG.html
+
 include $(EST)/config/rules/top_level.mak
 include $(EST)/config/rules/install.mak
