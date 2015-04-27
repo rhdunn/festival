@@ -1,5 +1,8 @@
 .*.swp
 
+*.o
+*.a
+
 config.*
 install-sh
 missing
@@ -7,3 +10,36 @@ mkinstalldirs
 
 autom4te.cache/
 configure
+
+config/config
+config/modincludes.inc
+config/system.mak
+
+.buildlib_*
+make.depend
+make.include
+.made
+
+lib/cstr.scm
+lib/fringe.scm
+lib/siod.scm
+lib/web.scm
+
+src/modules/init_modules.cc
+
+doc/*.1
+
+bin/
+src/main/festival
+src/main/festival_client
+src/modules/utilities/find_inits
+audsp
+
+examples/dumpfeats
+examples/durmeanstd
+examples/latest
+examples/make_utts
+examples/saytime
+examples/scfg_parse_text
+examples/text2pos
+examples/text2wave

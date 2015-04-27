@@ -5,6 +5,7 @@
 Add and modernize the standard project files:
 
   * Added a CHANGELOG.md file to track the project changes.
+  * Added a .gitignore file to ignore the build output.
 
 Add autotools support:
 
