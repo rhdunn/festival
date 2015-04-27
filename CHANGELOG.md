@@ -8,6 +8,10 @@ Add and modernize the standard project files:
   * Incorporate the NEWS history into CHANGELOG.md.
   * Added a .gitignore file to ignore the build output.
 
+Support the GNU standard project layout:
+
+  * Link NEWS to another file in the project.
+
 Add autotools support:
 
   * Added an autogen.sh script to setup the configure script.

@@ -10,6 +10,8 @@ if [ ! -e "${AUTOMAKE_DIR}" -o ! -e "${AUTOMAKE_DIR}/install-sh" ] ; then
 	exit 1
 fi
 
+ln -sf CHANGELOG.md NEWS
+
 ln -sf ${AUTOMAKE_DIR}/config.guess .
 ln -sf ${AUTOMAKE_DIR}/config.sub .
 
