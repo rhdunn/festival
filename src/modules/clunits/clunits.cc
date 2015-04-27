@@ -129,7 +129,7 @@ static LISP clunits_select(LISP utt)
     setup_clunits_params();
 
     f = u->relation("Segment")->head();
-    for (s=f; s; s=next(s))
+    for (s=f; s; s=s->next())
 	s->set_val("clunit_name",ffeature(s,clunit_name_feat));
 
     if (f)
@@ -164,7 +164,7 @@ static LISP clunits_get_units(LISP utt)
     cldb = check_cldb();  // make sure there is one loaded
 
     units = u->create_relation("Unit");
-    for (s=u->relation("Segment")->head(); s != 0; s=next(s))
+    for (s=u->relation("Segment")->head(); s != 0; s=s->next())
     {
 	EST_Item *unit = units->append();
 	CLunit *db_unit = clunit(s->f("unit_id"));
@@ -172,12 +172,12 @@ static LISP clunits_get_units(LISP utt)
 	unit->set_name(db_unit->name);
 	unit->set("fileid",db_unit->fileid);
 	// These should be modified from the optimal coupling
-	if ((prev(s)) && (s->f_present("unit_this_move")))
+	if ((s->prev()) && (s->f_present("unit_this_move")))
 	    st = s->F("unit_this_move");
 	else
 	    st = db_unit->start;
-	if ((next(s)) && (next(s)->f_present("unit_prev_move")))
-	    e = next(s)->F("unit_prev_move");
+	if (s->next() && (s->next()->f_present("unit_prev_move")))
+	    e = s->next()->F("unit_prev_move");
 	else
 	    e = db_unit->end;
 	if ((e-st) < 0.011)
@@ -201,7 +201,7 @@ static LISP clunits_get_units(LISP utt)
     // Make it look as much like the diphones as possible for
     // the rest of the code
     ss = u->create_relation("SourceSegments");
-    for (s = u->relation("Segment")->head(); s != 0 ; s = next(s))
+    for (s = u->relation("Segment")->head(); s != 0 ; s = s->next())
     {
 	EST_Item *d = ss->append();
 	d->set_name(ffeature(s,"clunit_name"));
@@ -222,8 +222,8 @@ static void cl_parse_diphone_times(EST_Relation &diphone_stream,
     float t_time = 0.0, end;
     p_time = 0.0;
     
-    for (s = source_lab.head(), u = diphone_stream.head(); u; u = next(u), 
-	 s = next(s))
+    for (s = source_lab.head(), u = diphone_stream.head(); u; u = u->next(), 
+	 s = s->next())
     {
 	pm = track(u->f("coefs"));
 	if (pm == 0)
@@ -259,7 +259,7 @@ static LISP clunits_simple_wave(LISP utt)
     EST_Item *s;
     int size,i,k,c;
 
-    for (size=0,s=u->relation("Unit")->head(); s != 0; s = next(s))
+    for (size=0,s=u->relation("Unit")->head(); s != 0; s = s->next())
 	size += wave(s->f("sig"))->num_samples();
 
     if (u->relation("Unit")->head())
@@ -269,7 +269,7 @@ static LISP clunits_simple_wave(LISP utt)
     }
     i = w->num_samples();
     w->resize(size); // its maximum size
-    for (s=next(u->relation("Unit")->head()); s; s=next(s))
+    for (s=u->relation("Unit")->head()->next(); s; s=s->next())
     {
 	w1 = wave(s->f("sig"));
 	// Find last zero crossing
@@ -308,7 +308,7 @@ static LISP clunits_windowed_wave(LISP utt)
     int width, lwidth;
     EST_Wave *www=0;
 
-    for (size=0,s=u->relation("Unit")->head(); s != 0; s = next(s))
+    for (size=0,s=u->relation("Unit")->head(); s != 0; s = s->next())
 	size += wave(s->f("sig"))->num_samples();
 
     if (u->relation("Unit")->head())
@@ -320,7 +320,7 @@ static LISP clunits_windowed_wave(LISP utt)
     w->resize(size); // its maximum size
     wi=0;
     lwidth = width = 0;
-    for (s=u->relation("Unit")->head(); s; s=next(s))
+    for (s=u->relation("Unit")->head(); s; s=s->next())
     {
 	w1 = wave(s->f("sig"));
 	t1 = track(s->f("coefs"));
@@ -362,7 +362,7 @@ static LISP clunits_smoothedjoin_wave(LISP utt)
     int samp_end, samp_start;
     EST_Wave *www=0;
 
-    for (size=0,s=u->relation("Unit")->head(); s != 0; s = next(s))
+    for (size=0,s=u->relation("Unit")->head(); s != 0; s = s->next())
     {
 	samp_end = s->I("samp_end");
 	samp_start = s->I("samp_start");
@@ -377,7 +377,7 @@ static LISP clunits_smoothedjoin_wave(LISP utt)
     }
     w->resize(size); // its maximum size
     wi=0;
-    for (s=u->relation("Unit")->head(); s; s=next(s))
+    for (s=u->relation("Unit")->head(); s; s=s->next())
     {
 	samp_end = s->I("samp_end");
 	samp_start = s->I("samp_start");
@@ -487,7 +487,7 @@ static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f)
 	// An experiment, for all candidates of the previous 
 	// item whose following is of this phone type, include
 	// them as a candidate
-	EST_Item *ppp = prev(s);
+	EST_Item *ppp = s->prev();
 	if (ppp)
 	{
 	    EST_VTCandidate *lc = vtcand(ppp->f("unit_cands"));

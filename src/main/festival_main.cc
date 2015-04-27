@@ -136,7 +136,7 @@ static void festival_main(int argc, char **argv)
 	festival_init_lang(al.val("--language"));
     
     // File processing
-    for (p=files.head(); p != 0; p=next(p))
+    for (p=files.head(); p != 0; p=p->next())
     {
 	if (files(p) == "-")  // paul thinks I want the "-" -- I don't
 	    continue;

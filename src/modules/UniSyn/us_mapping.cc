@@ -70,7 +70,7 @@
 //     //cout << "Source_pm" << source_pm.equal_space() << endl << endl;
 //     //cout << "Target_pm" << target_pm.equal_space() << endl << endl;
 
-//     for (s = source_lab.head(); s; s = next(s))
+//     for (s = source_lab.head(); s; s = s->next())
 //     {
 // 	s_end = s->F("source_end");
 // 	t_end = s->F("end");
@@ -124,7 +124,7 @@ void make_segment_single_mapping(EST_Relation &source_lab,
   
   
   
-  for (s = source_lab.head(); s; s = next(s))
+  for (s = source_lab.head(); s; s = s->next())
     {
 
       //      printf( "*********************************************\nphone %s\n", s->S("name").str());
@@ -689,10 +689,10 @@ void map_to_relation(EST_IVector &map, EST_Relation &r,
 
     EST_Item *last_s = 0;
 
-    for (s = u->relation("smap")->head(); s; s = next(s))
+    for (s = u->relation("smap")->head(); s; s = s->next())
     {
 	int n = s->I("index");
-	for (t = u->relation("tmap")->head(); t; t = next(t))
+	for (t = u->relation("tmap")->head(); t; t = t->next())
 	{
 	    if (map(t->I("index")) == n)
 	    {
@@ -726,7 +726,7 @@ void make_segment_double_mapping(EST_Relation &source_lab,
 		    "timings. Expect a truncated utterance.\n");
 
     for (s = source_lab.head(), t = target_lab.head(); s && t; 
-	 s = next(s), t = next(t))
+	 s = s->next(), t = t->next())
     {
         if (s->S("name") != t->S("name"))
 	  cerr << "Warning: Source and Target segment names do not match: "
@@ -776,14 +776,14 @@ void make_dp_mapping(EST_Relation &source_lab, EST_Track &source_pm,
     s_start = t_start = 0.0;
 
     // should really be replaced by feature functions.
-    for (prev_end = 0.0, s = source_lab.head(); s; s = next(s))
+    for (prev_end = 0.0, s = source_lab.head(); s; s = s->next())
     {
 	s->set("start", prev_end);
 	prev_end = s->F("end");
     }
 
     // should really be replaced by feature functions.
-    for (prev_end = 0.0, s = target_lab.head(); s; s = next(s))
+    for (prev_end = 0.0, s = target_lab.head(); s; s = s->next())
     {
 	s->set("start", prev_end);
 	prev_end = s->F("end");
@@ -794,14 +794,14 @@ void make_dp_mapping(EST_Relation &source_lab, EST_Track &source_pm,
 	EST_warning("Target pitchmarks end before end of target segment "
 		    "timings. Expect a truncated utterance.\n");
 
-    for (s = source_lab.head(); s; s = next(s))
+    for (s = source_lab.head(); s; s = s->next())
     {
 	s_start = s->F("start");
 
 	cout << "source: " << *s << endl;
 
 	while (s && (!s->in_relation(match_name)))
-	    s = next(s);
+	    s = s->next();
 
 	cout << "active source: " << *s << endl;
 

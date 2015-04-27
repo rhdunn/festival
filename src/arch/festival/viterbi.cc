@@ -90,7 +90,7 @@ LISP Gen_Viterbi(LISP utt)
     }
 
     // Map internal ids back to strings 
-    for (EST_Item *p=u->relation(f.S("Relation"))->head(); p != 0; p=next(p))
+    for (EST_Item *p=u->relation(f.S("Relation"))->head(); p != 0; p=p->next())
 	if (wfst == 0)
 	    p->set(f.S("return_feat"),ngram->get_vocab_word(p->I("gv_id")));
 	else

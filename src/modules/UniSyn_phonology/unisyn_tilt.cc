@@ -48,7 +48,7 @@ void vowel_tilt_to_abs_tilt(EST_Utterance &u)
     EST_Item *s, *t;
     float pos;
 
-    for (t = u.relation("Intonation")->head(); t; t = next(t))
+    for (t = u.relation("Intonation")->head(); t; t = t->next())
     {
 	if (t->as_relation("IntonationSyllable"))
 	{

@@ -80,7 +80,7 @@ static EST_Val ff_word_n_content(EST_Item *s)
     // returns the next content word after s
     EST_Item *p;
 
-    for (p=next(s->as_relation("Word")); p != 0; p = next(p))
+    for (p=s->as_relation("Word")->next(); p != 0; p = p->next())
     {
 	if (ff_word_gpos(p) == "content")
 	    return EST_Val(p->name());
@@ -95,7 +95,7 @@ static EST_Val ff_word_nn_content(EST_Item *s)
     int count = 0;
     EST_Item *p;
 
-    for (p=next(s->as_relation("Word")); p != 0; p = next(p))
+    for (p=s->as_relation("Word")->next(); p != 0; p = p->next())
     {
 	if (ff_word_gpos(p) == "content")
 	{
@@ -113,7 +113,7 @@ static EST_Val ff_word_p_content(EST_Item *s)
     // returns the previous content word after s
     EST_Item *p;
 
-    for (p=prev(s->as_relation("Word")); p != 0; p = prev(p))
+    for (p=s->as_relation("Word")->prev(); p != 0; p = p->prev())
 	if (ff_word_gpos(p) == "content")
 	    return EST_Val(p->name());
 
@@ -126,7 +126,7 @@ static EST_Val ff_word_pp_content(EST_Item *s)
     int count = 0;
     EST_Item *p;
 
-    for (p=prev(s->as_relation("Word")); p != 0; p = prev(p))
+    for (p=s->as_relation("Word")->prev(); p != 0; p = p->prev())
     {
 	if (ff_word_gpos(p) == "content")
 	{
@@ -145,7 +145,7 @@ static EST_Val ff_content_words_out(EST_Item *s)
     EST_Item *p;
     int pos=0;
 
-    for (p=next(nn); p; p=next(p))
+    for (p=nn->next(); p; p=p->next())
     {
 	if (ff_word_gpos(p) == "content")
 	    pos++;
@@ -160,7 +160,7 @@ static EST_Val ff_content_words_in(EST_Item *s)
     EST_Item *p;
     int pos=0;
 
-    for (p=prev(nn); p; p=prev(p))
+    for (p=nn->prev(); p; p=p->prev())
     {
 	if (ff_word_gpos(p) == "content")
 	    pos++;
@@ -192,7 +192,7 @@ static EST_Val ff_syl_onset_type(EST_Item *s)
     int vox=FALSE;
     int sonorant=FALSE;
 
-    for (p=daughter1(nn); next(p) != 0; p=next(p))
+    for (p=daughter1(nn); p->next() != 0; p=p->next())
     {
 	if (ph_is_vowel(p->name()))
 	    break;
@@ -224,16 +224,16 @@ static EST_Val ff_syl_coda_type(EST_Item *s)
     int vox=FALSE;
     int sonorant=FALSE;
 
-    for (p=daughter1(nn); next(p) != 0; p=next(p))
+    for (p=daughter1(nn); p->next() != 0; p=p->next())
     {
 	if (ph_is_vowel(p->name()))
 	    break;
     }
 
-    if (next(p) == 0)         // empty coda
+    if (p->next() == 0)         // empty coda
 	return EST_Val("+S");
 
-    for (p=next(p); p != 0; p=next(p))
+    for (p=p->next(); p != 0; p=p->next())
     {
 	if (ph_is_voiced(p->name()))
 	    vox = TRUE;

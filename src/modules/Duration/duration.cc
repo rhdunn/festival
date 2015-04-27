@@ -54,7 +54,7 @@ LISP FT_Duration_Ave_Utt(LISP utt)
 
     ph_durs = siod_get_lval("phoneme_durations","no phoneme durations");
 
-    for (s=u->relation("Segment")->first(); s != 0; s = next(s))
+    for (s=u->relation("Segment")->first(); s != 0; s = s->next())
     {
 	ldur = siod_assoc_str(s->name(),ph_durs);
 	stretch = dur_get_stretch_at_seg(s);
@@ -83,7 +83,7 @@ LISP FT_Duration_Def_Utt(LISP utt)
 
     *cdebug << "Duration Default module\n";
 
-    for (s=u->relation("Segment")->first(); s != 0; s = next(s))
+    for (s=u->relation("Segment")->first(); s != 0; s = s->next())
     {
 	stretch = dur_get_stretch_at_seg(s);
 	end += 0.100*stretch;
@@ -106,7 +106,7 @@ LISP FT_Duration_Tree_Utt(LISP utt)
 
     tree = siod_get_lval("duration_cart_tree","no duration cart tree");
 
-    for (s=u->relation("Segment")->first(); s != 0; s = next(s))
+    for (s=u->relation("Segment")->first(); s != 0; s = s->next())
     {
 	pdur = wagon_predict(s,tree);
 	stretch = dur_get_stretch_at_seg(s);
@@ -144,7 +144,7 @@ LISP FT_Duration_Tree_ZScores_Utt(LISP utt)
     tree = siod_get_lval("duration_cart_tree","no duration cart tree");
     dur_info = siod_get_lval("duration_ph_info","no duration phone info");
 
-    for (s=u->relation("Segment")->first(); s != 0; s = next(s))
+    for (s=u->relation("Segment")->first(); s != 0; s = s->next())
     {
 	pdur = wagon_predict(s,tree);
 	ph_info = siod_assoc_str(s->name(),dur_info);
@@ -162,8 +162,8 @@ LISP FT_Duration_Tree_ZScores_Utt(LISP utt)
         }
 	if ((pdur > 3) || (pdur < -3))
 	{
-	    cerr << "Duration tree extreme for " << s->name() << 
-		" " << pdur << endl;
+            //	    cerr << "Duration tree extreme for " << s->name() << 
+            //		" " << pdur << endl;
 	    pdur = ((pdur < 0) ? -3 : 3);
 	}
 	s->set("dur_factor",pdur);

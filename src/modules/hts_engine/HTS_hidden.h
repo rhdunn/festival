@@ -42,6 +42,19 @@
 /* POSSIBILITY OF SUCH DAMAGE.                                       */
 /* ----------------------------------------------------------------- */
 
+#ifndef HTS_HIDDEN_H
+#define HTS_HIDDEN_H
+
+#ifdef __cplusplus
+#define HTS_HIDDEN_H_START extern "C" {
+#define HTS_HIDDEN_H_END   }
+#else
+#define HTS_HIDDEN_H_START
+#define HTS_HIDDEN_H_END
+#endif                          /* __CPLUSPLUS */
+
+HTS_HIDDEN_H_START;
+
 /* hts_engine libraries */
 #include "HTS_engine.h"
 
@@ -106,7 +119,7 @@ void HTS_free(void *p);
 #define STEPINC  1.2
 #define W1       1.0
 #define W2       1.0
-#define GV_MAX_ITERATION 0
+#define GV_MAX_ITERATION 5
 
 /*  -------------------------- audio ------------------------------  */
 
@@ -154,3 +167,7 @@ void HTS_Audio_close(HTS_Audio * as);
 #define MULGFLG1 TRUE
 #define MULGFLG2 FALSE
 #define NGAIN    FALSE
+
+HTS_HIDDEN_H_END;
+
+#endif                          /* !HTS_HIDDEN_H */

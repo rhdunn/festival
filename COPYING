@@ -86,10 +86,13 @@ but most people.
  Conditions remain as free software like the rest of distribution
 
 ./src/modules/hts_engine/*
-./lib/hts*
- Copyright (C) 2001-2004, Nagoya Institute of Technology 
- and Tokyo Institute of Technology, all rights reserved.
- distriobuted under a similarly free licence as the rest of the system
+./lib/hts.scm
+ The HMM-based speech synthesis system (HTS)
+ hts_engine API version 1.04 (http://hts-engine.sourceforge.net/)
+ Copyright (C) 2001-2010  Nagoya Institute of Technology
+               2001-2008  Tokyo Institute of Technology
+ All rights reserved.
+ distributed under a New and Simplified BSD licence.
 
 ./lib/festival.el
 ;;;               Copyright (C) Alan W Black 1996

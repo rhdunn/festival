@@ -42,6 +42,19 @@
 /* POSSIBILITY OF SUCH DAMAGE.                                       */
 /* ----------------------------------------------------------------- */
 
+#ifndef HTS_VOCODER_C
+#define HTS_VOCODER_C
+
+#ifdef __cplusplus
+#define HTS_VOCODER_C_START extern "C" {
+#define HTS_VOCODER_C_END   }
+#else
+#define HTS_VOCODER_C_START
+#define HTS_VOCODER_C_END
+#endif                          /* __CPLUSPLUS */
+
+HTS_VOCODER_C_START;
+
 #include <math.h>               /* for sqrt(),log(),exp(),pow(),cos() */
 
 /* hts_engine libraries */
@@ -676,7 +689,7 @@ void HTS_Vocoder_initialize(HTS_Vocoder * v, const int m, const int stage,
 /* HTS_Vocoder_synthesize: pulse/noise excitation and MLSA/MGLSA filster based waveform synthesis */
 void HTS_Vocoder_synthesize(HTS_Vocoder * v, const int m, double lf0,
                             double *spectrum, double alpha, double beta,
-                            short *rawdata)
+                            double volume, short *rawdata)
 {
    double x;
    int i, j;
@@ -739,6 +752,7 @@ void HTS_Vocoder_synthesize(HTS_Vocoder * v, const int m, double lf0,
             x *= v->c[0];
          x = HTS_mglsadf(x, v->c, m, alpha, v->stage, v->d1);
       }
+      x *= volume;
 
       /* output */
       if (x > 32767.0)
@@ -836,3 +850,7 @@ void HTS_Vocoder_clear(HTS_Vocoder * v)
       }
    }
 }
+
+HTS_VOCODER_C_END;
+
+#endif                          /* !HTS_VOCODER_C */

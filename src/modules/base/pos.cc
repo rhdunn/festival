@@ -92,7 +92,7 @@ LISP FT_Classic_POS_Utt(LISP utt)
     LISP l;
     // Map pos tagset to desired set
     LISP pos_map = siod_get_lval("pos_map",NULL);
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {
 	// convert pos index into string value
 	pos = pos_ngram->get_vocab_word(w->f("pos_index").Int());

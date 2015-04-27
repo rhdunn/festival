@@ -139,10 +139,10 @@ bool EST_JoinCostCache::computeAndCache( const EST_TList<EST_Item*> &list,
   
   unsigned int i=0;
   EST_warning("EST_JoinCostCache::computeAndCache");
-  for( EST_Litem *it=list.head(); it; it=next(it), ++i ){
+  for( EST_Litem *it=list.head(); it; it=it->next(), ++i ){
     
     unsigned int j=i+1;    
-    for( EST_Litem *jt=next(it); jt; jt=next(jt), ++j ){
+    for( EST_Litem *jt=it->next(); jt; jt=jt->next(), ++j ){
       float cost = jc( list(it), list(jt) );
       
       if( cost >= ulimit )

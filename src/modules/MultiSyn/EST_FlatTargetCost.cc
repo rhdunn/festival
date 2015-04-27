@@ -220,28 +220,28 @@ TCData *EST_FlatTargetCost::flatpack(EST_Item *seg) const
 
   // seg word feature
   if((word=tc_get_word(seg)))
-    (*f)[WORD]=simple_id(word->S("id"));
+    (*f)[WQRD]=simple_id(word->S("id"));
   else
-    (*f)[WORD]=0;
+    (*f)[WQRD]=0;
   
 
   // Next seg word features
   if((word=tc_get_word(seg->next())))
-    (*f)[NWORD]=simple_id(word->S("id"));
+    (*f)[NWQRD]=simple_id(word->S("id"));
   else
-    (*f)[NWORD]=0;
+    (*f)[NWQRD]=0;
 
   // next next seg word feature
   if(seg->next()->next() && (word=tc_get_word(seg->next()->next())))
-    (*f)[NNWORD]=simple_id(word->S("id"));
+    (*f)[NNWQRD]=simple_id(word->S("id"));
   else
-    (*f)[NNWORD]=0;
+    (*f)[NNWQRD]=0;
 
   // Prev seg word feature
     if(seg->prev() && (word=tc_get_word(seg->prev())))
-      (*f)[PWORD]=simple_id(word->S("id"));
+      (*f)[PWQRD]=simple_id(word->S("id"));
     else
-      (*f)[PWORD]=0;
+      (*f)[PWQRD]=0;
 
 
   // segs sylpos
@@ -254,13 +254,13 @@ TCData *EST_FlatTargetCost::flatpack(EST_Item *seg) const
     (*f)[SYLPOS]=3; // final
 
   // segs wordpos
-  (*f)[WORDPOS]=0; // medial
-  if( f->a_no_check(WORD)!= f->a_no_check(NWORD) )
-    (*f)[WORDPOS]=1;  // inter
-  else if( f->a_no_check(WORD)!= f->a_no_check(PWORD) )
-    (*f)[WORDPOS]=2; // initial
-  else if( f->a_no_check(NWORD) != f->a_no_check(NNWORD) )
-    (*f)[WORDPOS]=3; // final
+  (*f)[WQRDPOS]=0; // medial
+  if( f->a_no_check(WQRD)!= f->a_no_check(NWQRD) )
+    (*f)[WQRDPOS]=1;  // inter
+  else if( f->a_no_check(WQRD)!= f->a_no_check(PWQRD) )
+    (*f)[WQRDPOS]=2; // initial
+  else if( f->a_no_check(NWQRD) != f->a_no_check(NNWQRD) )
+    (*f)[WQRDPOS]=3; // final
 
   // pbreak
   if ((word=tc_get_word(seg)))
@@ -331,9 +331,9 @@ float EST_FlatTargetCost::stress_cost() const
 float EST_FlatTargetCost::position_in_phrase_cost() const
 {
   
-  if ( !t->a_no_check(WORD) && !c->a_no_check(WORD) )
+  if ( !t->a_no_check(WQRD) && !c->a_no_check(WQRD) )
     return 0;
-  if ( !t->a_no_check(WORD) || !c->a_no_check(WORD) )
+  if ( !t->a_no_check(WQRD) || !c->a_no_check(WQRD) )
     return 1;
 
   return ( t->a_no_check(PBREAK) == c->a_no_check(PBREAK) ) ? 0 : 1;
@@ -344,19 +344,19 @@ float EST_FlatTargetCost::punctuation_cost() const
 
   float score = 0.0;
 
-  if ( (t->a_no_check(WORD) && !c->a_no_check(WORD)) 
-       || (!t->a_no_check(WORD) && c->a_no_check(WORD)) )
+  if ( (t->a_no_check(WQRD) && !c->a_no_check(WQRD)) 
+       || (!t->a_no_check(WQRD) && c->a_no_check(WQRD)) )
     score += 0.5;
   else
-    if (t->a_no_check(WORD) && c->a_no_check(WORD))
+    if (t->a_no_check(WQRD) && c->a_no_check(WQRD))
       if ( t->a_no_check(PUNC) != c->a_no_check(PUNC) )
 	score += 0.5;
   
-  if ( (t->a_no_check(NWORD) && !c->a_no_check(NWORD)) 
-       || (!t->a_no_check(NWORD) && c->a_no_check(NWORD)) )
+  if ( (t->a_no_check(NWQRD) && !c->a_no_check(NWQRD)) 
+       || (!t->a_no_check(NWQRD) && c->a_no_check(NWQRD)) )
     score += 0.5;
   else
-    if(t->a_no_check(NWORD) && c->a_no_check(NWORD))
+    if(t->a_no_check(NWQRD) && c->a_no_check(NWQRD))
       if ( t->a_no_check(NPUNC) != c->a_no_check(NPUNC) )
 	score += 0.5;
   
@@ -368,17 +368,17 @@ float EST_FlatTargetCost::punctuation_cost() const
 float EST_FlatTargetCost::partofspeech_cost() const
 {
   // Compare left phone half of diphone
-  if(!t->a_no_check(WORD) && !c->a_no_check(WORD))
+  if(!t->a_no_check(WQRD) && !c->a_no_check(WQRD))
     return 0;
-  if(!t->a_no_check(WORD) || !c->a_no_check(WORD))
+  if(!t->a_no_check(WQRD) || !c->a_no_check(WQRD))
     return 1;
   if( t->a_no_check(POS) != c->a_no_check(POS) )
     return 1;
 
   // Compare right phone half of diphone
-  if(!t->a_no_check(NWORD) && !c->a_no_check(NWORD))
+  if(!t->a_no_check(NWQRD) && !c->a_no_check(NWQRD))
     return 0;
-  if(!t->a_no_check(NWORD) || !c->a_no_check(NWORD))
+  if(!t->a_no_check(NWQRD) || !c->a_no_check(NWQRD))
     return 1;
   if( t->a_no_check(NPOS) != c->a_no_check(NPOS) )
     return 1;

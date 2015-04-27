@@ -74,7 +74,7 @@ static void r_reduction(EST_Utterance *u)
 
     for (s=u->relation("Segment")->first(); s != 0; s = t)
     {
-	t = next(s);
+	t = s->next();
 	if (wagon_predict(s,r_red_tree) == "delete")
 	    s->unref_all();
     }
@@ -93,7 +93,7 @@ static void vowel_reduction(EST_Utterance *u)
     if ((vow_table == NIL) || (red_tree == NIL))
 	return;   // ain't anything to do
     
-    for (s=u->relation("Syllable")->first(); s != 0; s = next(s))
+    for (s=u->relation("Syllable")->first(); s != 0; s = s->next())
     {
 	if (wagon_predict(s,red_tree) == "1")
 	    vowel_reduce(s,vow_table);
@@ -107,7 +107,7 @@ static void vowel_reduce(EST_Item *syl,LISP vow_table)
     EST_Item *seg;
     LISP vreduce=NIL;
 
-    for (seg=daughter1(syl,"SylStructure"); seg; seg=next(seg))
+    for (seg=daughter1(syl,"SylStructure"); seg; seg=seg->next())
     {
 	if (ph_is_vowel(seg->name()))
 	{

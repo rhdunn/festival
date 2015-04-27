@@ -33,6 +33,12 @@
 ;;;
 ;;;  Postlexical rules
 ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;           Modifed for CSTR HTS Voice Library                           ;;
+;;                 Author :  Junichi Yamagishi (jyamagis@inf.ed.ac.uk)    ;;
+;;                 Date   :  Sept 2008                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (define (PostLex utt)
 "(PostLex utt)
@@ -378,13 +384,34 @@ otherwise there will be no reduction)."
    (lambda (word)
      (if (string-equal "the" (downcase (item.feat word "name")))
          (begin
-           (set! seg (item.relation (item.daughtern (item.relation.daughtern word
-'SylStructure)) 'Segment))
+           (set! seg (item.relation (item.daughtern (item.relation.daughtern word 'SylStructure)) 'Segment))
            (if (string-equal "+" (item.feat (item.next seg) 'ph_vc))
                (item.set_feat seg 'name fullform)
                (item.set_feat seg 'name reducedform)))))
    (utt.relation.items utt 'Word)))
 utt)
+
+(define (postlex_the_vs_thee_changeflag utt)
+"(postlex_the_vs_thee_changeflag utt)
+Unnreduce the schwa in \"the\" when a vowel follows.
+Reduce the vowel in \"the\" when no vowel follows (this
+requires a lexicon entry for \"the\" with feature \"reduced\",
+otherwise there will be no reduction)."
+(let ((fullform (cadr (car (caar (cdr (cdar (lex.lookup_all 'thee)))))))
+      (reducedform (cadr(car(caar(cddr(lex.lookup 'the '(reduced)))))))
+       seg)
+
+  (mapcar
+   (lambda (word)
+     (if (string-equal "the" (downcase (item.feat word "name")))
+         (begin
+           (set! seg (item.relation (item.daughtern (item.relation.daughtern word 'SylStructure)) 'Segment))
+           (if (string-equal "+" (item.feat (item.next seg) 'ph_vc))
+               (item.set_feat seg 'reducable 0)
+               (item.set_feat seg 'reducable 1)))))
+   (utt.relation.items utt 'Word)))
+utt)
+
 
 ;;  For Multisyn voices only.  Volker 14/08/06
 (define (postlex_a utt)
@@ -396,13 +423,13 @@ does that."
 (let(seg)
   (mapcar
     (lambda(word)
-       (format t "%s\t%s\n" (item.feat word 'name)(item.feat word 'pos))
+;;       (format t "%s\t%s\n" (item.feat word 'name)(item.feat word 'pos))
        (if(and(string-equal "a" (downcase (item.feat word "name")))
               (string-equal "nn" (item.feat word "pos")))
           (begin
              (set! seg (item.relation (item.daughtern (item.relation.daughtern word
 'SylStructure)) 'Segment))
-             (format t "should not be reducable\n")
+;;             (format t "should not be reducable\n")
              (if (eq 1 (parse-number (item.feat seg 'reducable)))
                 (item.set_feat seg 'reducable 0))))
     )
@@ -475,21 +502,21 @@ is no word-final /r/.
 
             (if (and following_phone  last_phone)
                (begin
-                  ;(format t "%s\t%s %s %s %s\n" (item.name word)
-                  ;                     (item.name last_phone)
-                  ;                     (item.name following_phone)
-                  ;                     (item.feat following_phone 'ph_vc)
-                  ;                     (item.feat word 'pbreak))
+                  (format t "%s\t%s %s %s %s\n" (item.name word)
+                                       (item.name last_phone)
+                                       (item.name following_phone)
+                                       (item.feat following_phone 'ph_vc)
+                                       (item.feat word 'pbreak))
                   (if(and(equal? "r" (item.name last_phone))
                          (or(not(equal? "NB" (item.feat word 'pbreak)))
                             (equal? "-" (item.feat following_phone 'ph_vc))))
                      (begin
-                        (format t "postlex_intervoc_r: /r/ in \"%s %s\"  deleted\n"
+                        (format t "\t\t\t/r/ in \"%s %s\"  deleted\n"
                                   (item.name word)(item.name next_word))
                         (item.delete last_phone))))))
             (if(and last_phone (equal? "r" (item.name last_phone)))
                (begin
-                  (format t "postlex_intervoc_r: utterance-final /r/ deleted\n")
+                  (format t "\t\t\tutterance-final /r/ deleted\n")
                   (item.delete last_phone)))
          )
 

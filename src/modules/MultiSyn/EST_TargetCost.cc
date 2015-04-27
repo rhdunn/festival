@@ -731,7 +731,7 @@ static EST_String ff_tobi_accent(const EST_Item *s)
     EST_Item *nn = as(s,"Intonation");
     EST_Item *p;
 
-    for (p=daughter1(nn); p; p=next(p))
+    for (p=daughter1(nn); p; p=p->next())
 	if (p->name().contains("*"))
 	    return p->name();
     return "NONE";
@@ -743,7 +743,7 @@ static EST_String ff_tobi_endtone(const EST_Item *s)
     EST_Item *nn = as(s,"Intonation");
     EST_Item *p;
 
-    for (p=daughter1(nn); p; p=next(p))
+    for (p=daughter1(nn); p; p=p->next())
     {
 	EST_String l = p->name();
 	if ((l.contains("%")) || (l.contains("-")))

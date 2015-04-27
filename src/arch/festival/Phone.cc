@@ -64,7 +64,7 @@ int Phone::match_features(Phone *foreign)
     // Try to match the features of the foreign phone with this one
     EST_Litem *f;
 
-    for (f=features.list.head(); f != 0; f=next(f))
+    for (f=features.list.head(); f != 0; f=f->next())
     {	
 	if ( features.list(f).v != foreign->val(features.list(f).k))
 	    return FALSE;

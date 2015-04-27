@@ -49,7 +49,7 @@ void dur_to_end(EST_Relation &r)
 {
     float prev_end = 0;
 
-    for (EST_Item *p = r.head(); p ; p = next(p))
+    for (EST_Item *p = r.head(); p ; p = p->next())
     {
 	p->set("end", p->F("dur") + prev_end);
 	prev_end = p->F("end");
@@ -113,8 +113,8 @@ void parse_diphone_times(EST_Relation &diphone_stream,
     float t_time = 0.0, end;
     p_time = 0.0;
 
-    for (s = source_lab.head(), u = diphone_stream.head(); u; u = next(u), 
-	 s = next(s))
+    for (s = source_lab.head(), u = diphone_stream.head(); u; u = u->next(), 
+	 s = s->next())
     {
 	pm = track(u->f("coefs"));
 	

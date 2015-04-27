@@ -199,7 +199,7 @@ void DiphoneVoiceModule::initialise( const EST_TargetCost *tc, bool ignore_bad_t
     EST_warning( "Ignoring bad flags");
 
 
-  for( EST_Litem *it=fileList.head(); it!=0 ; it=next(it) ){
+  for( EST_Litem *it=fileList.head(); it!=0 ; it=it->next() ){
     u = new EST_Utterance;
     CHECK_PTR(u);
     
@@ -241,7 +241,7 @@ DiphoneVoiceModule::~DiphoneVoiceModule()
 {
   if( utt_dbase != 0 ){
     EST_Litem *it = utt_dbase->head();
-    for( ; it!=0 ; it=next(it) )
+    for( ; it!=0 ; it=it->next() )
       delete (*utt_dbase)(it);
     delete utt_dbase;
   }
@@ -552,9 +552,9 @@ int DiphoneVoiceModule::getPhoneList( const EST_String &phone, ItemList &list )
   unsigned int n=0;
 
   if( utt_dbase != 0 ){
-    for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=next(it) ){
+    for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=it->next() ){
       EST_Item *ph=(*utt_dbase)(it)->relation("Segment")->head();
-      for( ; ph!=0; ph=next(ph) ){
+      for( ; ph!=0; ph=ph->next() ){
 	if( ph->S("name") == phone ){
 	  list.append( ph );
 	  n++;
@@ -589,7 +589,7 @@ bool DiphoneVoiceModule::getUtterance( EST_Utterance **utt,
   //search down list of utterance structures, comparing
   // fileid feature.  If find a match, return pointer to that
   // utterance.
-  for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=next(it) )
+  for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=it->next() )
     if( (*utt_dbase)(it)->f.val(feat_name) == value ){
       *utt = (*utt_dbase)(it);
       return true;
@@ -600,7 +600,7 @@ bool DiphoneVoiceModule::getUtterance( EST_Utterance **utt,
 
 void DiphoneVoiceModule::getDiphoneCoverageStats(EST_DiphoneCoverage *dc) const
 {
-  for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=next(it) )
+  for( EST_Litem *it=utt_dbase->head(); it!=0 ; it=it->next() )
     dc->add_stats((*utt_dbase)(it));
 }
 

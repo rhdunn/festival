@@ -46,7 +46,7 @@
 void add_feature_function(EST_Relation &r, const EST_String &fname,
 			  const EST_String &funcname)
 {
-    for (EST_Item *p = r.head(); p; p = next(p))
+    for (EST_Item *p = r.head(); p; p = p->next())
 	p->set_function(fname, funcname);
 }
 
@@ -55,7 +55,7 @@ void add_non_terminal_features(EST_Item *s,
 {
     EST_Features::Entries a;
 
-    for (EST_Item *p = s; p; p = next(p))
+    for (EST_Item *p = s; p; p = p->next())
     {
 	if (daughter1(p) != 0)
 	{
@@ -104,7 +104,7 @@ EST_Item *syl_nucleus(EST_Item *syl_struct)
 EST_Item *nth(EST_Relation &r, int n)
 {
     int i = 1;
-    for (EST_Item *s = r.head(); s; s = next(s), ++i)
+    for (EST_Item *s = r.head(); s; s = s->next(), ++i)
 	if (n == i)
 	    return s;
 

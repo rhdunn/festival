@@ -362,7 +362,7 @@ static LISP item_relations(LISP si)
     LISP relnames = NIL;
     EST_Litem *p;
 
-    for (p = s->relations().list.head(); p; p=next(p))
+    for (p = s->relations().list.head(); p; p=p->next())
 	relnames = cons(rintern(s->relations().list(p).k),relnames);
 
     return reverse(relnames);
@@ -414,12 +414,12 @@ static LISP utt_relation_append(LISP utt, LISP relname, LISP li)
 
 static LISP item_next(LISP li)
 {
-    return (li == NIL) ? NIL : siod(next(item(li)));
+    return (li == NIL) ? NIL : siod(item(li)->next());
 }
 
 static LISP item_prev(LISP li)
 {
-    return (li == NIL) ? NIL : siod(prev(item(li)));
+    return (li == NIL) ? NIL : siod(item(li)->prev());
 }
 
 static LISP item_up(LISP li)

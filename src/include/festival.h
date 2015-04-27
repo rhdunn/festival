@@ -81,7 +81,8 @@ void festival_server_mode(void);
 void festival_wait_for_spooler(void);
 void festival_tidy_up();
 
-typedef void (*FT_Module)(EST_Utterance &utt);
+/* Never used and conflicts with some external system */
+/* typedef void (*FT_Module)(EST_Utterance &utt); */
 
 /* Feature functions */
 void festival_def_nff(const EST_String &name,const EST_String &sname, 

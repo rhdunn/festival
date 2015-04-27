@@ -81,14 +81,14 @@ LISP FT_MultiParse_Utt(LISP utt)
     EST_SCFG_Chart chart;
     chart.set_grammar_rules(rules);
 
-    for (st=u->relation("Token")->head(); st; st = next(st))
+    for (st=u->relation("Token")->head(); st; st = st->next())
     {
-	for (et=next(st); et; et=next(et))
+	for (et=st->next(); et; et=et->next())
 	    if (wagon_predict(et,eos_tree) != 0)
 		break;
 	// Now find related words
 	s = first_leaf(st)->as_relation("Word");
-	e = first_leaf(next(et))->as_relation("Word");
+	e = first_leaf(et->next())->as_relation("Word");
 	chart.setup_wfst(s,e,"phr_pos");
 	chart.parse();
 	chart.extract_parse(u->relation("Syntax"),s,e,TRUE);
@@ -120,13 +120,13 @@ void MultiParse(EST_Utterance &u)
     // produce a parse wherever there is a sentence end marker or
     // the end of utterance.
 
-    for (w = s = u.relation("Word")->head(); w; w = next(w))
-	if (w->f_present("sentence_end") || (next(w) == 0))
+    for (w = s = u.relation("Word")->head(); w; w = w->next())
+	if (w->f_present("sentence_end") || (w->next() == 0))
 	{
-	    chart.setup_wfst(s, next(w), "phr_pos");
+	    chart.setup_wfst(s, w->next(), "phr_pos");
 	    chart.parse();
-	    chart.extract_parse(u.relation("Syntax"), s, next(w), TRUE);
-	    s = next(w);
+	    chart.extract_parse(u.relation("Syntax"), s, w->next(), TRUE);
+	    s = w->next();
 	}
 }
 

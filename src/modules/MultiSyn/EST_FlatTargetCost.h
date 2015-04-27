@@ -49,14 +49,15 @@
 #include "EST_THash.h"
 #include "EST_TargetCost.h" 
 
+/* we use WQRD in place of WORD below to keep VC++ happy */
 enum tcdata_t 
 {
   VOWEL, SIL, BAD_DUR, NBAD_DUR, BAD_OOL, NBAD_OOL, BAD_F0,
   SYL, SYL_STRESS, N_SIL, N_VOWEL,
   NSYL, NSYL_STRESS,
   RC, NNBAD_DUR, NNSYL, LC, PBAD_DUR,
-  PSYL, WORD, NWORD, NNWORD, PWORD,
-  SYLPOS, WORDPOS, PBREAK, 
+  PSYL, WQRD, NWQRD, NNWQRD, PWQRD,
+  SYLPOS, WQRDPOS, PBREAK, 
   POS, PUNC, NPOS, NPUNC,
   TCHI_LAST
 } ;
@@ -92,7 +93,7 @@ class EST_FlatTargetCost : public EST_TargetCost {
   inline float position_in_syllable_cost() const
   { return ( t->a_no_check(SYLPOS) == c->a_no_check(SYLPOS) ) ? 0 : 1; }
   inline float position_in_word_cost() const
-  { return ( t->a_no_check(WORDPOS) == c->a_no_check(WORDPOS) ) ? 0 : 1; }
+  { return ( t->a_no_check(WQRDPOS) == c->a_no_check(WQRDPOS) ) ? 0 : 1; }
   float position_in_phrase_cost() const;
   float punctuation_cost() const;
   float partofspeech_cost() const;

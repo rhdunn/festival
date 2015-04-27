@@ -74,7 +74,7 @@ LISP FT_Int_Targets_General_Utt(LISP utt)
     
     targrel = u->create_relation("Target");
     
-    for (s=u->relation("Syllable")->first(); s != 0 ; s=next(s))
+    for (s=u->relation("Syllable")->first(); s != 0 ; s=s->next())
     {
 	targets = 
           leval(cons(tfunc,cons(utt,cons(siod(s),NIL))),NIL);
@@ -99,7 +99,7 @@ static EST_Item *find_nearest_seg(EST_Utterance *u,float pos)
     // this is not very efficient
     EST_Item *seg;
 
-    for (seg=u->relation("Segment")->first(); seg != 0;seg=next(seg))
+    for (seg=u->relation("Segment")->first(); seg != 0;seg=seg->next())
     {
 	if (seg->F("end") >= pos)
 	    return seg;

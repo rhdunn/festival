@@ -103,12 +103,12 @@ static void phrasing_none(EST_Utterance *u)
 
     u->create_relation("Phrase");
 
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {
 	if (phr == 0)
 	    phr = add_phrase(u);
 	append_daughter(phr,"Phrase",w);
-	if (next(w) == 0)
+	if (w->next() == 0)
 	{
 	    w->set("pbreak","B");
 	    phr->set_name("4");
@@ -127,7 +127,7 @@ static void phrasing_by_cart(EST_Utterance *u)
     u->create_relation("Phrase");
     tree = siod_get_lval("phrase_cart_tree","no phrase cart tree");
 
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {
 	if (phr == 0)
 	    phr = add_phrase(u);
@@ -209,7 +209,7 @@ static void phrasing_by_probmodels(EST_Utterance *u)
     pbyp_get_params(siod_get_lval("phr_break_params",NULL));
     gc_protect(&bb_tags);
 
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {   // Set up tag index for pos ngram
 	EST_String lpos = map_pos(pos_map,w->f("pos").string());
 	w->set("phr_pos",lpos);
@@ -228,7 +228,7 @@ static void phrasing_by_probmodels(EST_Utterance *u)
 
     // Given predicted break, go through and add phrases 
     u->create_relation("Phrase");
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {
 	w->set("pbreak",bb_ngram->
 		 get_vocab_word(w->f("pbreak_index").Int()));
@@ -266,39 +266,39 @@ static EST_VTCandidate *bb_candlist(EST_Item *s,EST_Features &f)
     if (bb_pos_ngram->order() == 4)
     {
 	window[1] = s->I("pos_index",0);
-	if (prev(s) != 0)
-	    window[0] = prev(s)->I("pos_index",0);
+	if (s->prev() != 0)
+	    window[0] = s->prev()->I("pos_index",0);
 	else
 	    window[0] = pos_p_start_tag;
-	if (next(s) != 0)
-	    window[2] = next(s)->I("pos_index",0);
+	if (s->next() != 0)
+	    window[2] = s->next()->I("pos_index",0);
 	else
 	    window[2] = pos_n_start_tag;
     }
     else if (bb_pos_ngram->order() == 3)
     {
 	window[0] = s->I("pos_index",0);
-	if (next(s) != 0)
-	    window[1] = next(s)->I("pos_index",0);
+	if (s->next() != 0)
+	    window[1] = s->next()->I("pos_index",0);
 	else
 	    window[1] = pos_n_start_tag;
     }
     else if (bb_pos_ngram->order() == 5)
     {   // This is specific for some set of pos tagsets
 	window[2] = s->I("pos_index",0);
-	if (prev(s) != 0)
+	if (s->prev() != 0)
 	{
-	    window[1] = prev(s)->I("pos_index",0);
+	    window[1] = s->prev()->I("pos_index",0);
 	}
 	else
 	{
 	    window[1] = pos_p_start_tag;
 	}
-	if (next(s) != 0)
+	if (s->next() != 0)
 	{
-	    window[3] = next(s)->I("pos_index",0);
-	    if (next(next(s)) != 0)
-		window[0] = next(next(s))->I("pos_index",0);
+	    window[3] = s->next()->I("pos_index",0);
+	    if (s->next()->next() != 0)
+		window[0] = s->next()->next()->I("pos_index",0);
 	    else
 		window[0] = 0;
 	}
@@ -328,7 +328,7 @@ static EST_VTCandidate *bb_candlist(EST_Item *s,EST_Features &f)
 	c->next = all_c;
 	all_c = c;  // but then if you give only one option ...
     }
-    else if (next(s) == 0)  // end of utterances so force a break
+    else if (s->next() == 0)  // end of utterances so force a break
     {   
 	EST_VTCandidate *c = new EST_VTCandidate;
 	c->s = s;
@@ -634,7 +634,7 @@ static void phrasing_by_fa(EST_Utterance *u)
     pbyp_get_params(siod_get_lval("phr_break_params",NULL));
     gc_protect(&bb_tags);
 
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {   // Set up tag index for pos ngram
 	EST_String lpos = map_pos(pos_map,w->f("pos").string());
 	w->set("phr_pos",lpos);
@@ -651,7 +651,7 @@ static void phrasing_by_fa(EST_Utterance *u)
 
     // Given predicted break, go through and add phrases 
     u->create_relation("Phrase");
-    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    for (w=u->relation("Word")->first(); w != 0; w = w->next())
     {
 	w->set("pbreak",bb_ngram->
 		 get_vocab_word(w->f("pbreak_index").Int()));

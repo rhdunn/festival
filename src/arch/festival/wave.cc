@@ -428,7 +428,7 @@ static void utt_save_f0_from_targets(EST_Utterance *u,EST_String &filename)
     EST_Item *ptval, *tval;
 
     ptval = tval = u->relation("Target")->first_leaf();
-    for (i=0,s=u->relation("Segment")->first(); s != 0; s=next(s))
+    for (i=0,s=u->relation("Segment")->first(); s != 0; s=s->next())
     {
 	if (i >= frames)
 	    break;  // may hit here one before end

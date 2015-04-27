@@ -151,7 +151,7 @@ void us_get_diphones(EST_Utterance &utt)
 	utt.relation("Unit")->f.set("sig_ext", diph_index->sig_ext);
     }
 
-    for (p = next(p); p; p = next(p))
+    for (p = p->next(); p; p = p->next())
     {
 	d = utt.relation("Unit")->append();
 	name2 = get_diphone_name(p,"right");
@@ -161,7 +161,7 @@ void us_get_diphones(EST_Utterance &utt)
     }
 
 //    utt.create_relation("SourceSegments");
-//    for (p = utt.relation("Segment", 1)->head(); p; p = next(p))
+//    for (p = utt.relation("Segment", 1)->head(); p; p = p->next())
 //    {
 //	d = utt.relation("SourceSegments")->append();
 //	d->set_name(p->name());
@@ -209,7 +209,7 @@ LISP us_make_group_file(LISP lname, LISP params)
     if ((fp = fopen(group_file, "wb")) == NULL)
 	EST_error("US DB: failed to open group file as temporary file\n");
 
-    for (d = diphone.head(); d; d = next(d))
+    for (d = diphone.head(); d; d = d->next())
     {
 	sig = wave(d->f("sig"));
 	tr = track(d->f("coefs"));
@@ -238,7 +238,7 @@ LISP us_make_group_file(LISP lname, LISP params)
     fprintf(fp, "sig_file_format %s\n",(const char *)sig_file_format);
     fprintf(fp, "EST_Header_End\n");
 
-    for (d = diphone.head(); d; d = next(d))
+    for (d = diphone.head(); d; d = d->next())
 	fprintf(fp, "%s %d %d %d\n", (const char *)d->S("name"), 
 		d->I("track_start"), d->I("wave_start"),
 		d->I("middle_frame"));
@@ -536,7 +536,7 @@ void us_full_cut(EST_Relation &unit)
     int samp_start, samp_end;
     float start_time;
 
-    for (s = unit.head(); s; s = next(s))
+    for (s = unit.head(); s; s = s->next())
     {
 	sub_coefs = new EST_Track;
 

@@ -106,7 +106,7 @@ LISP FT_Any_Token_Utt(LISP utt)
     user_token_to_word_func = siod_get_lval("token_to_words",NULL);
     u->create_relation("Word");
 
-    for (t=u->relation("Token")->first(); t != 0; t = next(t))
+    for (t=u->relation("Token")->first(); t != 0; t = t->next())
     {
 	if (user_token_to_word_func != NIL)
 	{
@@ -145,7 +145,7 @@ LISP FT_English_Token_Utt(LISP utt)
     user_token_to_word_func = siod_get_lval("token_to_words",NULL);
     u->create_relation("Word");
 
-    for (t=u->relation("Token")->first(); t != 0; t = next(t))
+    for (t=u->relation("Token")->first(); t != 0; t = t->next())
     {
 	words = word_it(t,t->name());
 	// Initial punctuation becomes words

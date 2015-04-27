@@ -241,7 +241,7 @@ LISP tts_chunk_stream(EST_TokenStream &ts,
 	t = ts.get();
 	tok = add_token(u,t);
 	app_tok(tok);     // do what you do with the token
-	ebo = prev(tok,"Token");  // end but one token
+	ebo = as(tok,"Token")->prev();  // end but one token
 	if ((ebo != 0) &&
 	    (wagon_predict(ebo,eou_tree) == 1))
 	{

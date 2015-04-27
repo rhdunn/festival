@@ -75,7 +75,7 @@ DiphoneBackoff::DiphoneBackoff(LISP l_backofflist)
 // {
 //   EST_Litem *p;
 //
-//   for (p = backofflist.head(); p != 0; p = next(p))
+//   for (p = backofflist.head(); p != 0; p = p->next())
 //    delete backofflist(p);
 // }
 
@@ -113,7 +113,7 @@ EST_String DiphoneBackoff::backoff(EST_String left, EST_String right)
 	  p = 0;
 	}
       else
-	p = next(p);
+	p = p->next();
     }
   
   if ( left != rl || right != rr )
@@ -203,7 +203,7 @@ int DiphoneBackoff::backoff(EST_Item *p1)
 		      (const char *)full_sub);
 	  done = true;
 	}
-      p = next(p);
+      p = p->next();
     }
 
   if (done)
@@ -217,7 +217,7 @@ ostream& DiphoneBackoff::print(ostream &st) const
 {
   EST_Litem *p;
 
-  for (p = backofflist.head(); p != 0; p = next(p))
+  for (p = backofflist.head(); p != 0; p = p->next())
     st << backofflist(p);
   return st;
 }

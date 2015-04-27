@@ -86,7 +86,7 @@ static void my_parse_diphone_times(EST_Relation &diphone_stream,
   // the unit linked list *may be* shorter that the segment list. 
   //(admittedly could cause confusion)
 
-  for( s=source_lab.head(), u=diphone_stream.head(); (u!=0)&&(s!=0); u=next(u), s=next(s)){
+  for( s=source_lab.head(), u=diphone_stream.head(); (u!=0)&&(s!=0); u=u->next(), s=s->next()){
     EST_Track *pm = track(u->f("coefs"));
     
     int end_frame = pm->num_frames() - 1;
@@ -576,7 +576,7 @@ void DiphoneUnitVoice::getUnitSequence( EST_Utterance  *utt )
 
   // stop if necessary units are still missing.
   if( missing_diphones.length() > 0 ){
-    for( EST_Litem *it=missing_diphones.head(); it!=0 ; it=next(it) )
+    for( EST_Litem *it=missing_diphones.head(); it!=0 ; it=it->next() )
       printf( "requested diphone missing: %s\n", missing_diphones(it).str() );
  
     EST_warning("Making phone joins to compensate...");
