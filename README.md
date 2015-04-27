@@ -7,7 +7,7 @@
 ----------
 
 This directory contains the
-[Festival Speech Synthesis System](http://www.cstr.ed.ac.uk/projects/festival.html),
+[Festival Speech Synthesis System](http://www.cstr.ed.ac.uk/projects/festival/),
 developed at CSTR, University of Edinburgh. The project was originally
 started by Alan W Black and Paul Taylor but [many others](ACKNOWLEDGMENTS)
 have been involved.
@@ -45,10 +45,10 @@ can be built using the following commands:
 
 Festival should run on any standard Unix platform.  It has already run
 on Solaris, SunOS, Linux and FreeBSD.  It requires a C++ compiler (GCC
-2.7.2, 2.8.1, 2.95.[123], 3.2.3 3.3.2 RedHat "gcc-2.96" and gcc 3.3,
-3.4, 4.0, 4.0.1 4.1 are our standard compilers) to install. A port to Windows
-XP/NT/95/98 and 2000 using either Cygnus GNUWIN32 and Visual C++ is
-included, this is still new but many people are successfully using it.
+2.7.2, 2.8.1, 2.95.[123], 3.2.3 3.3.2 RedHat "gcc-2.96" and gcc 3.3 are
+our standard compilers) to install. A port to Windows XP/NT/95/98 and
+2000 using either Cygnus GNUWIN32 and Visual C++ is included, this is
+still new but many people are successfully using it.
 
 A detailed description of installation and requirements for the whole
 system is given in the [INSTALL](INSTALL) file.
