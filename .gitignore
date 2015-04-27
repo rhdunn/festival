@@ -44,6 +44,7 @@ examples/dumpfeats
 examples/durmeanstd
 examples/latest
 examples/make_utts
+examples/powmeanstd
 examples/saytime
 examples/scfg_parse_text
 examples/text2pos
