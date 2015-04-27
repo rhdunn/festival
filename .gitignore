@@ -1,0 +1,4 @@
+.*.swp
+
+autom4te.cache/
+configure
