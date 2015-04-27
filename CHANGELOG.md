@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.4.2] - 2001-06-21 Release
+
+  * Various new gcc's support
+  * Visual C++ 6.0 support
+  * uses configure (though could do so even more)
+  * substantial updates to the clunits unit selection module
+  * lots of wee bugs fixed
+  * a few very hard bugs fixed
+    * (client/server race condition)
+    * (dropped bytes in reading files when machine overloaded)
+    * (FreeBSD memory/gc problem)
+  * default waverform type is now RIFF.
+
 ## [1.4.1-1] - 2015-04-27 Maintenance
 
 Add and modernize the standard project files:
