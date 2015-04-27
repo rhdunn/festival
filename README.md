@@ -74,7 +74,7 @@ and free source products without restriction. It has the following copyright:
 
     Centre for Speech Technology Research
     University of Edinburgh, UK
-    Copyright (c) 1996-2001
+    Copyright (c) 1996-2002
     All Rights Reserved.
 
 The changes to the project are described in the [CHANGELOG.md](CHANGELOG.md)

@@ -1,7 +1,16 @@
 # Change Log
 
+## [1.4.3-1] - 2015-04-27 Maintenance
+
+  * Build improvements from [1.4.1-1](#1.4.1-1).
+
+## [1.4.3] - 2003-01-25 Release
+
+Upstream version 1.4.3.
+
 ## [1.4.2-1] - 2015-04-27 Maintenance
 
+  * Build improvements from [1.4.1-1](#1.4.1-1).
   * Remove the derivable autoconf and automake files: config.{guess,sub},
     configure, install-sh, missing and mkinstalldirs.
   * Remove configure.in as this was added as configure.ac in [1.4.1-1](#1.4.1-1).
