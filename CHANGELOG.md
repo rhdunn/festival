@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.95-1] - 2015-04-27 Maintenance
+
+  * Build improvements from [1.4.1-1](#1.4.1-1).
+
 ## [2.0.95] - 2010-04-20 Beta
 
   * Support for various new GCC compilers
