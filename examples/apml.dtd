@@ -1,0 +1,28 @@
+<!ELEMENT apml (turnallocation, performative*, turnallocation)>
+
+<!ELEMENT turnallocation (performative)>
+<!ATTLIST turnallocation type (take|give) #REQUIRED>
+
+<!ELEMENT performative (theme|rheme)+>
+<!ATTLIST performative 
+type (greet|question|inform|paraphrase|suggest) #REQUIRED>
+
+<!ELEMENT theme (#PCDATA|emphasis|boundary)*>
+<!ATTLIST theme affect (sorry-for|relief) #IMPLIED
+                   belief-relation
+(gen-spec|cause-effect|solutionhood|suggestion|modifier|justification) #IMPLIED> 
+
+<!ELEMENT rheme (#PCDATA|emphasis|boundary)*>
+<!ATTLIST rheme affect (sorry-for|relief) #IMPLIED
+                   belief-relation
+(gen-spec|cause-effect|solutionhood|suggestion|modifier|justification) #IMPLIED>
+
+<!ELEMENT emphasis (#PCDATA)>
+<!ATTLIST emphasis type (theme|rheme) #IMPLIED
+                   level (strong|medium|weak) "medium"
+                   x-pitchaccent (Hstar|Lstar|LplusHstar|LstarplusH|HstarplusL|HplusLstar) "Hstar"
+                   deictic CDATA #IMPLIED
+                   adjectival (small|tiny) #IMPLIED>
+
+<!ELEMENT boundary EMPTY>
+<!ATTLIST boundary type (L|H|LL|HH|LH|HL) "LL"> 

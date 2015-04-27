@@ -43,6 +43,10 @@
 #include "festival.h"
 #include "festivalP.h"
 
+#ifdef WIN32
+#include "winsock2.h"
+#endif
+
 static void utt_save_f0_from_targets(EST_Utterance *u,EST_String &filename);
 static float f0_interpolate(EST_Item *ptval, EST_Item *tval, float time);
 
@@ -378,7 +382,11 @@ static LISP utt_send_wave_client(LISP utt)
     else
 	type = get_c_string(ltype);
     w->save(tmpfile,type);
+#ifdef WIN32
+    send(ft_server_socket,"WV\n",3,0);
+#else
     write(ft_server_socket,"WV\n",3);
+#endif
     socket_send_file(ft_server_socket,tmpfile);
     unlink(tmpfile);
 
@@ -387,18 +395,21 @@ static LISP utt_send_wave_client(LISP utt)
 
 static LISP send_sexpr_to_client(LISP l)
 {
-    EST_String sl;
-    unsigned int i,n,csllen;
+    EST_String tmpfile = make_tmp_filename();
+    FILE *fd;
 
-    sl = siod_sprint(l);
-    const char *csl = sl;
-    csllen = strlen(csl);
+    fd = fopen(tmpfile,"w");
 
+    lprin1f(l,fd);
+    fprintf(fd,"\n");
+    fclose(fd);
+#ifdef WIN32
+    send(ft_server_socket,"LP\n",3,0);
+#else
     write(ft_server_socket,"LP\n",3);
-    for (i=0; i < csllen; i+=n)
-    {
-	n = write(ft_server_socket,csl,( i+256 < csllen ? 256 : csllen-i));
-    }
+#endif
+    socket_send_file(ft_server_socket,tmpfile);
+    unlink(tmpfile);
 
     return l;
 }

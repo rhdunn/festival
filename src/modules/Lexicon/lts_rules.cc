@@ -36,8 +36,8 @@
 /*                                                                       */
 /* A letter to sound rule system that allows rules to be specified       */
 /* externally.  This is specified desined to use the existing Welsh      */
-/* letter to rules developed by Brinoy Williams for the Welsh            */
-/* synthesizer.  This form was came from a program by Greg Lee (Univ of  */
+/* letter to rules developed by Briony Williams for the Welsh            */
+/* synthesizer.  This form came from a program by Greg Lee (Univ of  */
 /* Hawaii), but this is not using his code.                              */
 /*                                                                       */
 /* Multiple rule sets are supported alloing multiple applications of     */

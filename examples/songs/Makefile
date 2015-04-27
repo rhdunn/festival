@@ -2,7 +2,7 @@
 ##                                                                       ##
 ##                Centre for Speech Technology Research                  ##
 ##                     University of Edinburgh, UK                       ##
-##                      Copyright (c) 1996-2002                          ##
+##                       Copyright (c) 1996,1997                         ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -30,61 +30,15 @@
 ##  THIS SOFTWARE.                                                       ##
 ##                                                                       ##
 ###########################################################################
-##                                                                       ##
-##                The Festival Speech Synthesis System                   ##
-##                                                                       ##
-##       Authors:  Alan W Black, Paul Taylor, Richard Caley and others   ##
-##          Date:  January 2003                                          ##
-##                                                                       ## 
-###########################################################################
-TOP=.
-DIRNAME=.
-BUILD_DIRS = src lib examples bin doc
-ALL_DIRS=config $(BUILD_DIRS) testsuite
-CONFIG=configure configure.in config.sub config.guess \
-       missing install-sh mkinstalldirs
-FILES = Makefile README ACKNOWLEDGMENTS NEWS COPYING INSTALL $(CONFIG)
-VERSION=$(PROJECT_VERSION)
+TOP=../..
+DIRNAME=examples/songs
+BUILD_DIRS=
+ALL_DIRS=$(BUILD_DIRS)
 
-LOCAL_CLEAN= Templates.DB
-
-ALL = .config_error $(BUILD_DIRS)
-
-# Try and say if config hasn't been created
-config_dummy := $(shell test -f config/config || ( echo '*** '; echo '*** Making default config file ***'; echo '*** '; ./configure; )  >&2)
-
-# force a check on the system file
-system_dummy := $(shell $(MAKE) -C $(TOP)/config -f make_system.mak TOP=.. system.mak)
+SONGS = america1.xml america2.xml america3.xml america4.xml \
+        daisy.xml doremi.xml lochlomond.xml \
+        spice1.xml spice2.xml spice3.xml spice4.xml
+FILES=Makefile $(SONGS)
 
 include $(TOP)/config/common_make_rules
 
-backup:  time-stamp
-	 @ $(RM) -f $(TOP)/FileList
-	 @ $(MAKE) file-list
-	 @ sed 's/^\.\///' <FileList | sed 's/^/festival\//' >.file-list-all
-	 @ (cd ..; tar cvf - `cat festival/.file-list-all` festival/.time-stamp | gzip > festival/festival-$(VERSION)-$(PROJECT_STATE).tar.gz )
-	 @ $(RM) -f $(TOP)/.file-list-all
-	 @ ls -l festival-$(VERSION)-$(PROJECT_STATE).tar.gz
-
-time-stamp :
-	@ echo festival $(VERSION) >.time-stamp
-#    Too many randomly different unices out there ....
-#	@ echo `id -u -n`@`hostname`.`domainname` >>.time-stamp
-	@ date >>.time-stamp
-
-test:
-	@ $(MAKE) --no-print-directory -C testsuite test
-
-config/config: config/config.in config.status
-	./config.status
-
-configure: configure.in
-	autoconf
-
-%.html: %.md _layouts/webpage.html
-	kramdown --template _layouts/webpage.html $< > $@
-
-docs: CHANGELOG.html README.html
-
-include $(EST)/config/rules/top_level.mak
-include $(EST)/config/rules/install.mak

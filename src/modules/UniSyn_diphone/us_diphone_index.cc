@@ -208,9 +208,8 @@ LISP us_make_group_file(LISP lname, LISP params)
     fclose(fp);
 
     if ((fp = fopen(index_file, "wb")) == NULL)
-	EST_error("US DB: failed to final group file \"%s\"\n",
+	EST_error("US DB: failed to open group file \"%s\" for writing\n",
 		  (const char *) index_file);
-
 
     fprintf(fp, "EST_File index\n");
     fprintf(fp, "DataType ascii\n");
@@ -233,7 +232,11 @@ LISP us_make_group_file(LISP lname, LISP params)
     int r;
 
     if ((fp_group = fopen(group_file, "rb")) == NULL)
+    {
+	fprintf(stderr,"Unexpected lost temporary group file from \"%s\"\n",
+		(const char *)group_file);
 	return NIL;
+    }
 
     while ((r = fread(buf, sizeof(char), block_size, fp_group)) != 0)
 	fwrite(buf, sizeof(char), r, fp);
@@ -325,7 +328,6 @@ int read_diphone_index(const EST_String &filename,
 		di.diphone[i].set("start", atof(ts.get().string()));
 		di.diphone[i].set("middle", atof(ts.get().string()));
 		di.diphone[i].set("end", ts.get().string());
-
 		if ((di.diphone[i].F("start")>=di.diphone[i].F("middle"))||
 		    (di.diphone[i].F("middle") >= di.diphone[i].F("end")))
 		{
@@ -339,7 +341,7 @@ int read_diphone_index(const EST_String &filename,
 	}
     
 	// now copy reference entries
-	for (i = 0; i < num_entries; ++i)
+	for (i = 0; i < n_num_entries; ++i)
 	    if (di.diphone[i].S("filename").contains("&", 0))
 	    {
 		pointer = di.diphone[i].S("filename").after("&", 0);

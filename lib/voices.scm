@@ -42,7 +42,7 @@
 ;; The path to search for voices is created from the load-path with
 ;; an extra list of directories appended.
 
-(defvar system-voice-path '("/projects/festival/lib/voices-1.4/")
+(defvar system-voice-path '( )
   "system-voice-path
    Additional directory not near the load path where voices can be
    found, this can be redefined in lib/sitevars.scm if desired.")
@@ -166,9 +166,11 @@ to be used."
 ;; had better exist in every installation.
 
 (define (no_voice_error)
+  (format t "\nWARNING\n")
   (format t "No default voice found in %l\n" voice-path)
   (format t "either no voices unpacked or voice-path is wrong\n")
-  (error "" nil))
+  (format t "Scheme interpreter will work, but there is no voice to speak with.\n")
+  (format t "WARNING\n\n"))
 
 (defvar voice_default 'no_voice_error
  "voice_default

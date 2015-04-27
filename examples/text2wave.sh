@@ -148,7 +148,6 @@ and delete the intermediate ones."
 	(utt.wave.resample wholeutt (parse-number frequency)))
     (if (not (equal? volume "1.0"))
 	(begin
-	  (format t "doing v\n")
 	  (utt.wave.rescale wholeutt (parse-number volume))))
     (utt.save.wave wholeutt outfile output_type)
     ))

@@ -361,11 +361,11 @@ float frame_distance(const EST_Track &a, int ai,
 	if (wghts.a_no_check(k) != 0.0)
 	{
 	    diff = a.a_no_check(ai,k)-b.a_no_check(bi,k);
-	    diff *= diff;
-	    cost += sqrt(diff)*wghts.a_no_check(k);
+	    diff *= wghts.a_no_check(k);
+	    cost += diff*diff;
 	}
     }
 
-    return cost;
+    return sqrt(cost);
 }
 

@@ -47,7 +47,8 @@
   Synthesize using MBROLA as external module.  Basically dump the info
   from this utterance. Call MBROLA and reload the waveform into utt.
   [see MBROLA]"
-  (let ((filename (make_tmp_filename)))
+  (let ((filename (make_tmp_filename))
+	)
     (save_segments_mbrola utt filename)
     (system (string-append mbrola_progname " " 
 			   mbrola_database " "

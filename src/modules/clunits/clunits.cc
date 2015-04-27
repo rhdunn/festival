@@ -104,6 +104,7 @@ static int optimal_coupling = 0;
 static int extend_selections = 0;
 static int clunits_debug = 0;
 static int clunits_log_scores = 0;
+static int clunits_smooth_frames = 0;
 float continuity_weight = 1;
 float f0_join_weight = 0.0;
 float different_prev_pen = 1000.0;
@@ -294,9 +295,8 @@ static LISP clunits_windowed_wave(LISP utt)
     EST_Track *t1 = 0;
     EST_Item *witem = 0;
     EST_Item *s;
-    int size,i,k,wi,samp_idx;
+    int size,i,k,wi,samp_idx, l_samp_idx;
     int width, lwidth;
-    float ltime;
     EST_Wave *www=0;
 
     for (size=0,s=u->relation("Unit")->head(); s != 0; s = next(s))
@@ -315,20 +315,20 @@ static LISP clunits_windowed_wave(LISP utt)
     {
 	w1 = wave(s->f("sig"));
 	t1 = track(s->f("coefs"));
-	samp_idx = 0;
-	ltime = 0;
+
+	l_samp_idx = 0;
 	for (i=0; i < t1->num_frames()-1; i++)
 	{
-	    width = (int)((t1->t(i)-ltime)*w->sample_rate());
-	    if ((i==0) && (lwidth != 0))
+	    samp_idx = (int)(t1->t(i)*w->sample_rate());
+	    width = samp_idx - l_samp_idx;
+	    if (clunits_smooth_frames && (i==0) && (lwidth != 0))
 		width = (width+lwidth)/2;  // not sure if this is worth it
-	    ltime = t1->t(i);
 	    wi += width;
-	    samp_idx += width;
 	    for (k=-width; ((k<width)&&((samp_idx+k)<w1->num_samples())) ;k++)
 		w->a(wi+k) += 
 		    (int)(0.5*(1+cos((PI/(double)(width))*(double)k))*
 			w1->a(samp_idx+k));
+	    l_samp_idx = samp_idx;
 	}
 	lwidth = width;
     }
@@ -406,6 +406,7 @@ static void setup_clunits_params()
     f0_join_weight = get_param_float("f0_join_weight",clunits_params,0.0);
     clunits_debug = get_param_int("clunits_debug",clunits_params,0);
     clunits_log_scores = get_param_int("log_scores",clunits_params,0);
+    clunits_smooth_frames = get_param_int("smooth_frames",clunits_params,0);
     clunit_name_feat = get_param_str("clunit_name_feat",clunits_params,"name");
     selection_trees = 
 	siod_get_lval("clunits_selection_trees",
@@ -418,7 +419,7 @@ static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f)
     // Use the appropriate CART to select a small group of candidates
     EST_VTCandidate *all_cands = 0;
     EST_VTCandidate *c, *gt;
-    LISP tree,group,l,pd;
+    LISP tree,group,l,pd,cc,ls;
     EST_String name;
     EST_String lookingfor;
     CLunit *u;
@@ -428,8 +429,17 @@ static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f)
     bbb=ccc=0;
 
     lookingfor = s->S("clunit_name");
-    tree = car(cdr(siod_assoc_str(lookingfor,selection_trees)));
-    pd = wagon_pd(s,tree);
+    ls = siod(s);
+
+    cc = siod_get_lval("clunits_cand_hooks",NULL);
+    if (cc)
+	pd = apply_hooks(siod_get_lval("clunits_cand_hooks",NULL),
+			 ls);
+    else
+    {
+	tree = car(cdr(siod_assoc_str(lookingfor,selection_trees)));
+	pd = wagon_pd(s,tree);
+    }
     if (pd == NIL)
     {
 	cerr << "CLUNITS: no predicted class for " << 

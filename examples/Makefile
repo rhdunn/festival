@@ -32,17 +32,20 @@
 ###########################################################################
 TOP=..
 DIRNAME=examples
+BUILD_DIRS=
+ALL_DIRS=$(BUILD_DIRS) songs
 
 EXTEXTS = intro.text spintro.text benchmark.text
 EXAMPLES = webdemo.scm ex1.email ex1.ogi example.sable example2.sable \
-           tobi.stml example.th
+           tobi.stml example.th example.apml
 SCRIPTS = saytime.sh text2pos.sh latest.sh \
            scfg_parse_text.sh text2wave.sh make_utts.sh dumpfeats.sh \
            durmeanstd.sh
 SHELL_SCRIPTS = benchmark festival_client.pl
 SCMS = toksearch.scm th-mode.scm addr-mode.scm
 SAMPLEC = festival_client.c festival_client.h
-FILES=Makefile $(EXAMPLES) $(EXTEXTS) $(SCRIPTS) $(SHELL_SCRIPTS) $(SCMS) $(SAMPLEC) speech_pm_1.0.tar
+OTHERS = apml.dtd
+FILES=Makefile $(EXAMPLES) $(EXTEXTS) $(SCRIPTS) $(SHELL_SCRIPTS) $(SCMS) $(SAMPLEC) $(OTHERS) speech_pm_1.0.tar
 
 ALL = $(SCRIPTS:.sh=)
 LOCAL_CLEAN = $(SCRIPTS:.sh=)

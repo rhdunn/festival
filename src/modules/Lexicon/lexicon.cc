@@ -224,6 +224,8 @@ void Lexicon::add_to_cache(LISP cache,
 			   const EST_String &word,
 			   int start,int mid, int end)
 {
+    int fc;
+
     if (cdr(cache) == NIL)  // hit bottom
     {
 	LISP a,b;
@@ -233,8 +235,10 @@ void Lexicon::add_to_cache(LISP cache,
 	
 	setcdr(cache,cons(strintern(word),cons(a,cons(b,NIL))));
     }
-    else if (fcompare(word,get_c_string(car(cdr(cache))),NULL) < 0)
+    else if ((fc = fcompare(word,get_c_string(car(cdr(cache))),NULL)) < 0)
 	add_to_cache(siod_nth(2,cache),word,start,mid,end);
+    else if (fc == 0)
+	return; /* already in cache */
     else
 	add_to_cache(siod_nth(3,cache),word,start,mid,end);
 }
@@ -338,8 +342,10 @@ LISP Lexicon::bl_bsearch(const EST_String &word,LISP features,
     closest_entry = bl_find_next_entry(mid);
     if ((depth < CACHE_DEPTH) &&
 	(end-start > 256))
+    {
 	add_to_cache(index_cache,get_c_string(car(closest_entry)),
 		     start,mid,end);
+    }
 
     compare = bl_match_entry(closest_entry,word);
 

@@ -12,15 +12,15 @@
 @c aid in producing this document -- awb
 
 @set EDITION 1.4
-@set VERSION 1.4.2
-@set UPDATED 25th July 2001
+@set VERSION 1.4.3
+@set UPDATED 27th December 2002
 
 @ifinfo
 This file documents the @code{Festival} Speech Synthesis System a general
 text to speech system for making your computer talk and developing
 new synthesis techniques.
 
-Copyright (C) 1996-2001 University of Edinburgh
+Copyright (C) 1996-2002 University of Edinburgh
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -53,7 +53,7 @@ by the authors.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1996-2001 University of Edinburgh, all rights
+Copyright @copyright{} 1996-2002 University of Edinburgh, all rights
 reserved.
 
 Permission is granted to make and distribute verbatim copies of
@@ -189,10 +189,10 @@ know as it helps justify ourselves to our various sponsors.
 
 The current copyright on the core system is
 @example
-          The Festival Speech Synthesis System: version 1.4.2
+          The Festival Speech Synthesis System: version 1.4.3
                 Centre for Speech Technology Research                  
                      University of Edinburgh, UK                       
-                      Copyright (c) 1996-2001                            
+                      Copyright (c) 1996-2002                            
                         All Rights Reserved.                           
                                                                        
   Permission is hereby granted, free of charge, to use and distribute 
@@ -611,7 +611,6 @@ location and customize that installation.
 * Configuration::       Setting up compilation
 * Site initialization:: Settings for your particular site
 * Checking an installation::  But does it work ...
-* Y2K::                 Comment on Festival and year 2000
 @end menu
 
 @node Requirements, Configuration, , Installation
@@ -622,9 +621,9 @@ In order to compile Festival you first need the following
 source packages
 
 @table @code
-@item festival-1.4.2.tar.gz
+@item festival-1.4.3-release.tar.gz
 Festival Speech Synthesis System source
-@item speech_tools-1.2.2.tar.gz
+@item speech_tools-1.2.3-release.tar.gz
 The Edinburgh Speech Tools Library 
 @item festlex_NAME.tar.gz
 @cindex lexicon
@@ -638,7 +637,7 @@ program to convert that file to the Festival format is included.
 You'll need a speech database.  A number are available (with varying
 distribution policies).  Each voice may have other dependencies such as
 requiring particular lexicons
-@item festdoc_1.4.2.tar.gz
+@item festdoc_1.4.3.tar.gz
 Full postscript, info and html documentation for Festival and the
 Speech Tools.  The source of the documentation is available
 in the standard distributions but for your conveniences it has
@@ -651,7 +650,7 @@ In addition to Festival specific sources you will also need
 @item A UNIX machine
 Currently we have compiled and tested the system under Solaris (2.5(.1),
 2.6, 2.7 and 2.8), SunOS (4.1.3), FreeBSD 3.x, 4.x Linux (Redhat 4.1,
-5.0, 5.1, 5.2, 6.[012], 7.[01] and other Linux distributions), and it
+5.0, 5.1, 5.2, 6.[012], 7.[01], 8.0 and other Linux distributions), and it
 should work under OSF (Dec Alphas) SGI (Irix), HPs (HPUX).  But any
 standard UNIX machine should be acceptable.  We have now successfully
 ported this version to Windows NT nad Windows 95 (using the Cygnus GNU
@@ -666,15 +665,13 @@ hard to make the system portable, we know it is very unlikely to
 compile without change except with compilers that have already been tested.
 The currently tested systems are
 @itemize @bullet
-@item Sun Sparc Solaris 2.5, 2.5.1, 2.6, 2.7:
-GCC 2.7.2, egcs 1.1.1, egcs 1.1.2, GCC 2.95.1
-@item Sun Sparc SunOS 4.1.3:
-GCC 2.7.2
+@item Sun Sparc Solaris 2.5, 2.5.1, 2.6, 2.7, 2.9:
+GCC 2.95.1, GCC 3.2
 @item FreeBSD for Intel 3.x and 4.x
 GCC 2.95.1, GCC 3.0
-@item Linux for Intel (RedHat 4.1/5.0/5.1/5.2/6.0):
+@item Linux for Intel (RedHat 4.1/5.0/5.1/5.2/6.0/7.x/8.0):
 GCC 2.7.2, GCC 2.7.2/egcs-1.0.2, egcs 1.1.1, egcs-1.1.2, GCC 2.95.[123],
-GCC "2.96", GCC 3.0
+GCC "2.96", GCC 3.0, GCC 3.0.1 GCC 3.2 GCC 3.2.1
 @item Windows NT 4.0:
 GCC 2.7.2 plus egcs (from Cygnus GNU win32 b19), Visual C++ PRO v5.0,
 Visual C++ v6.0
@@ -1061,7 +1058,7 @@ A second level of customization is on a per user basis.  After loading
 @file{.festivalrc} from the user's home directory (if it exists).  This
 file may contain arbitrary Festival commands.    
 
-@node Checking an installation, Y2K, Site initialization, Installation
+@node Checking an installation, , Site initialization, Installation
 @section Checking an installation
 
 Once compiled and site initialization is set up you should test 
@@ -1070,8 +1067,8 @@ to see if Festival can speak or not.
 Start the system
 @example
 $ bin/festival
-Festival Speech Synthesis System 1.4.2:release July 2001
-Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
+Festival Speech Synthesis System 1.4.3:release Jan 2003
+Copyright (C) University of Edinburgh, 1996-2003. All rights reserved.
 For details type `(festival_warranty)'
 festival> ^D
 @end example
@@ -1084,8 +1081,8 @@ is correct.  To find out what it has been set to, start the
 system without loading the init files.
 @example
 $ bin/festival -q
-Festival Speech Synthesis System 1.4.2:release July 2001
-Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
+Festival Speech Synthesis System 1.4.3:release Jan 2003
+Copyright (C) University of Edinburgh, 1996-2003. All rights reserved.
 For details type `(festival_warranty)'
 festival> libdir
 "/projects/festival/lib/"
@@ -1153,45 +1150,6 @@ Festival, to ensure new enhancements don't mess up existing supported
 features.  They are not designed to test an installation is successful,
 though if they run correctly it is most probable the installation has
 worked.
-
-@node Y2K, , Checking an installation, Installation
-@section Y2K
-
-@cindex Y2K
-Festival comes with @emph{no} warranty therefore we will not make
-any legal statement about the performance of the system.  However a 
-number of people have ask about Festival and Y2K compliance, and 
-we have decided to make some comments on this. 
-
-Every effort has been made to ensure that Festival will continue running
-as before into the next millenium.  However even if Festival itself has
-no problems it is dependent on the operating system environment it is
-running in.  During compilation dates on files are important and
-the compilation process may not work if your machine cannot assign
-(reasonable) dates to new files.  At run time there is less
-dependence on system dates and times.  Specifically times
-are used in generation of random numbers (where only relative time
-is important) and as time stamps in log files when festival
-runs in server mode, thus we feel it is unlikely there will
-be any problems.
-
-However, as a speech synthesizer, Festival must make explicit decisions
-about the pronunciation of dates in the next two decades when people
-themselves have not yet made such decisions.  Most people are still
-unsure how to read years written as '01, '04, '12, 00s, 10s, (cf. '86,
-90s).  It is interesting to note that while there is a convenient short
-name for the last decade of the twentieth century, the "ninties" there
-is no equivalent name for the first decade of the twenty-first century
-(or the second).  In the mean time we have made reasonable decisions
-about such pronunciations.
-
-Once people have themselves become Y2K compliant and decided what to
-actually call these years, if their choices are different from how
-Festival pronounces them we reserve the right to change how Festival
-speaks these dates to match their belated decisions.  However as we do
-not give out warranties about compliance we will not be requiring our
-users to return signed Y2K compliant warranties about their own
-compliance either.
 
 @node Quick start, Scheme, Installation, Top
 @chapter Quick start
@@ -1300,8 +1258,8 @@ Here is a short session using Festival's command interpreter.
 Start Festival with no arguments
 @lisp
 $ festival
-Festival Speech Synthesis System 1.4.2:release July 2001
-Copyright (C) University of Edinburgh, 1996-2001. All rights reserved.
+Festival Speech Synthesis System 1.4.3:release Dec 2002
+Copyright (C) University of Edinburgh, 1996-2002. All rights reserved.
 For details type `(festival_warranty)'
 festival>
 @end lisp
@@ -1334,7 +1292,7 @@ underlying explicit functions used in synthesizing an utterance.
 
 @cindex utterance
 @cindex hello world
-Utterances can consist of various types (@xref{Utterance types}),
+Utterances can consist of various types @xref{Utterance types},
 but the simplest form is plain text.  We can create an utterance
 and save it in a variable
 @lisp
@@ -2447,7 +2405,7 @@ Will render @file{fred.sable} as speech in Sable mode.
 Another way of using Sable is through the Emacs interface.  The
 say-buffer command will send the Emacs buffer mode to Festival as
 its tts-mode. If the Emacs mode is stml or sgml the file is treated
-as an sable file.  @xref{Emacs interface}
+as an sable file.  @xref{Emacs interface}.
 
 @cindex saving Sable waveforms
 @cindex saving TTS waveforms
@@ -2677,7 +2635,7 @@ part of speech fields allow differentiation.  For example
 ( "lives" v ((( l i v z ) 1)) )
 @end lisp
 
-@xref{Lookup process} for a description of how multiple entries with the
+@xref{Lookup process}, for a description of how multiple entries with the
 same headword are used during lookup.
 
 @cindex lexical stress
@@ -4101,7 +4059,7 @@ updated.
 With the above functions quite elaborate utterance manipulations can
 be performed.  For example in post-lexical rules where modifications
 to the segments are required based on the words and their context.
-@xref{Post-lexical rules} for an example of using various
+@xref{Post-lexical rules}, for an example of using various
 utterance access functions.
 
 @node Features, Utterance I/O, Accessing an utterance, Utterances
@@ -4205,7 +4163,7 @@ A number of functions exist to help in this task.  For example
 will return a list of word, and part of speech context for each
 word in the utterance.  
 
-@xref{Extracting features} for an example of extracting sets
+@xref{Extracting features}, for an example of extracting sets
 of features from a database for use in building stochastic models.
 
 @node Utterance I/O, , Features, Utterances
@@ -5914,14 +5872,14 @@ to be.
 The audio spooler may be started by selecting asynchronous 
 mode
 @lisp
-(audio_mode async)
+(audio_mode 'async)
 @end lisp
 This is switched on by default be the function @code{tts}.
 You may put Festival back into synchronous mode (i.e. the @code{utt.play}
 command will wait until the audio has finished playing before returning).
 by the command
 @lisp
-(audio_mode sync)
+(audio_mode 'sync)
 @end lisp
 Additional related commands are
 @table @code
@@ -6425,7 +6383,7 @@ Set up synthesis for Male Spanish speaker: Eduardo Lopez"
 @subsection Last remarks
 
 We save the above definitions in a file @file{spanish_el.scm}.  Now we
-can declare the new voice to Festival.  @xref{Defining a new voice}
+can declare the new voice to Festival.  @xref{Defining a new voice},
 for a description of methods for adding new voices.  For testing
 purposes we can explciitly load the file @file{spanish_el.scm}
 
@@ -8250,16 +8208,17 @@ Festival in various ways, not just as speech synthesizer
 
 @menu
 * POS Example::          Using Festival as a part of speech tagger
+* Singing Synthesis::    Using Festival for singing
 @end menu
 
-@node POS Example, ,  , Examples
+@node POS Example,Singing Synthesis,  , Examples
 @section POS Example
 
 @cindex POS example
 @cindex script programming
 This example shows how we can use part of the standard synthesis process
 to tokenize and tag a file of text.  This section does not cover
-training and setting up a part of speech tag set (@xref{POS tagging}),
+training and setting up a part of speech tag set @xref{POS tagging},
 only how to go about using the standard POS tagger on text.
 
 This example also shows how to use Festival as a simple scripting
@@ -8346,6 +8305,55 @@ part of speech and print it to standard output.
 @lisp
 (tts_file "-")
 @end lisp
+
+@node Singing Synthesis, ,POS Example, Examples
+@section Singing Synthesis
+
+@cindex singing
+As an interesting example a @file{singing-mode} is included.  This
+offers an XML based mode for specifying songs, both notes and duration.
+This work was done as a student project by Dominic Mazzoni.  A 
+number of examples wr provided in @file{examples/songs}.  This
+may be run as
+@lisp
+festival> (tts "doremi.xml" 'singing)
+@end lisp
+Each note can be given a note and a beat value
+@example
+<?xml version="1.0"?>
+<!DOCTYPE SINGING PUBLIC "-//SINGING//DTD SINGING mark up//EN" 
+      "Singing.v0_1.dtd"
+[]>
+<SINGING BPM="30">
+<PITCH NOTE="G3"><DURATION BEATS="0.3">doe</DURATION></PITCH>
+<PITCH NOTE="A3"><DURATION BEATS="0.3">ray</DURATION></PITCH>
+<PITCH NOTE="B3"><DURATION BEATS="0.3">me</DURATION></PITCH>
+<PITCH NOTE="C4"><DURATION BEATS="0.3">fah</DURATION></PITCH>
+<PITCH NOTE="D4"><DURATION BEATS="0.3">sew</DURATION></PITCH>
+<PITCH NOTE="E4"><DURATION BEATS="0.3">lah</DURATION></PITCH>
+<PITCH NOTE="F#4"><DURATION BEATS="0.3">tee</DURATION></PITCH>
+<PITCH NOTE="G4"><DURATION BEATS="0.3">doe</DURATION></PITCH>
+</SINGING>
+@end example
+You can construct multi-part songs by synthesizing each part
+and generating waveforms, them combining them.  For example
+@example
+text2wave -mode singing america1.xml -o america1.wav
+text2wave -mode singing america2.xml -o america2.wav
+text2wave -mode singing america3.xml -o america3.wav
+text2wave -mode singing america4.xml -o america4.wav
+ch_wave -o america.wav -pc longest america?.wav
+@end example
+The voice used to sing is the current voice.  Note that the number of
+syllables in the words must match that at run time, which means thios
+doesn't always work cross dialect (UK voices sometimes wont work without
+tweaking.
+
+@cindex flinger
+This technique is basically simple, though is definitely effective.
+However for a more serious singing synthesizer we recommend you look at
+Flinger @url{http://cslu.cse.ogi.edu/tts/flinger/}, addresses the issues
+of synthesizing the human singing voice in more detail.
 
 @node Problems, References , Examples , Top
 @chapter Problems

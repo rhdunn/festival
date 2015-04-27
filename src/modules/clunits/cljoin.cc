@@ -40,6 +40,7 @@
 
 #include "EST_error.h"
 #include "us_synthesis.h"
+#include "festival.h"
 
 #if 0
 static int awb_voiced(EST_Track &pm,int i)
@@ -87,13 +88,9 @@ static void make_segment_varied_mapping(EST_Relation &source_lab,
 					float dur_impose_factor,
 					float f0_impose_factor) 
 {
-    int n_i, i,j;
-    int spp,tpp;
-    float n_start, s_start, t_start;
-    float n_end, t_end, s_end;
-    float n_dur, s_dur, t_dur;
-    float s_dur_factor, t_dur_factor;
-    float ntime, stime, ttime, n;
+    int n_i, s_i, u_i, u_frames;
+    int spp;
+    float stime, ttime, ltime, dratio, n_frames;
     int max_frames;
     EST_Item *u;
     EST_Track ntarget_pm;
@@ -106,15 +103,8 @@ static void make_segment_varied_mapping(EST_Relation &source_lab,
 
     ntarget_pm.resize(max_frames,target_pm.num_channels());
     map.resize(max_frames);
-
-    // I don't like there being a pitch period at time 0 in the source
-    for (i=1; i < source_pm.num_frames(); i++)
-    {
-	source_pm.t(i-1) = source_pm.t(i);
-	for (j=0; j < source_pm.num_channels(); j++)
-	    source_pm.a(i-1,j) = source_pm.a(i,j);
-    }
-    source_pm.resize(source_pm.num_frames()-1,source_pm.num_channels());
+    
+//    printf("source_lab relations is %s\n",(const char *)source_lab.name());
 
     if (target_pm.t(target_pm.num_frames() - 1) < 
 	source_lab.tail()->F("end",0))
@@ -126,48 +116,39 @@ static void make_segment_varied_mapping(EST_Relation &source_lab,
     }
 
     n_i = 0;
-    s_start = t_start = n_start = 0.0;
+    s_i = 0;
+    ltime = 0;
     for (u = source_lab.head(); u; u = next(u))
     {
-	s_end = u->F("source_end");
-	t_end = u->F("end");
+	u_frames = u->I("num_frames");
+//	stime = source_pm.t(s_i+u_frames-1) - source_pm.t(s_i);
+	stime = u->F("unit_duration");
+	ttime = ffeature(u,"segment_duration");
+	if (streq("+",(EST_String)ffeature(u,"ph_vc")))
+	    dratio = stime / (stime + ((ttime-stime)*dur_impose_factor));
+	else
+	    dratio = 1;
+	n_frames = (float)u_frames / dratio;
+/*	printf("unit %s dratio %f %d %f time %f, stime %f\n",
+	       (const char *)u->name(),dratio,u_frames,n_frames,
+	       ttime,stime); */
 	
-	s_dur = s_end - s_start;
-	t_dur = t_end - t_start;
-	// How much of the target do we impose
-	n_dur = s_dur + ((t_dur-s_dur)*dur_impose_factor);
-	n_end = n_start + n_dur;
-	
-	s_dur_factor = s_dur / n_dur;
-	t_dur_factor = t_dur / n_dur;
-/*	printf("s end %f dur %f factor %f t end %f dur %f factor %f\n",
-	       s_end, s_dur, s_dur_factor,
-	       t_end, t_dur, t_dur_factor); */
-	for (n = 0.0; n + n_start < n_end; n_i++)
+ 	for (u_i = 0; u_i < n_frames; u_i++,n_i++)
 	{
-	    spp = source_pm.index_below((n * s_dur_factor) + s_start);
-	    spp++;
-	    stime = source_pm.t(spp) - source_pm.t(spp-1);
-
-	    tpp = target_pm.index((n * t_dur_factor) + t_start);
-	    ttime = target_pm.t(tpp) - (tpp == 0 ? 0 : target_pm.t(tpp-1));
-
-	    ntime = stime + ((ttime-stime) * f0_impose_factor);
-
-	    n += ntime;
-	    if (n+n_start >= n_end)
+	    spp = (int)((float)u_i*dratio);
+	    
+	    if (s_i + spp == 0)
+		ntarget_pm.t(n_i) = ltime;
+	    else
+		ntarget_pm.t(n_i) = ltime + source_pm.t(s_i+spp)-
+		    source_pm.t(s_i+spp-1);
+	    map[n_i] = s_i+spp;
+	    ltime = ntarget_pm.t(n_i);
+	    if (n_i+1 == ntarget_pm.num_frames())
 		break;
-	    ntarget_pm.t(n_i) = n_start + n;
-            map[n_i] = spp;
-/*	    printf("s pp %d time %f %f t pp %d time %f n %f %f %f\n",
-		   spp, stime, source_pm.t(spp),
-		   tpp, ttime, n,
-		   n_start+n, n_end); */
 	}
+	s_i += u_frames;
 
-	s_start = s_end;
-	t_start = t_end;
-	n_start = ntarget_pm.t(n_i);
     }
 
     ntarget_pm.resize(n_i,ntarget_pm.num_channels());

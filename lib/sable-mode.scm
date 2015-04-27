@@ -233,6 +233,12 @@ SABLE mode token specific analysis."
     ((equal? (car (xxml_attval "NAME" ATTLIST)) 'male3)
      (set! sable_current_speaker 'voice_ked_diphone)
      (voice_ked_diphone))
+    ((equal? (car (xxml_attval "NAME" ATTLIST)) 'female1)
+     (set! sable_current_speaker 'voice_us1_mbrola)
+     (voice_us1_mbrola))
+    ((equal? (car (xxml_attval "NAME" ATTLIST)) 'male4)
+     (set! sable_current_speaker 'voice_us2_mbrola)
+     (voice_us2_mbrola))
    (t
       (set! sable_current_speaker (intern (string-append "voice_" (car (xxml_attval "NAME" ATTLIST)))))
       (eval (list sable_current_speaker))))
