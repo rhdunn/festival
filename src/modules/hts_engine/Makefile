@@ -1,66 +1,66 @@
-###########################################################################
-##                                                                       ##
-##  ---------------------------------------------------------------      ##
-##      The HMM-Based Speech Synthesis System (HTS): version 1.1b        ##
-##                        HTS Working Group                              ##
-##                                                                       ##
-##                   Department of Computer Science                      ##
-##                   Nagoya Institute of Technology                      ##
-##                                and                                    ##
-##    Interdisciplinary Graduate School of Science and Engineering       ##
-##                   Tokyo Institute of Technology                       ##
-##                      Copyright (c) 2001-2003                          ##
-##                        All Rights Reserved.                           ##
-##                                                                       ##
-##  Permission is hereby granted, free of charge, to use and             ##
-##  distribute this software and its documentation without               ##
-##  restriction, including without limitation the rights to use,         ##
-##  copy, modify, merge, publish, distribute, sublicense, and/or         ##
-##  sell copies of this work, and to permit persons to whom this         ##
-##  work is furnished to do so, subject to the following conditions:     ##
-##                                                                       ##
-##    1. The code must retain the above copyright notice, this list      ##
-##       of conditions and the following disclaimer.                     ##
-##                                                                       ##
-##    2. Any modifications must be clearly marked as such.               ##
-##                                                                       ##
-##  NAGOYA INSTITUTE OF TECHNOLOGY, TOKYO INSITITUTE OF TECHNOLOGY,      ##
-##  HTS WORKING GROUP, AND THE CONTRIBUTORS TO THIS WORK DISCLAIM        ##
-##  ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL           ##
-##  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT       ##
-##  SHALL NAGOYA INSTITUTE OF TECHNOLOGY, TOKYO INSITITUTE OF            ##
-##  TECHNOLOGY, HTS WORKING GROUP, NOR THE CONTRIBUTORS BE LIABLE        ##
-##  FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY            ##
-##  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,      ##
-##  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTUOUS       ##
-##  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR              ##
-##  PERFORMANCE OF THIS SOFTWARE.                                        ##
-##                                                                       ##
-###########################################################################
-##  Nagoya Institute of Technology's HTS Engine                          ##
-##  Integrated in the Festival tree to allow it to be more available     ##
-##  Alan W Black (awb@cs.cmu.edu)
-###########################################################################
+# ----------------------------------------------------------------- #
+#           The HMM-Based Speech Synthesis System (HTS)             #
+#           festopt_hts_engine developed by HTS Working Group       #
+#           http://hts-engine.sourceforge.net/                      #
+# ----------------------------------------------------------------- #
+#                                                                   #
+#  Copyright (c) 2001-2010  Nagoya Institute of Technology          #
+#                           Department of Computer Science          #
+#                                                                   #
+#                2001-2008  Tokyo Institute of Technology           #
+#                           Interdisciplinary Graduate School of    #
+#                           Science and Engineering                 #
+#                                                                   #
+# All rights reserved.                                              #
+#                                                                   #
+# Redistribution and use in source and binary forms, with or        #
+# without modification, are permitted provided that the following   #
+# conditions are met:                                               #
+#                                                                   #
+# - Redistributions of source code must retain the above copyright  #
+#   notice, this list of conditions and the following disclaimer.   #
+# - Redistributions in binary form must reproduce the above         #
+#   copyright notice, this list of conditions and the following     #
+#   disclaimer in the documentation and/or other materials provided #
+#   with the distribution.                                          #
+# - Neither the name of the HTS working group nor the names of its  #
+#   contributors may be used to endorse or promote products derived #
+#   from this software without specific prior written permission.   #
+#                                                                   #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND            #
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,       #
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF          #
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE          #
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS #
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,          #
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   #
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,     #
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON #
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,   #
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY    #
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE           #
+# POSSIBILITY OF SUCH DAMAGE.                                       #
+# ----------------------------------------------------------------- #
+
 TOP=../../..
 DIRNAME=src/modules/hts_engine
-H = parser.h
 
-H = defaults.h global.h misc.h mlpg.h model.h tree.h vocoder.h \
-    mlsa_resynthesis.h
-CPPSRCS = hts_engine.cc misc.cc mlpg.cc model.cc tree.cc vocoder.cc \
-    mlsa_resynthesis.cc
-SRCS = $(CPPSRCS)
+H = HTS_engine.h HTS_hidden.h
 
-OBJS = $(CPPSRCS:.cc=.o) 
+CPPSRCS = fest2hts_engine.cc
+CSRCS = HTS_audio.c HTS_engine.c HTS_gstream.c HTS_label.c HTS_misc.c HTS_model.c HTS_pstream.c HTS_sstream.c HTS_vocoder.c
 
-FILES=Makefile $(SRCS) $(H)
+SRCS = $(CPPSRCS) $(CSRCS)
 
-LOCAL_INCLUDES = -I../include
+OBJS = $(CPPSRCS:.cc=.o) $(CSRCS:.c=.o)
+INFOS = README COPYING INSTALL AUTHORS
+
+FILES=Makefile $(SRCS) $(H) $(INFOS)
+
+LOCAL_INCLUDES = -I ../include -D FESTIVAL
 
 INLIB = $(TOP)/src/lib/libFestival.a
 
 ALL = .buildlib
 
 include $(TOP)/config/common_make_rules
-
-

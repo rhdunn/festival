@@ -478,69 +478,70 @@ Pretty print APML syllable structure."
 (define (apml_initialise)
   "(apml_initialise)
 Set up the current voice for apml use."
-  (cond
-   ((or (string-equal (Parameter.get 'Language) "americanenglish")
-	(string-equal (Parameter.get 'Language) "britishenglish"))
-    (begin
-      (format t "Initialising APML for English.\n")
-      ;; Phrasing.
-      (Parameter.set 'Phrase_Method 'cart_tree)
-      (set! phrase_cart_tree apml_phrase_tree)
-      ;; Pauses.
-      ;;(set! duration_cart_tree apml_kal_duration_cart_tree)
-      ;;(set! duration_ph_info apml_kal_durs)
-      ;;(Parameter.set 'Pause_Method Apml_Pauses)
-      ;; Lexicon.
+  (if (not (string-matches current-voice ".*multisyn.*")) ; nothing if multisyn
+      (cond
+       ((or (string-equal (Parameter.get 'Language) "americanenglish")
+	    (string-equal (Parameter.get 'Language) "britishenglish"))
+	(begin
+	  (format t "Initialising APML for English.\n")
+	  ;; Phrasing.
+	  (Parameter.set 'Phrase_Method 'cart_tree)
+	  (set! phrase_cart_tree apml_phrase_tree)
+	  ;; Pauses.
+	  ;;(set! duration_cart_tree apml_kal_duration_cart_tree)
+	  ;;(set! duration_ph_info apml_kal_durs)
+	  ;;(Parameter.set 'Pause_Method Apml_Pauses)
+	  ;; Lexicon.
       ;;;; We now assume the lexicon you have already set is suitable,
       ;;;; You probably want to ensure this is "apmlcmu" or "unilex"
-      ;;(if (not (member_string "apmlcmu" (lex.list)))
-	;;  (load (path-append lexdir "apmlcmu/apmlcmulex.scm")))
-      ;;(lex.select "apmlcmu")
-      ;; Add other lex entries here:
-      ;;(lex.add.entry '("minerals" nil (((m ih n) 1) ((er) 0) ((ax l z) 0))))
-      ;;(lex.add.entry '("fibre" nil (((f ay b) 1) ((er) 0))))
-      ;;(lex.add.entry '("dont" v (((d ow n t) 1))))
-      ;;(lex.add.entry '("pectoris" nil (((p eh k) 2) ((t ao r) 1) ((ih s) 0))))
-      ;;(lex.add.entry '("sideeffects" nil (((s ay d) 1) ((ax f) 0) ((eh k t s) 2))))
-      
-      ;; Intonation events.
-      (set! int_accent_cart_tree apml_accent_cart)
-      (set! int_tone_cart_tree   apml_boundary_cart)
-      (Parameter.set 'Int_Method Intonation_Tree)
-      ;; Intonation f0 contour.
-      (set! f0_lr_start apml_f2b_f0_lr_start)
-      (set! f0_lr_left apml_f2b_f0_lr_left)
-      (set! f0_lr_mid apml_f2b_f0_lr_mid)
-      (set! f0_lr_right apml_f2b_f0_lr_right)
-      (set! f0_lr_end apml_f2b_f0_lr_end)
-      (set! int_lr_params
-	    (list (list 'target_f0_mean (car (apml_get_lr_params)))
-		  (list 'target_f0_std (car (cdr (apml_get_lr_params))))
-		  (list 'model_f0_mean 170)
-		  (list 'model_f0_std 40)))
-      (Parameter.set 'Int_Target_Method Int_Targets_5_LR)
-      nil))
-   ((string-equal (Parameter.get 'Language) "italian")
-    (begin
-      (format t "Initialising APML for Italian.\n")
-      ;; Phrasing.
-      (Parameter.set 'Phrase_Method 'cart_tree)
-      (set! phrase_cart_tree apml_phrase_tree)
-      ;; Intonation events.
-      (set! int_accent_cart_tree apml_accent_cart)
-      (set! int_tone_cart_tree   apml_boundary_cart)
-      (Parameter.set 'Int_Method Intonation_Tree)
-      ;; Intonation f0 contour.
-      (set! f0_lr_start apml_f2b_f0_lr_start)
-      (set! f0_lr_mid apml_f2b_f0_lr_mid)
-      (set! f0_lr_end apml_f2b_f0_lr_end)
-      (set! int_lr_params
-	    (list (list 'target_f0_mean (car (apml_get_lr_params)))
-		  (list 'target_f0_std (car (cdr (apml_get_lr_params))))
-		  (list 'model_f0_mean 170)
-		  (list 'model_f0_std 34)))
-      (Parameter.set 'Int_Target_Method Int_Targets_LR)
-      nil))
-   (t nil)))
+	  ;;(if (not (member_string "apmlcmu" (lex.list)))
+	  ;;  (load (path-append lexdir "apmlcmu/apmlcmulex.scm")))
+	  ;;(lex.select "apmlcmu")
+	  ;; Add other lex entries here:
+	  ;;(lex.add.entry '("minerals" nil (((m ih n) 1) ((er) 0) ((ax l z) 0))))
+	  ;;(lex.add.entry '("fibre" nil (((f ay b) 1) ((er) 0))))
+	  ;;(lex.add.entry '("dont" v (((d ow n t) 1))))
+	  ;;(lex.add.entry '("pectoris" nil (((p eh k) 2) ((t ao r) 1) ((ih s) 0))))
+	  ;;(lex.add.entry '("sideeffects" nil (((s ay d) 1) ((ax f) 0) ((eh k t s) 2))))
+	  
+	  ;; Intonation events.
+	  (set! int_accent_cart_tree apml_accent_cart)
+	  (set! int_tone_cart_tree   apml_boundary_cart)
+	  (Parameter.set 'Int_Method Intonation_Tree)
+	  ;; Intonation f0 contour.
+	  (set! f0_lr_start apml_f2b_f0_lr_start)
+	  (set! f0_lr_left apml_f2b_f0_lr_left)
+	  (set! f0_lr_mid apml_f2b_f0_lr_mid)
+	  (set! f0_lr_right apml_f2b_f0_lr_right)
+	  (set! f0_lr_end apml_f2b_f0_lr_end)
+	  (set! int_lr_params
+		(list (list 'target_f0_mean (car (apml_get_lr_params)))
+		      (list 'target_f0_std (car (cdr (apml_get_lr_params))))
+		      (list 'model_f0_mean 170)
+		      (list 'model_f0_std 40)))
+	  (Parameter.set 'Int_Target_Method Int_Targets_5_LR)
+	  nil))
+       ((string-equal (Parameter.get 'Language) "italian")
+	(begin
+	  (format t "Initialising APML for Italian.\n")
+	  ;; Phrasing.
+	  (Parameter.set 'Phrase_Method 'cart_tree)
+	  (set! phrase_cart_tree apml_phrase_tree)
+	  ;; Intonation events.
+	  (set! int_accent_cart_tree apml_accent_cart)
+	  (set! int_tone_cart_tree   apml_boundary_cart)
+	  (Parameter.set 'Int_Method Intonation_Tree)
+	  ;; Intonation f0 contour.
+	  (set! f0_lr_start apml_f2b_f0_lr_start)
+	  (set! f0_lr_mid apml_f2b_f0_lr_mid)
+	  (set! f0_lr_end apml_f2b_f0_lr_end)
+	  (set! int_lr_params
+		(list (list 'target_f0_mean (car (apml_get_lr_params)))
+		      (list 'target_f0_std (car (cdr (apml_get_lr_params))))
+		      (list 'model_f0_mean 170)
+		      (list 'model_f0_std 34)))
+	  (Parameter.set 'Int_Target_Method Int_Targets_LR)
+	  nil))
+   (t nil))))
 
 (provide 'apml)

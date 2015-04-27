@@ -107,6 +107,7 @@ static int wagon_ask(EST_Item *s, LISP question,
     const EST_String fname = get_c_string(car(question));
     LISP operand;
 
+    /* printf("wagon_ask %s\n",(const char *)siod_sprint(question)); */
     if (!fcache->present(fname))
     {
 	answer = ffeature(s,fname);
@@ -125,9 +126,15 @@ static int wagon_ask(EST_Item *s, LISP question,
     
     if (streq("is",str_oper))
 	if (answer.string() == get_c_string(operand))
+        {
+            /*            printf("wagon_ask %s is %s\n",(const char *)answer.string(),(const char *)get_c_string(operand)); */
 	    return TRUE;
+        }
 	else
+        {
+            /* printf("wagon_ask %s isnot %s\n",(const char *)answer.string(),(const char *)get_c_string(operand)); */
 	    return FALSE;
+        }
     else if (streq("=",str_oper))
 	if (answer == get_c_float(operand))
 	    return TRUE;

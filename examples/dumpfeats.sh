@@ -108,7 +108,7 @@
 	      (durmeanstd_error "no file of utts names file specified"))
           (set! files 
                 (append
-                 (load (car (cdr o)) t) files))
+                 (reverse (load (car (cdr o)) t)) files))
 	  (set! o (cdr o)))
 	 ((string-equal "-eval" (car o))
 	  (if (not (cdr o))
@@ -139,7 +139,8 @@ to a files or files specified by outskeleton."
 	(set! fd (fopen outskeleton "w")))
     (mapcar
      (lambda (uttfile)
-       (format stderr "%s\n" uttfile)
+       (if (cdr names)  ;; only output the utt name if there is more than one
+           (format stderr "%s\n" uttfile))
        ;; change fd to new file if in skeleton mode
        (if (string-matches outskeleton ".*%s.*")
 	   (set! fd (fopen (format nil outskeleton

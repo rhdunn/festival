@@ -362,6 +362,22 @@ float EST_TargetCost::right_context_cost() const
   return (targ_context->features().val("name").String() == cand_context->features().val("name").String()) ? 0 : 1;
 }
 
+float EST_TargetCost::out_of_lex_cost() const
+{
+  static const EST_String ool_feat("bad_lex");
+  
+  // bad_dur may at some stage be set on a target for resynthesis purposes.
+  if( cand->f_present(ool_feat) 
+      != targ->f_present(ool_feat) )
+    return 1.0;
+  
+  if( cand->next()->f_present(ool_feat) 
+      != targ->next()->f_present(ool_feat) )
+    return 1.0;
+
+  return 0.0;
+}
+
 float EST_TargetCost::bad_duration_cost() const
 {
   static const EST_String bad_dur_feat("bad_dur");
@@ -450,7 +466,7 @@ float EST_DefaultTargetCost::operator()(const EST_Item* targ, const EST_Item* ca
   score += 10.0*bad_duration_cost(); // see also join cost.
   score += 10.0*bad_f0_cost();
   score += 10.0*punctuation_cost();
-
+  score += 10.0*out_of_lex_cost();
 
   return score ;
 }
@@ -458,8 +474,6 @@ float EST_DefaultTargetCost::operator()(const EST_Item* targ, const EST_Item* ca
 /*
  *  DERIVED CLASS: EST_APMLTargetCost
  *
- *  This is CSTR's proposed default target cost. Nothing special, if you think you can
- *  do better derive your own class.
  */
 
 float EST_APMLTargetCost::operator()(const EST_Item* targ, const EST_Item* cand) const 
@@ -474,11 +488,18 @@ float EST_APMLTargetCost::operator()(const EST_Item* targ, const EST_Item* cand)
   score += add_weight(5.0)*position_in_word_cost();
   score += add_weight(6.0)*partofspeech_cost();
   score += add_weight(4.0)*position_in_phrase_cost();
-  score += add_weight(10.0)*punctuation_cost();
   score += add_weight(4.0)*left_context_cost();
   score += add_weight(3.0)*right_context_cost();
 
-  return score / weight_sum;
+  score /= weight_sum;
+
+  score += 10.0*bad_duration_cost(); // see also join cost.
+  score += 10.0*bad_f0_cost();
+  score += 10.0*punctuation_cost();
+  score += 10.0*out_of_lex_cost();
+
+  return score;
+
 }
 
 /*

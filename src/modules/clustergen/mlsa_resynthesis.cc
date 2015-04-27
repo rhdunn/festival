@@ -35,7 +35,7 @@
 /*  PERFORMANCE OF THIS SOFTWARE.                                    */
 /*                                                                   */
 /*  ---------------------------------------------------------------  */
-/*   This is Zen's MLSA filter as ported by Toda to fetvox vc        */
+/*   This is Zen's MLSA filter as ported by Toda to festvox vc       */
 /*   and back ported into hts/festival so we can do MLSA filtering   */
 /*   If I took more time I could probably make this use the same as  */
 /*   as the other code in this directory -- awb@cs.cmu.edu 03JAN06   */
@@ -62,10 +62,53 @@
 
 #include "mlsa_resynthesis.h"
 
-LISP mlsa_resynthesis(LISP ltrack)
+static void wavecompressor(DVECTOR wav);
+static DVECTOR xdvalloc(long length);
+static DVECTOR xdvcut(DVECTOR x, long offset, long length);
+static void xdvfree(DVECTOR vector);
+static double dvmax(DVECTOR x, long *index);
+static double dvmin(DVECTOR x, long *index);
+static DMATRIX xdmalloc(long row, long col);
+static void xdmfree(DMATRIX matrix);
+
+static void waveampcheck(DVECTOR wav, XBOOL msg_flag);
+
+static void init_vocoder(double fs, int framel, int m, VocoderSetup *vs);
+static void vocoder(double p, double *mc, EST_Track *str,
+                    int t,
+                    int m, double a, double beta,
+		    VocoderSetup *vs, double *wav, long *pos);
+static double mlsadf(double x, double *b, int m, double a, int pd, double *d,
+		     VocoderSetup *vs);
+static double mlsadf1(double x, double *b, int m, double a, int pd, double *d,
+		      VocoderSetup *vs);
+static double mlsadf2(double x, double *b, int m, double a, int pd, double *d,
+		      VocoderSetup *vs);
+static double mlsafir (double x, double *b, int m, double a, double *d);
+static double nrandom (VocoderSetup *vs);
+static double rnd (unsigned long *next);
+static unsigned long srnd (unsigned long seed);
+static int mseq (VocoderSetup *vs);
+static void mc2b (double *mc, double *b, int m, double a);
+static double b2en (double *b, int m, double a, VocoderSetup *vs);
+static void b2mc (double *b, double *mc, int m, double a);
+static void freqt (double *c1, int m1, double *c2, int m2, double a,
+		   VocoderSetup *vs);
+static void c2ir (double *c, int nc, double *h, int leng);
+
+
+#if 0
+static DVECTOR get_dpowvec(DMATRIX rmcep, DMATRIX cmcep);
+static double get_dpow(double *rmcep, double *cmcep, int m, double a,
+		       VocoderSetup *vs);
+#endif
+static void free_vocoder(VocoderSetup *vs);
+
+LISP mlsa_resynthesis(LISP ltrack, LISP strtrack)
 {
     /* Resynthesizes a wave from given track */
     EST_Track *t;
+    EST_Track *str = 0;
     EST_Wave *wave = 0;
     DVECTOR w;
     DMATRIX mcep;
@@ -73,6 +116,8 @@ LISP mlsa_resynthesis(LISP ltrack)
     int sr = 16000;
     int i,j;
     double shift;
+    double ALPHA = 0.42;
+    double BETA = 0.0;
 
     if ((ltrack == NULL) ||
         (TYPEP(ltrack,tc_string) &&
@@ -80,6 +125,11 @@ LISP mlsa_resynthesis(LISP ltrack)
         return siod(new EST_Wave(0,1,sr));
 
     t = track(ltrack);
+
+    if (strtrack != NULL)
+    {   /* We have to do mixed-excitation */
+        str = track(strtrack);
+    }
 
     f0v = xdvalloc(t->num_frames());
     mcep = xdmalloc(t->num_frames(),t->num_channels()-1);
@@ -96,7 +146,12 @@ LISP mlsa_resynthesis(LISP ltrack)
     else
         shift = 5.0;
 
-    w = synthesis_body(mcep,f0v,NULL,sr,shift);
+    ALPHA = FLONM(siod_get_lval("mlsa_alpha_param",
+                                  "mlsa: mlsa_alpha_param not set"));
+    BETA = FLONM(siod_get_lval("mlsa_beta_param",
+                                 "mlsa: mlsa_beta_param not set"));
+
+    w = synthesis_body(mcep,f0v,str,sr,shift,ALPHA,BETA);
 
     wave = new EST_Wave(w->length,1,sr);
     
@@ -113,9 +168,11 @@ LISP mlsa_resynthesis(LISP ltrack)
 
 DVECTOR synthesis_body(DMATRIX mcep,	// input mel-cep sequence
 		       DVECTOR f0v,	// input F0 sequence
-		       DVECTOR dpow,	// input diff-pow sequence
+                       EST_Track *str,  // str for mixed excitation
 		       double fs,	// sampling frequency (Hz)
-		       double framem)	// FFT length
+		       double framem,	// FFT length
+                       double alpha,
+                       double beta)
 {
     long t, pos;
     int framel;
@@ -123,26 +180,54 @@ DVECTOR synthesis_body(DMATRIX mcep,	// input mel-cep sequence
     VocoderSetup vs;
     DVECTOR xd = NODATA;
     DVECTOR syn = NODATA;
+    int i,j;
 
     framel = (int)(framem * fs / 1000.0);
     init_vocoder(fs, framel, mcep->col - 1, &vs);
+
+    if (str != NULL)
+    {
+        /* Mixed excitation filters */
+        LISP filters = siod_get_lval("me_mix_filters",
+                                     "mlsa: me_mix_filters not set");
+        LISP f;
+        int fl;
+        for (fl=0,f=filters; f; fl++)
+            f=cdr(f);
+        for (fl=0,f=filters; f; fl++)
+            f=cdr(f);
+        vs.ME_num = 5;
+        vs.ME_order = fl/vs.ME_num;
+
+        for (i=0; i < vs.ME_num; i++)
+        {
+            for (j=0; j<vs.ME_order; j++)
+            {
+                vs.h[i][j] = FLONM(car(filters));
+                filters = cdr(filters);
+            }
+        }
+        vs.gauss = MFALSE;
+    }
 
     // synthesize waveforms by MLSA filter
     xd = xdvalloc(mcep->row * (framel + 2));
     for (t = 0, pos = 0; t < mcep->row; t++) {
 	if (t >= f0v->length) f0 = 0.0;
 	else f0 = f0v->data[t];
-	if (dpow == NODATA)
-	    vocoder(f0, mcep->data[t], mcep->col - 1, ALPHA, 0.0, &vs,
-		    xd->data, &pos);
-	else
-	    vocoder(f0, mcep->data[t], dpow->data[t], mcep->col - 1, ALPHA,
-		    0.0, &vs, xd->data, &pos);
+
+        vocoder(f0, mcep->data[t], 
+                str, t,
+                mcep->col - 1, 
+                alpha, beta, &vs,
+                xd->data, &pos);
+
     }
     syn = xdvcut(xd, 0, pos);
 
     // normalized amplitude
-    waveampcheck(syn, XFALSE);
+    /*    waveampcheck(syn, XFALSE); */
+    wavecompressor(syn);
 
     // memory free
     xdvfree(xd);
@@ -151,38 +236,29 @@ DVECTOR synthesis_body(DMATRIX mcep,	// input mel-cep sequence
     return syn;
 }
 
-#if 0
-static DVECTOR get_dpowvec(DMATRIX rmcep, DMATRIX cmcep)
+static void wavecompressor(DVECTOR wav)
 {
-    long t;
-    DVECTOR dpow = NODATA;
-    VocoderSetup pvs;
+    /* a somewhat over specific compressor */
+    int i;
+    double maxvalue, absv, d;
+    int sign;
 
-    // error check
-    if (rmcep->col != cmcep->col) {
-	fprintf(stderr, "Error: Different number of dimensions\n");
-	exit(1);
+    maxvalue = MAX(FABS(dvmax(wav, NULL)), FABS(dvmin(wav, NULL)));
+    for (i=0; i < wav->length; i++)
+    {
+        sign = ( wav->data[i] < 0 ) ? -1 : 1;
+        absv = FABS(wav->data[i]);
+        if (absv > 15000)
+        {
+            d = absv - 15000;
+            d /= maxvalue-15000;
+            wav->data[i] = sign*(12500+(5000*d));
+        }
+        else if (absv > 10000)
+            wav->data[i] = sign*(10000+((absv-10000)/2.0));
     }
-    if (rmcep->row != cmcep->row) {
-	fprintf(stderr, "Error: Different number of frames\n");
-	exit(1);
-    }
 
-    // memory allocation
-    dpow = xdvalloc(rmcep->row);
-    init_vocoder(16000.0, 80, rmcep->col - 1, &pvs);
-
-    // calculate differential power
-    for (t = 0; t < rmcep->row; t++)
-	dpow->data[t] = get_dpow(rmcep->data[t], cmcep->data[t],
-				 rmcep->col - 1, ALPHA, &pvs);
-
-    // memory free
-    free_vocoder(&pvs);
-
-    return dpow;
 }
-#endif
 
 static void waveampcheck(DVECTOR wav, XBOOL msg_flag)
 {
@@ -210,6 +286,8 @@ static void waveampcheck(DVECTOR wav, XBOOL msg_flag)
 static void init_vocoder(double fs, int framel, int m, VocoderSetup *vs)
 {
     // initialize global parameter
+    int i;
+
     vs->fprd = framel;
     vs->iprd = 1;
     vs->seed = 1;
@@ -238,15 +316,59 @@ static void init_vocoder(double fs, int framel, int m, VocoderSetup *vs)
     vs->o  = 0;
     vs->d  = NULL;
     vs->irleng= 64;
+
+    // for MIXED EXCITATION
+    vs->ME_order = 48;
+    vs->ME_num = 5;
+    vs->hpulse = walloc(double,vs->ME_order);
+    vs->hnoise = walloc(double,vs->ME_order);
+    vs->xpulsesig = walloc(double,vs->ME_order);
+    vs->xnoisesig = walloc(double,vs->ME_order);
+    vs->h = walloc(double *,vs->ME_num);
+    for (i=0; i< vs->ME_num; i++)
+        vs->h[i] = walloc(double,vs->ME_order);
    
     return;
 }
 
-static void vocoder(double p, double *mc, int m, double a, double beta,
-	     VocoderSetup *vs, double *wav, long *pos)
+static double plus_or_minus_one()
+{
+    /* Randomly return 1 or -1 */
+    if (rand() > RAND_MAX/2.0)
+        return 1.0;
+    else
+        return -1.0;
+}
+
+static void vocoder(double p, double *mc, 
+                    EST_Track *str, int t,
+                    int m, double a, double beta,
+                    VocoderSetup *vs, double *wav, long *pos)
 {
     double inc, x, e1, e2;
     int i, j, k; 
+    double xpulse, xnoise;
+    double fxpulse, fxnoise;
+
+    if (str != NULL)     /* MIXED-EXCITATION */
+    {
+        /* Copy in str's and build hpulse and hnoise for this frame */
+        for (i=0; i<vs->ME_order; i++)
+        {
+            vs->hpulse[i] = vs->hnoise[i] = 0.0;
+            for (j=0; j<vs->ME_num; j++)
+            {
+                vs->hpulse[i] += str->a(t,j) * vs->h[j][i];
+                vs->hnoise[i] += (1 - str->a(t,j)) * vs->h[j][i];
+            }
+        }
+        printf("awb_debug str %f %f %f %f %f\n",
+               str->a(t,0),
+               str->a(t,1),
+               str->a(t,2),
+               str->a(t,3),
+               str->a(t,4));
+    }
    
     if (p != 0.0) 
 	p = vs->rate / p;  // f0 -> pitch
@@ -302,103 +424,50 @@ static void vocoder(double p, double *mc, int m, double a, double beta,
 	    if (vs->gauss)
 		x = (double) nrandom(vs);
 	    else
-		x = mseq(vs);
+		x = plus_or_minus_one();
+
+            if (str != NULL)             /* MIXED EXCITATION */
+            {
+                xnoise = x;
+                xpulse = 0.0;
+            }
 	} else {
-	    if ((vs->pc += 1.0) >= vs->p1) {
+	    if ((vs->pc += 1.0) >= vs->p1) 
+            {
 		x = sqrt (vs->p1);
 		vs->pc = vs->pc - vs->p1;
-	    } else x = 0.0;
+	    } 
+            else 
+                x = 0.0;
+
+            if (str != NULL)  /* MIXED EXCITATION */
+            {
+                xpulse = x;
+                xnoise = plus_or_minus_one();
+            }
 	}
 
-	x *= exp(vs->c[0]);
+        /* MIXED EXCITATION */
+        /* The real work -- apply shaping filters to pulse and noise */
+        if (str != NULL)
+        {
+            fxpulse = fxnoise = 0.0;
+            for (k=vs->ME_order-1; k>0; k--)
+            {
+                fxpulse += vs->hpulse[k] * vs->xpulsesig[k];
+                fxnoise += vs->hnoise[k] * vs->xnoisesig[k];
 
-	x = mlsadf(x, vs->c, m, a, vs->pd, vs->d1, vs);
+                vs->xpulsesig[k] = vs->xpulsesig[k-1];
+                vs->xnoisesig[k] = vs->xnoisesig[k-1];
+            }
+            fxpulse += vs->hpulse[0] * xpulse;
+            fxnoise += vs->hnoise[0] * xnoise;
+            vs->xpulsesig[0] = xpulse;
+            vs->xnoisesig[0] = xnoise;
 
-	wav[*pos] = x;
-	*pos += 1;
-
-	if (!--i) {
-	    vs->p1 += inc;
-	    for (k = 0; k <= m; k++) vs->c[k] += vs->cinc[k];
-	    i = vs->iprd;
-	}
-    }
-   
-    vs->p1 = p;
-    memmove(vs->c,vs->cc,sizeof(double)*(m+1));
-   
-    return;
-}
-
-static void vocoder(double p, double *mc, double dpow, int m, double a, double beta,
-	     VocoderSetup *vs, double *wav, long *pos)
-{
-    double inc, x, e1, e2;
-    int i, j, k; 
-   
-    if (p != 0.0) 
-	p = vs->rate / p;  // f0 -> pitch
-   
-    if (vs->p1 < 0) {
-	if (vs->gauss & (vs->seed != 1)) 
-	    vs->next = srnd((unsigned)vs->seed);
-         
-	vs->p1   = p;
-	vs->pc   = vs->p1;
-	vs->cc   = vs->c + m + 1;
-	vs->cinc = vs->cc + m + 1;
-	vs->d1   = vs->cinc + m + 1;
-      
-	mc2b(mc, vs->c, m, a);
-	vs->c[0] += dpow;
-      
-	if (beta > 0.0 && m > 1) {
-	    e1 = b2en(vs->c, m, a, vs);
-	    vs->c[1] -= beta * a * mc[2];
-	    for (k=2;k<=m;k++)
-		vs->c[k] *= (1.0 + beta);
-	    e2 = b2en(vs->c, m, a, vs);
-	    vs->c[0] += log(e1/e2)/2;
-	}
-
-	return;
-    }
-
-    mc2b(mc, vs->cc, m, a);
-    vs->cc[0] += dpow;
-    if (beta>0.0 && m > 1) {
-	e1 = b2en(vs->cc, m, a, vs);
-	vs->cc[1] -= beta * a * mc[2];
-	for (k = 2; k <= m; k++)
-	    vs->cc[k] *= (1.0 + beta);
-	e2 = b2en(vs->cc, m, a, vs);
-	vs->cc[0] += log(e1 / e2) / 2.0;
-    }
-
-    for (k=0; k<=m; k++)
-	vs->cinc[k] = (vs->cc[k] - vs->c[k]) *
-	    (double)vs->iprd / (double)vs->fprd;
-
-    if (vs->p1!=0.0 && p!=0.0) {
-	inc = (p - vs->p1) * (double)vs->iprd / (double)vs->fprd;
-    } else {
-	inc = 0.0;
-	vs->pc = p;
-	vs->p1 = 0.0;
-    }
-
-    for (j = vs->fprd, i = (vs->iprd + 1) / 2; j--;) {
-	if (vs->p1 == 0.0) {
-	    if (vs->gauss)
-		x = (double) nrandom(vs);
-	    else
-		x = mseq(vs);
-	} else {
-	    if ((vs->pc += 1.0) >= vs->p1) {
-		x = sqrt (vs->p1);
-		vs->pc = vs->pc - vs->p1;
-	    } else x = 0.0;
-	}
+            x = fxpulse + fxnoise; /* excitation is pulse plus noise */
+            printf("awb_debug %f\n",(float)x);
+        }
 
 	x *= exp(vs->c[0]);
 
@@ -692,6 +761,8 @@ static double get_dpow(double *rmcep, double *cmcep, int m, double a,
 
 static void free_vocoder(VocoderSetup *vs)
 {
+    int i;
+
     wfree(vs->c);
     wfree(vs->mc);
     wfree(vs->d);
@@ -706,6 +777,14 @@ static void free_vocoder(VocoderSetup *vs)
     vs->g = NULL;
     vs->cep = NULL;
     vs->ir = NULL;
+
+    wfree(vs->hpulse);
+    wfree(vs->hnoise);
+    wfree(vs->xpulsesig);
+    wfree(vs->xnoisesig);
+    for (i=0; i<vs->ME_num; i++)
+        wfree(vs->h[i]);
+    wfree(vs->h);
    
     return;
 }

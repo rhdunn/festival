@@ -250,6 +250,25 @@ using current lexicon and specific module."
      (t
       (Classic_Word utt)))))
 
+(define (find_oovs vocab oovs)
+  (let ((fd (fopen vocab "r"))
+        (ofd (fopen oovs "w"))
+        (e 0)
+        (oov 0)
+        (entry))
+
+    (while (not (equal? (set! entry (readfp fd)) (eof-val)))
+       (set! e (+ 1 e))
+       (if (not (lex.lookup_all entry))
+           (begin
+             (set! oov (+ 1 oov))
+             (format ofd "%l\n" (lex.lookup entry nil))))
+       )
+    (format t ";; %d words %d oov %2.2f oov_rate\n"
+            e oov (/ (* oov 100.0) e))
+    )
+)
+
 
 (provide 'lexicons)
 

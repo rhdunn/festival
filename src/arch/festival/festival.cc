@@ -208,13 +208,16 @@ void festival_banner(void)
     if (siod_get_lval("hush_startup",NULL) == NIL)
     {
 	EST_Litem *t;
-	cout << STRINGIZE(FTNAME) << " " << 
+	cout << "\n" << STRINGIZE(FTNAME) << " " << 
 	    festival_version << endl;
-	cout << "Copyright (C) University of Edinburgh, 1996-2004. " <<
+	cout << "Copyright (C) University of Edinburgh, 1996-2010. " <<
 	    "All rights reserved." << endl;
 	if (sub_copyrights.length() > 0)
+        {
+            cout << "\n";
 	    for (t = sub_copyrights.head(); t != 0; t = next(t))
 		cout << sub_copyrights.item(t);
+        }
 	cout << "For details type `(festival_warranty)'" << endl;
     }
 }
@@ -358,7 +361,7 @@ void festival_lisp_vars(void)
     //  Modify my PATH to include these directories
     siod_set_lval("etc-path",cons(rintern(etcdir),
 				  cons(rintern(etcdircommon),NIL)));
-    char *path = getenv("PATH");
+    const char *path = getenv("PATH");
     if (path == 0)
 	path = "";
     char *newpath = walloc(char,1024+strlen(path)+strlen(etcdir)+

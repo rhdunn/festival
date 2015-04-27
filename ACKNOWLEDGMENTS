@@ -1,10 +1,9 @@
 Festival is currently actively developed by:
 
-	Alan W Black   (Carnegie Mellon University)
-	Rob Clark      (Edinburgh University)
-        Korin Richmond (Edinburgh University)
-	Heiga Zen      (Nagoya Institute of Technology)
-
+	Alan W Black      (Carnegie Mellon University)
+	Rob Clark         (Edinburgh University)
+        Junichi Yamagishi (Edinburgh University)
+	Keiichiro Oura    (Nagoya Institute of Technology)
 
 The following people and organisations have contributed to the
 development of Festival in various ways.  It is their work that makes
@@ -12,12 +11,15 @@ it all possible.
 
 Alan W Black    Overall design, most of the front end and software control
 Paul Taylor     Overall design, most of the back end
+Richard Caley   for doing lots of difficult and boring bits
 Rob Clark       Intonation, multisyn voice building, general developement and
                 maintenance.
+Keiichiro Oura  Updated HTS engine and API
+Junichi Yamagishi
+                HTS voices
 Korin Richmond  Multisyn engine, swig wrappers and general developement.
 Heiga Zen       HTS engine
 Brian Foley     Mac OSX support
-Richard Caley   for doing lots of difficult and boring bits
 Kevin Lenzo     for speaking a bunch of different nonsense words,
                 design and improvements to the clunits module,
                 and co-author of the whole festvox project

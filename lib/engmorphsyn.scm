@@ -34,6 +34,9 @@
 ;;;                         Date:   December 1997
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  
+;;;   THIS IS EXPERIMENTAL AND DOES *NOT* WORK
+;;;
+;;;  
 ;;;  An English morpho-syntax finite-state grammar
 ;;;  This is used for morphological decomposition of unknown words
 ;;;  specifically (only) words that are not found in the lexicon.

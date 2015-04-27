@@ -121,7 +121,9 @@ void parse_diphone_times(EST_Relation &diphone_stream,
 	e_frame = pm->num_frames() - 1;
 	m_frame = u->I("middle_frame");
 
+        if (m_frame < 0) m_frame=0;
 	dur_1 = pm->t(m_frame);
+        if (e_frame < m_frame) e_frame=m_frame;
 	dur_2 = pm->t(e_frame) - dur_1;
 	
 	s->set("source_end", (dur_1 + p_time));

@@ -67,7 +67,7 @@ Email spcific token to word rules."
    ((and (string-matches name ">")
          (string-matches (item.feat token "whitespace") 
 			 "[ \t\n]*\n *"))
-    (voice_don_diphone)
+    (voice_cmu_us_awb_cg)
     nil ;; return nothing to say
    )
    (t  ;; for all other cases

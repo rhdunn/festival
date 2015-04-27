@@ -36,18 +36,17 @@
 /*          Author :  Tomoki Toda (tomoki@ics.nitech.ac.jp)          */
 /*          Date   :  June 2004                                      */
 /*                                                                   */
-/*          Modified by Alan W Black (awb@cs.cmu.edu) Jan 2006       */
-/*          taken from festvox/src/vc/ back into Festival            */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/*  Subroutine for Speech Synthesis                                  */
-/*                                                                   */
+/* Functions shared between mlpg and mlsa                            */
 /*-------------------------------------------------------------------*/
 
-#ifndef __MLSA_RESYNTHESIS_H
-#define __MLSA_RESYNTHESIS_H
+#ifndef __CST_VC_H
+#define __CST_VC_H
 
-#define ALPHA 0.42
+typedef struct LVECTOR_STRUCT {
+    long length;
+    long *data;
+    long *imag;
+} *LVECTOR;
 
 typedef struct DVECTOR_STRUCT {
     long length;
@@ -69,19 +68,26 @@ typedef struct DMATRIX_STRUCT {
 #define NODATA NULL
 
 #define FABS(x) ((x) >= 0.0 ? (x) : -(x))
+#define LABS(x) ((x) >= 0 ? (x) : -(x))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-static DVECTOR xdvalloc(long length);
-static DVECTOR xdvcut(DVECTOR x, long offset, long length);
-static void xdvfree(DVECTOR vector);
-static double dvmax(DVECTOR x, long *index);
-static double dvmin(DVECTOR x, long *index);
-static DMATRIX xdmalloc(long row, long col);
-static void xdmfree(DMATRIX matrix);
+#define xdvnull() xdvalloc(0)
 
-DVECTOR synthesis_body(DMATRIX mcep, DVECTOR f0v, DVECTOR dpow,
-                       double fs, double framem);
-static void waveampcheck(DVECTOR wav, XBOOL msg_flag);
+#define xdvnums(length, value) xdvinit((double)(value), 0.0, (double)(length))
+#define xdvzeros(length) xdvnums(length, 0.0)
+
+LVECTOR xlvalloc(long length);
+void xlvfree(LVECTOR x);
+DVECTOR xdvalloc(long length);
+DVECTOR xdvcut(DVECTOR x, long offset, long length);
+void xdvfree(DVECTOR vector);
+double dvmax(DVECTOR x, long *index);
+double dvmin(DVECTOR x, long *index);
+DMATRIX xdmalloc(long row, long col);
+void xdmfree(DMATRIX matrix);
+DVECTOR xdvinit(double j, double incr, double n);
+
+double dvsum(DVECTOR x);
 
 #define RANDMAX 32767 
 #define   B0         0x00000001
@@ -92,68 +98,4 @@ static void waveampcheck(DVECTOR wav, XBOOL msg_flag);
 
 typedef enum {MFALSE, MTRUE} Boolean;
 
-typedef struct _VocoderSetup {
-   
-   int fprd;
-   int iprd;
-   int seed;
-   int pd;
-   unsigned long next;
-   Boolean gauss;
-   double p1;
-   double pc;
-   double pj;
-   double pade[21];
-   double *ppade;
-   double *c, *cc, *cinc, *d1;
-   double rate;
-   
-   int sw;
-   double r1, r2, s;
-   
-   int x;
-   
-   /* for postfiltering */
-   int size;
-   double *d; 
-   double *g;
-   double *mc;
-   double *cep;
-   double *ir;
-   int o;
-   int irleng;
-   
-} VocoderSetup;
-
-static void init_vocoder(double fs, int framel, int m, VocoderSetup *vs);
-static void vocoder(double p, double *mc, int m, double a, double beta,
-		    VocoderSetup *vs, double *wav, long *pos);
-static void vocoder(double p, double *mc, double dpow, int m, double a,
-		    double beta, VocoderSetup *vs, double *wav, long *pos);
-static double mlsadf(double x, double *b, int m, double a, int pd, double *d,
-		     VocoderSetup *vs);
-static double mlsadf1(double x, double *b, int m, double a, int pd, double *d,
-		      VocoderSetup *vs);
-static double mlsadf2(double x, double *b, int m, double a, int pd, double *d,
-		      VocoderSetup *vs);
-static double mlsafir (double x, double *b, int m, double a, double *d);
-static double nrandom (VocoderSetup *vs);
-static double rnd (unsigned long *next);
-static unsigned long srnd (unsigned long seed);
-static int mseq (VocoderSetup *vs);
-static void mc2b (double *mc, double *b, int m, double a);
-static double b2en (double *b, int m, double a, VocoderSetup *vs);
-static void b2mc (double *b, double *mc, int m, double a);
-static void freqt (double *c1, int m1, double *c2, int m2, double a,
-		   VocoderSetup *vs);
-static void c2ir (double *c, int nc, double *h, int leng);
-
-
-#if 0
-static DVECTOR get_dpowvec(DMATRIX rmcep, DMATRIX cmcep);
-static double get_dpow(double *rmcep, double *cmcep, int m, double a,
-		       VocoderSetup *vs);
-#endif
-static void free_vocoder(VocoderSetup *vs);
-
-#endif /* __RESYNTHESIS_SUB_H */
+#endif /* __CST_VC_H */

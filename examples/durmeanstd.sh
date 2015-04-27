@@ -141,9 +141,16 @@
 (define (suffstats.mean x)
   (/ (suffstats.sum x) (suffstats.n x)))
 (define (suffstats.variance x)
-  (/ (- (* (suffstats.n x) (suffstats.sumx x))
-	(* (suffstats.sum x) (suffstats.sum x)))
-     (* (suffstats.n x) (- (suffstats.n x) 1))))
+  (cond
+   ((or (< (suffstats.n x) 2 )
+        (equal? (* (suffstats.n x) (suffstats.sumx x))
+                (* (suffstats.sum x) (suffstats.sum x))))
+    ;; avoid 0 variance 
+    (/ (suffstats.mean x) 10.0))
+   (t
+      (/ (- (* (suffstats.n x) (suffstats.sumx x))
+            (* (suffstats.sum x) (suffstats.sum x)))
+         (* (suffstats.n x) (- (suffstats.n x) 1))))))
 (define (suffstats.stddev x)
   (sqrt (suffstats.variance x)))
 

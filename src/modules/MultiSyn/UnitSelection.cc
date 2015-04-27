@@ -105,7 +105,7 @@ static LISP FT_utt_tag_unit( LISP l_utt, LISP l_unitnum )
 
   EST_Item *currentCandidateUsed = item(it->f("source_ph1"));
   
-  printf( "setting omit flag on unit %d (item %x)\n", i-1, currentCandidateUsed ); 
+  printf( "setting omit flag on unit %d (item %p)\n", i-1, currentCandidateUsed ); 
 
   omitlist->append( currentCandidateUsed );
   
@@ -551,6 +551,82 @@ static LISP FT_du_voice_diphone_coverage( LISP l_voice, LISP l_filename)
   return NIL;
 }
 
+static LISP FT_du_voice_set_jc_f0_weight( LISP l_voice, LISP l_val )
+{
+
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_jc_f0_weight( get_c_float( l_val ) );
+    if (duv->get_jc())
+      duv->get_jc()->set_f0_weight( get_c_float( l_val ) );
+  }
+  else
+    EST_error( "du_voice_set_jc_f0_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_get_jc_f0_weight( LISP l_voice )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    return flocons(duv->get_jc_f0_weight());
+  }
+  else
+    EST_error( "du_voice_get_jc_f0_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_set_jc_power_weight( LISP l_voice, LISP l_val )
+{
+
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_jc_power_weight( get_c_float( l_val ) );
+    if (duv->get_jc())
+      duv->get_jc()->set_power_weight( get_c_float( l_val ) );
+  }
+  else
+    EST_error( "du_voice_set_jc_power_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_get_jc_power_weight( LISP l_voice )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    return flocons(duv->get_jc_power_weight());
+  }
+  else
+    EST_error( "du_voice_get_jc_power_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_set_jc_spectral_weight( LISP l_voice, LISP l_val )
+{
+
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    duv->set_jc_spectral_weight( get_c_float( l_val ) );
+    if (duv->get_jc())
+      duv->get_jc()->set_spectral_weight( get_c_float( l_val ) );
+  }
+  else
+    EST_error( "du_voice_set_jc_spectral_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+static LISP FT_du_voice_get_jc_spectral_weight( LISP l_voice )
+{
+  if( DiphoneUnitVoice *duv = dynamic_cast<DiphoneUnitVoice*>(voice(l_voice)) ){
+    return flocons(duv->get_jc_spectral_weight());
+  }
+  else
+    EST_error( "du_voice_get_jc_spectral_weight: expects DiphoneUnitVoice" );
+
+  return NIL;
+}
+
+
 void festival_MultiSyn_init(void)
 {
   proclaim_module("MultiSyn");
@@ -673,6 +749,30 @@ void festival_MultiSyn_init(void)
    *  "(du_voice.set_join_cost_weight DU_VOICE FLOAT)\n	\
    *  Sets the join cost weight (default is 1)");
    */
+
+  init_subr_2("du_voice.set_jc_f0_weight", FT_du_voice_set_jc_f0_weight,
+  "(du_voice.set_jc_f0_weight DU_VOICE FLOAT)\n\
+   Sets the joincost f0 weight (default 1)");
+ 
+  init_subr_1("du_voice.get_jc_f0_weight", FT_du_voice_get_jc_f0_weight,
+  "(du_voice.get_jc_f0_weight DU_VOICE)\n\
+    Gets the joincost f0 weight");
+
+  init_subr_2("du_voice.set_jc_power_weight", FT_du_voice_set_jc_power_weight,
+  "(du_voice.set_jc_power_weight DU_VOICE FLOAT)\n\
+   Sets the joincost power weight (default 1)");
+ 
+  init_subr_1("du_voice.get_jc_power_weight", FT_du_voice_get_jc_power_weight,
+  "(du_voice.get_jc_f0_weight DU_VOICE)\n\
+    Gets the joincost f0 weight");
+
+  init_subr_2("du_voice.set_jc_spectral_weight", FT_du_voice_set_jc_spectral_weight,
+  "(du_voice.set_jc_spectral_weight DU_VOICE FLOAT)\n\
+   Sets the joincost spectral weight (default 1)");
+ 
+  init_subr_1("du_voice.get_jc_spectral_weight", FT_du_voice_get_jc_spectral_weight,
+  "(du_voice.get_jc_f0_weight DU_VOICE)\n\
+    Gets the joincost f0 weight");
 
   init_subr_2("du_voice.set_prosodic_modification", FT_du_voice_set_prosodic_modification,
   "(du_voice.set_prosodic_modification DU_VOICE INT)\n\

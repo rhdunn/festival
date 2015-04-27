@@ -69,6 +69,8 @@ LISP acost_utt_load_coeffs(LISP utt, LISP params)
 		u->f("fileid").string()+
 		    get_param_str("coeffs_ext",params,".coeffs");
     float ac_left_context = get_param_float("ac_left_context",params,0.0);
+    EST_String segrelation = 
+        EST_String(get_param_str("clunit_relation",params,"Segment"));
 
     if (track->load(coefffilename) != format_ok)
     {
@@ -82,7 +84,7 @@ LISP acost_utt_load_coeffs(LISP utt, LISP params)
     c_si->set_val("Acoustic_Coeffs", est_val(track));
 
     // Now add subtracks for each segment
-    for (EST_Item *s=u->relation("Segment")->first(); s != 0; s=next(s))
+    for (EST_Item *s=u->relation(segrelation)->first(); s != 0; s=next(s))
     {
 	EST_Track *st = new EST_Track;
 	float start = ffeature(s,"segment_start");
@@ -231,6 +233,13 @@ static void find_unit_distances(LISP units, const EST_String &fname)
 	{
 	    EST_Item *si = get_c_item(car(u));
 	    EST_Track *a=acost_get_coefficients(si);
+            if (a->num_channels() != weights.length())
+            {
+                cerr << "ACOST: number of weights " <<
+                    weights.length() << " does not match mcep param width "
+                     << a->num_channels() << endl;
+                festival_error();
+            }
 	    cumulate_ss_frames(a,ss_frames);
 	}
     }

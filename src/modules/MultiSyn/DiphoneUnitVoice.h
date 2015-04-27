@@ -141,6 +141,16 @@ public:
   void  set_ob_pruning_beam( float width ){ ob_pruning_beam=width; }
   float get_ob_pruning_beam( ) const { return ob_pruning_beam; }
 
+  void  set_jc_f0_weight( float val ) { jc_f0_weight=val; }
+  float get_jc_f0_weight() { return jc_f0_weight; }
+  EST_JoinCost * get_jc() { return jc; }
+
+  void  set_jc_power_weight( float val ) { jc_power_weight=val; }
+  float get_jc_power_weight() { return jc_power_weight; }
+
+  void  set_jc_spectral_weight( float val ) { jc_spectral_weight=val; }
+  float get_jc_spectral_weight() { return jc_spectral_weight; }
+
   void  set_tc_rescoring_beam( float width ){ tc_rescoring_beam = width; }
   float get_tc_rescoring_beam( ) const { return tc_rescoring_beam; }
 
@@ -186,6 +196,11 @@ private:
 
   float tc_weight;
   float jc_weight;
+
+  float jc_f0_weight;    // join cost f0 weight
+  float jc_power_weight;    // join cost f0 weight
+  float jc_spectral_weight; // join cost spectral weight
+
   int prosodic_modification;
 
   unsigned int wav_srate;

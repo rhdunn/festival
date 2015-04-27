@@ -117,6 +117,7 @@ class EST_TargetCost {
   float left_context_cost() const;
   float right_context_cost() const;
   float bad_duration_cost() const;
+  float out_of_lex_cost() const;
   float bad_f0_cost() const;
 };
 
