@@ -2,7 +2,7 @@
 ##                                                                       ##
 ##                Centre for Speech Technology Research                  ##
 ##                     University of Edinburgh, UK                       ##
-##                       Copyright (c) 1996,1997                         ##
+##                         Copyright (c) 1996                            ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -31,18 +31,70 @@
 ##                                                                       ##
 ###########################################################################
 ##                                                                       ##
-##                Makefile for config directory                          ##
+##  Makefile for config directory                                        ##
 ##                                                                       ##
 ###########################################################################
-TOP=..
-DIRNAME=config
+TOP=../..
+DIRNAME=config/systems
 
-CONFIGS = config.in vc_config_make_rules-dist
-FILES=Makefile common_make_rules vc_common_make_rules \
-      test_make_rules project.mak project_config_check.mak \
-      system.sh make_system.mak \
-      $(CONFIGS)
-ALL_DIRS = modules systems
+SYSTEMS =					\
+	Linux.mak				\
+	RedHatLinux.mak				\
+	DebianGNULinux.mak			\
+	alpha_Linux.mak				\
+	alpha_OSF1V4.0.mak			\
+	alpha_RedHatLinux.mak			\
+	hp9000_HP-UX.mak			\
+	hp9000_HP-UXB.10.mak			\
+	ip_IRIX.mak				\
+	ip_IRIX5.3.mak				\
+	ip_IRIX6.3.mak				\
+	ip_IRIX6.4.mak				\
+	ip_IRIX646.4.mak			\
+	ix86_CYGWIN1.0.mak			\
+	ix86_CYGWIN1.1.mak			\
+	ix86_CYGWIN1.3.mak			\
+	ix86_CYGWIN20.1.mak			\
+	ix86_CYGWIN32.mak			\
+	ix86_CYGWIN324.0.mak			\
+	ix86_FreeBSD.mak			\
+	ix86_FreeBSD2.1.mak			\
+	ix86_FreeBSD2.2.mak			\
+	ix86_FreeBSD3.0.mak			\
+	ix86_FreeBSD3.1.mak			\
+	ix86_FreeBSD3.2.mak			\
+	ix86_FreeBSD3.3.mak			\
+	ix86_FreeBSD4.0.mak			\
+	ix86_OS22.mak				\
+	ix86_RedHatLinux4.0.mak			\
+	ix86_RedHatLinux4.1.mak			\
+	ix86_RedHatLinux4.2.mak			\
+	ix86_RedHatLinux5.0.mak			\
+	ix86_RedHatLinux5.1.mak			\
+	ix86_RedHatLinux5.2.mak			\
+	ix86_RedHatLinux6.0.mak			\
+	ix86_RedHatLinux6.1.mak			\
+	ix86_RedHatLinux6.2.mak			\
+	ix86_RedHatLinux7.0.mak			\
+	ix86_SunOS5.5.mak			\
+	ix86_SunOS5.6.mak			\
+	ix86_SunOS5.7.mak			\
+	ix86_SunOS5.8.mak			\
+	ix86_SunOS5.mak				\
+	rs6000_AIX4.1.mak			\
+	sparc_SunOS4.1.mak			\
+	sparc_SunOS4.mak			\
+	sparc_SunOS5.5.mak			\
+	sparc_SunOS5.6.mak			\
+	sparc_SunOS5.7.mak			\
+	sparc_SunOS5.8.mak			\
+	sparc_SunOS5.mak			\
+	unknown_DebianGNULinux.mak		\
+	unknown_Linux.mak			\
+	unknown_RedHatLinux.mak			\
+	unknown_unknown.mak
+
+FILES = Makefile default.mak $(SYSTEMS) 
 
 include $(TOP)/config/common_make_rules
 

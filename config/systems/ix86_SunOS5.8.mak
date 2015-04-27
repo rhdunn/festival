@@ -1,8 +1,8 @@
- ########################################################-*-mode:Makefile-*-
+ ###########################################################################
  ##                                                                       ##
  ##                Centre for Speech Technology Research                  ##
  ##                     University of Edinburgh, UK                       ##
- ##                       Copyright (c) 1996,1997                         ##
+ ##                         Copyright (c) 1996                            ##
  ##                        All Rights Reserved.                           ##
  ##                                                                       ##
  ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -30,84 +30,12 @@
  ##  THIS SOFTWARE.                                                       ##
  ##                                                                       ##
  ###########################################################################
- #              Makefile rules for testing things                          #
+ ##                                                                       ##
+ ##                 Author: Alan W Black (awb@cstr.ed.ac.uk)              ##
+ ## --------------------------------------------------------------------  ##
+ ## Settings for SunOS 5.8                                                ##
+ ##                                                                       ##
  ###########################################################################
 
-TEST_PROGRAMS = $(TEST_MODULES:%=%_example) $(TEST_MODULES:%=%_regression)
-#TSRCS = $(TEST_PROGRAMS:%=%.C)
-#SRCS = $(TSRCS)
-#OBJS = $(SRCS:%.C=%.o)
-
-include $(TOP)/config/common_make_rules
-
-test_scripts: $(TEST_SCRIPTS:%=%_script_test)
-
-test_modules: $(TEST_MODULES:%=%_module_build_and_test)
-
-$(TEST_MODULES:%=%_module_build_and_test) : %_module_build_and_test :  %_module_rebuild %_module_test
-
-$(TEST_MODULES:%=%_module_rebuild) : %_module_rebuild : 
-	@echo 'build $* (module)'
-	@/bin/rm -f $(OBJS)
-	@if $(MAKE) --no-print-directory OPTIMISE=$(TEST_OPTIMISE) WARN=1 $*_example $*_regression ;\
-		then \
-		: ;\
-	else \
-		echo $* example status: FAILED ; exit 1	;\
-	fi
-
-$(TEST_MODULES:%=%_module_test) : %_module_test : correct/%_example.out correct/%_regression.out 
-	@echo 'test $* (module)'
-	@if ./$*_example $($(*:=_example_args)) > $*_example.out ;\
-		then \
-		echo $*_example completed ;\
-		if [ ! -f $*_example.out ] || diff $*_example.out correct/$*_example.out ;\
-			then \
-			echo $* example status: CORRECT ;\
-		else \
-			echo $* example status: INCORRECT ;\
-		fi ;\
-	else \
-		echo $* example status: FAILED ;\
-	fi
-	@if ./$*_regression $($(*:=_regression_args)) > $*_regression.out ;\
-		then \
-		echo $*_regression completed ;\
-		if [ ! -f $*_regression.out ] || diff $*_regression.out correct/$*_regression.out ;\
-			then \
-			echo $* regression status: CORRECT ;\
-		else \
-			echo $* regression status: INCORRECT ;\
-		fi ;\
-	else \
-		echo $* regression status: FAILED ;\
-	fi
-	@echo
-	@echo
-
-$(TEST_SCRIPTS:%=%_script_test) : %_script_test : %.sh correct/%_script.out
-	@echo 'test $* (script)'
-	@OUTPUT='$*_script.out'  ;\
-	TOP='$(TOP)' ;\
-	export TOP OUTPUT ;\
-	if /bin/sh $*.sh $($(*:=_script_args)) ;\
-	then \
-		echo $* script completed ;\
-		if [ ! -f $*_script.out ] || diff $*_script.out correct/$*_script.out ;\
-			then \
-			echo $* script status: CORRECT ;\
-		else \
-			echo $* script status: INCORRECT ;\
-		fi ;\
-	else \
-		echo $* script status: FAILED ;\
-	fi
-	@echo
-	@echo
-
-$(SRCS:%.C=%.o) : %.o : %.C
-
-% : %.o
-	$(CXX) $(CXXFLAGS) $(TEMPLATES) -o $@ $@.o $(ESTLIB) $($(@:=_LIBS)) $(LIBS)
-
+include $(EST)/config/systems/ix86c_SunOS5.mak
 

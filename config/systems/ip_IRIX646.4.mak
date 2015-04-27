@@ -1,8 +1,8 @@
 ###########################################################################
 ##                                                                       ##
 ##                Centre for Speech Technology Research                  ##
-##                     University of Edinburgh, UK                       ##
-##                       Copyright (c) 1996,1997                         ##
+##                     University of Edinburgh,UK                        ##
+##                         Copyright (c) 1996                            ##
 ##                        All Rights Reserved.                           ##
 ##                                                                       ##
 ##  Permission is hereby granted, free of charge, to use and distribute  ##
@@ -31,18 +31,14 @@
 ##                                                                       ##
 ###########################################################################
 ##                                                                       ##
-##                Makefile for config directory                          ##
+##                 Author: Alan W Black                                  ##
+##                   Date: Nov 1997                                      ##
+###########################################################################
+## Settings for Irix 6.4.                                                ##
 ##                                                                       ##
 ###########################################################################
-TOP=..
-DIRNAME=config
 
-CONFIGS = config.in vc_config_make_rules-dist
-FILES=Makefile common_make_rules vc_common_make_rules \
-      test_make_rules project.mak project_config_check.mak \
-      system.sh make_system.mak \
-      $(CONFIGS)
-ALL_DIRS = modules systems
+include $(EST)/config/systems/ip_IRIX.mak
 
-include $(TOP)/config/common_make_rules
+
 

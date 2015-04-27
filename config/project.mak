@@ -1,4 +1,4 @@
- ###########################################################################
+ ########################################################-*-mode:Makefile-*-
  ##                                                                       ##
  ##                Centre for Speech Technology Research                  ##
  ##                     University of Edinburgh, UK                       ##
@@ -40,8 +40,8 @@
 
 PROJECT_NAME = Festival Speech Synthesis System
 PROJECT_PREFIX = FESTIVAL
-PROJECT_VERSION = 1.4.1
-PROJECT_DATE = November 1999
+PROJECT_VERSION = 1.4.2
+PROJECT_DATE = July 2001
 PROJECT_STATE = release
 
 # config files of projects we depend on
