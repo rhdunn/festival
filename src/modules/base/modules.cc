@@ -177,6 +177,7 @@ static void create_phones(EST_Utterance *u)
 LISP FT_Initialize_Utt(LISP args);
 LISP FT_Classic_Phrasify_Utt(LISP args);
 LISP FT_Classic_Word_Utt(LISP args);
+LISP FT_Unilex_Word_Utt(LISP args);
 LISP FT_Classic_POS_Utt(LISP args);
 LISP FT_PostLex_Utt(LISP utt);
 void festival_ff_init(void);
@@ -201,6 +202,11 @@ void festival_base_init(void)
   a simple CART-based prediction model is used. [see Phrase breaks]");
     festival_def_utt_module("Classic_Word",FT_Classic_Word_Utt,
     "(Classic_Word UTT)\n\
+  Build the syllable/segment/SylStructure from the given words using the\n\
+  Lexicon.  Uses part of speech information in the lexicon look up if\n\
+  present.");
+    festival_def_utt_module("Unilex_Word",FT_Unilex_Word_Utt,
+    "(Unilex_Word UTT)\n\
   Build the syllable/segment/SylStructure from the given words using the\n\
   Lexicon.  Uses part of speech information in the lexicon look up if\n\
   present.");

@@ -8,7 +8,7 @@ Festival Text to Speech System</A> documentation
 <br>
 Copyright <A HREF="http://www.ed.ac.uk"> University of Edinburgh</A> 1997
 <br>
-Contact: <A HREF="mailto:festivals@cstr.ed.ac.uk"> 
+Contact: <A HREF="mailto:festival@cstr.ed.ac.uk"> 
          festival@cstr.ed.ac.uk </a>
 </P>
 <br clear=right>

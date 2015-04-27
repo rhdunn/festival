@@ -47,7 +47,7 @@
 #include "festival.h"
 #include "intonation.h"
 
-enum lr_tpos {tp_start, tp_mid, tp_end};
+enum lr_tpos {tp_start, tp_left, tp_mid, tp_right, tp_end};
 
 static EST_String accent_specified(EST_Item *s);
 static EST_String tone_specified(EST_Item *s);
@@ -59,6 +59,9 @@ static void add_target_at(EST_Utterance *u, EST_Item *seg,
 			  float val,lr_tpos pos);
 static float apply_lr_model(LISP model, EST_FVector &feats);
 static void find_feat_values(EST_Item *s, LISP model,EST_FVector &feats);
+
+static LISP Intonation_Endtone_Tree_Utt(LISP utt);  // ... mh 99-08-06
+static LISP Intonation_Accent_Tree_Utt(LISP utt);
 
 static float target_f0_mean = 0.0;
 static float target_f0_std = 1.0;
@@ -74,24 +77,52 @@ LISP FT_Intonation_Tree_Utt(LISP utt)
     // For each syllable predict intonation events.  Potentially
     // two forms, accents and ent tones
     EST_Utterance *u = get_c_utt(utt);
-    EST_Item *s;
-    EST_String paccent,ptone;
-    LISP accent_tree, endtone_tree;
-
-    accent_tree = siod_get_lval("int_accent_cart_tree","no accent tree");
-    endtone_tree = siod_get_lval("int_tone_cart_tree","no tone cart tree");
 
     u->create_relation("IntEvent");
     u->create_relation("Intonation");
 
+    utt = Intonation_Endtone_Tree_Utt(utt);
+    utt = Intonation_Accent_Tree_Utt(utt);
+
+    return utt;
+}
+
+LISP Intonation_Accent_Tree_Utt(LISP utt)
+{
+    // For each syllable predict intonation events.
+    // here only accents
+    EST_Utterance *u = get_c_utt(utt);
+    EST_Item *s;
+    EST_String paccent;
+    LISP accent_tree;
+
+    accent_tree = siod_get_lval("int_accent_cart_tree","no accent tree");
+
     for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
     {
 	if ((paccent = accent_specified(s)) == "0") // check if pre-specified
-	    paccent = wagon_predict(s,accent_tree);
+	    paccent = (EST_String)wagon_predict(s,accent_tree);
 	if (paccent != "NONE")
 	    add_IntEvent(u,s,paccent);
+    }
+    return utt;
+}
+
+LISP Intonation_Endtone_Tree_Utt(LISP utt)
+{
+    // For each syllable predict intonation events.
+    // here only endtones
+    EST_Utterance *u = get_c_utt(utt);
+    EST_Item *s;
+    EST_String ptone;
+    LISP endtone_tree;
+
+    endtone_tree = siod_get_lval("int_tone_cart_tree","no tone cart tree");
+
+    for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
+    {
 	if ((ptone = tone_specified(s)) == "0")
-	    ptone = wagon_predict(s,endtone_tree);
+	    ptone = (EST_String)wagon_predict(s,endtone_tree);
 	if (ptone != "NONE")
 	    add_IntEvent(u,s,ptone);
     }
@@ -107,11 +138,11 @@ static EST_String accent_specified(EST_Item *s)
     EST_Item *token = parent(word,"Token");
     EST_String paccent("0");
     if (token)
-	paccent = ffeature(token,"accent");
+	paccent = (EST_String)ffeature(token,"accent");
 	
     if (paccent == "0")
     {
-	paccent = ffeature(word,"accent");
+	paccent = (EST_String)ffeature(word,"accent");
 	if (paccent == "0")
 	    return paccent;
     }
@@ -139,11 +170,11 @@ static EST_String tone_specified(EST_Item *s)
     EST_Item *token = parent(word,"Token");
     EST_String ptone("0");
     if (token)
-	ptone = ffeature(token,"tone");
+	ptone = (EST_String)ffeature(token,"tone");
 
     if (ptone == "0")
     {
-	ptone = ffeature(word,"tone");
+	ptone = (EST_String)ffeature(word,"tone");
 	if (ptone == "0")
 	    return ptone;
     }
@@ -196,6 +227,60 @@ LISP FT_Int_Targets_LR_Utt(LISP utt)
     return utt;
 
 }
+
+LISP FT_Int_Targets_LR_5_Utt(LISP utt)
+{
+  // Predict F0 targets using Linear regression
+  // This version uses 5 points rather than 3.
+   EST_Utterance *u = get_c_utt(utt);
+    EST_Item *s;
+    float pstart, pleft, pmid, pright, pend;
+    LISP start_lr, left_lr, mid_lr, right_lr, end_lr;
+
+    init_int_lr_params();
+    // Note the models must *all* be the same size
+    start_lr = siod_get_lval("f0_lr_start","no f0 start lr model");
+    left_lr = siod_get_lval("f0_lr_left","no f0 left lr model");
+    mid_lr = siod_get_lval("f0_lr_mid","no f0 mid lr model");
+    right_lr = siod_get_lval("f0_lr_right","no f0 right lr model");
+    end_lr = siod_get_lval("f0_lr_end","no f0 end lr model");
+    
+    u->create_relation("Target");
+    pend = 0;
+    EST_FVector feats;
+    feats.resize(siod_llength(start_lr));
+
+    for (s=u->relation("Syllable")->first(); s != 0; s=next(s))
+    {
+	find_feat_values(s,start_lr,feats);
+	pstart = apply_lr_model(start_lr,feats);
+	pstart = MAP_F0(pstart);
+	if (after_pause(s))
+	    add_target_at(u,daughter1(s,"SylStructure"),pstart,tp_start);
+	else
+	    add_target_at(u,daughter1(s,"SylStructure"),
+			  (pstart+pend)/2.0,tp_start);
+
+	pleft = apply_lr_model(left_lr,feats);
+	pleft = MAP_F0(pleft);
+	add_target_at(u,vowel_seg(s),pleft,tp_left);
+	pmid = apply_lr_model(mid_lr,feats);
+	pmid = MAP_F0(pmid);
+	add_target_at(u,vowel_seg(s),pmid,tp_mid);
+	pright = apply_lr_model(right_lr,feats);
+	pright = MAP_F0(pright);
+	add_target_at(u,vowel_seg(s),pright,tp_right);
+
+	pend = apply_lr_model(end_lr,feats);
+	pend = MAP_F0(pend);
+	if (before_pause(s))
+	    add_target_at(u,daughtern(s,"SylStructure"),pend,tp_end);
+    }
+
+    return utt;
+
+}
+
 
 #define FFEATURE_NAME(X) (get_c_string(car(X)))
 #define FFEATURE_WEIGHT(X) (get_c_float(car(cdr(X))))
@@ -263,14 +348,24 @@ static void add_target_at(EST_Utterance *u, EST_Item *seg,
 	    << endl;
 	return;
     }
-
-    if (pos == tp_start)
-	add_target(u,seg,ffeature(seg,"segment_start").Float(),val);
-    else if (pos == tp_mid)
-	add_target(u,seg,ffeature(seg,"segment_mid").Float(),val);
-    else if (pos == tp_end)
-	add_target(u,seg,seg->F("end"),val);
-    else
+  
+  if (pos == tp_start)
+    add_target(u,seg,ffeature(seg,"segment_start").Float(),val);
+  else if (pos == tp_left)
+    add_target(u,seg,
+	       0.5*(ffeature(seg,"segment_mid").Float()+
+		    ffeature(seg,"segment_start").Float()),
+	       val);
+  else if (pos == tp_mid)
+    add_target(u,seg,ffeature(seg,"segment_mid").Float(),val);
+  else if (pos == tp_right)
+    add_target(u,seg,
+	       0.5*(ffeature(seg,"segment_mid").Float()+
+		    seg->F("end")),
+	       val);
+  else if (pos == tp_end)
+    add_target(u,seg,seg->F("end"),val);
+  else
     {
 	cerr << "add_target_at: unknown position type\n";
 	festival_error();

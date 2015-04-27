@@ -43,12 +43,14 @@
 #include "siod.h"
 #include "EST_sigpr.h"
 #include "EST_error.h"
+#include <math.h>
+#include "EST_inline_utils.h"
 
 void us_generate_wave(EST_Utterance &utt, 
 		     const EST_String &filter_method,
 		     const EST_String &ola_method)
 {
-    EST_IVector *map;
+    EST_IVector *map, *frame_pm_indices;
     EST_WaveVector *frames;
     EST_Track *source_coef, *target_coef;
     EST_Wave *sig;
@@ -62,23 +64,25 @@ void us_generate_wave(EST_Utterance &utt,
     map = ivector(utt.relation("US_map", 1)->head()->f("map"));
 
     sig = new EST_Wave;
-
-    if (ola_method == "synth_period")
-	td_synthesis2(*frames, *target_coef, *sig, *map);
+  
+    if ( ola_method == "asymmetric_window" ){
+      frame_pm_indices = ivector(utt.relation("SourceCoef", 1)->head()->f("pm_indices"));
+      asymmetric_window_td_synthesis( *frames, *target_coef, *sig, *map, *frame_pm_indices );
+    }
+    else if ( ola_method == "synth_period" )
+      td_synthesis2(*frames, *target_coef, *sig, *map);
     else
-	td_synthesis(*frames, *target_coef, *sig, *map);
-
+      td_synthesis(*frames, *target_coef, *sig, *map);
+    
     if (filter_method == "lpc")
-    {
+      {
 	map_coefs(*source_coef, *target_coef, *map);
 	// fast version
 	lpc_filter_fast(*target_coef, *sig, *sig);
 	// slower version (but cleaner)
 	//lpc_filter_1(*target_coef, *sig, *sig);
-    }
-    // Other filer types here ... psola is in separate distribution
-
-//    sig->rescale(get_c_float(siod_get_lval("us_gain", "No gain defined")));
+      }
+    
     add_wave_to_utterance(utt, *sig, "Wave");
 }
 
@@ -111,47 +115,103 @@ void map_coefs(EST_Track &source_coef, EST_Track &target_coef,
 }
 
 void td_synthesis(EST_WaveVector &frames,
-			 EST_Track &target_pm, EST_Wave &target_sig,
-			 EST_IVector &map)
+		  EST_Track &target_pm, EST_Wave &target_sig,
+		  EST_IVector &map)
 {
     int t_start;
     int i, j;
     float sr;
     int last_sample=0;
-    static int ttt=0;
-    ttt++;
+    int map_n = map.n();
     
-    if (frames.length()> 0)
-	sr = (float)frames(0).sample_rate();
-    else
-	sr = 16000; // sort of, who cares, its going to be a 0 sample waveform
+    if( (frames.length()>0) && (map_n>0) ){
+      sr = (float)frames(0).sample_rate();
+      last_sample = (int)(rint(target_pm.end()*sr)) +
+	((frames(map(map_n-1)).num_samples() - 1)/2);//window_signal guarantees odd
 
-    if (map.n() > 0)
-    {
-	last_sample = (int)(target_pm.end() * sr) + 
-	    (frames(map(map.n()-1)).num_samples() / 2);
+      target_sig.resize(last_sample+1);
+      target_sig.fill(0);
+      target_sig.set_sample_rate((int)sr);
+ 
+      for( i=0; i<map_n; ++i ){
+	const EST_Wave &frame = frames(map.a_no_check(i));
+	const int frame_num_samples = frame.num_samples();
+	t_start = (int)(rint(target_pm.t(i)*sr)) -
+	  ((frame_num_samples - 1)/2);//window_signal guarantees odd
+
+
+	
+#if defined(EST_DEBUGGING)
+	cerr << t_start << " " 
+	     << (frame_num_samples-1)/2 + t_start << " "
+	     << frame_num_samples << "\n";
+#endif
+
+
+	for( j=0; j<frame_num_samples; ++j )
+	  if( j+t_start>=0 )
+	    target_sig.a_no_check(j + t_start) += frame.a_no_check(j);
+      }    
     }
+}
 
-    target_sig.resize(last_sample);
+void asymmetric_window_td_synthesis(EST_WaveVector &frames,
+				    EST_Track &target_pm, 
+				    EST_Wave &target_sig,
+				    EST_IVector &map,
+				    EST_IVector &frame_pm_indices)
+{
+  int t_start;
+  int i, j;
+  float sr;
+  int last_sample=0;
+  int map_n = map.n();
+  
+
+
+#if defined(EST_DEBUGGING)
+  cerr << "(maplength framelength pm_indiceslength) "
+       << map_n << " "
+       << frames.n() << " "
+       << frame_pm_indices.n() << endl;
+#endif
+
+
+  if( (frames.length()>0) && (map_n>0) ){
+    sr = (float)frames(0).sample_rate();
+
+    last_sample = (int)(rint(target_pm.end()*sr)) +
+      (frames(map(map_n-1)).num_samples() - frame_pm_indices(map(map_n-1)) - 1);
+
+    target_sig.resize(last_sample+1, EST_ALL, 0); //0 -> don't set values
     target_sig.fill(0);
     target_sig.set_sample_rate((int)sr);
     
-    for (i = 0; i < map.n(); ++i)
-    {
-	const EST_Wave &frame = frames(map.a_no_check(i));
-	t_start = ((int)(target_pm.t(i) * sr)
-		   - (frame.num_samples() / 2));
+    for( i=0; i<map_n; ++i ){
+      const int source_index = map.a_no_check(i);
+      const EST_Wave &frame = frames(source_index);
+      const int frame_num_samples = frame.num_samples();
+      t_start = (int)(rint(target_pm.t(i)*sr)) - frame_pm_indices(source_index);
+      
 
-	for (j = 0; j < frame.num_samples(); ++j)
-	    if (j+t_start>=0)
-	    {
-	      //target_sig.a_no_check(j + t_start) += frame.a_no_check(j);
-	      // The above *is* safe, unless there are real bugs elsewhere
-	      // that may first manifest themselves here.
-	      target_sig.a(j + t_start) += frame.a(j);
-	    }
+#if defined(EST_DEBUGGING)
+      cerr << t_start << " " 
+	   << frame_pm_indices(source_index) << " " 
+	   << frame_pm_indices(source_index) + t_start << " "
+	   << frame_num_samples << "\n";
+#endif      
+
+
+      //this initialisation for j intends to ensure (j+t_start)>=0
+      // (it might be less than one where prosodic modification 
+      // has moved the first pitch mark relative to wave start)
+      for( j=-min(0,t_start); j<frame_num_samples; ++j )
+      //for( j=0; j<frame_num_samples; ++j )
+	target_sig.a_no_check(j + t_start) += frame.a_no_check(j);
     }    
+  }
 }
+
 
 void td_synthesis2(EST_WaveVector &frames,
 		   EST_Track &target_pm, EST_Wave &target_sig,
@@ -234,74 +294,6 @@ void td_synthesis2(EST_WaveVector &frames,
 
     if (siod_get_lval("us_debug_save_target_unit_lab", NULL) != NIL)
 	unit.save("target_unit.lab");
-
-}
-*/
-
-
-/*static void adjust_energy(EST_TVector<EST_Wave> &frames,  EST_FVector &gain)
-{
-    for (int i = 0; i < frames.n(); ++i)
-    {
-	*cdebug << "gain " << gain(i) << endl;
-	frames[i].rescale(gain(i));
-    }
-}
-*/
-
-/*void lpc_synthesis(EST_Track &source_coef, EST_Track &target_coef, 
-		   EST_TVector <EST_Wave> &frames, EST_Wave &sig, 
-		   EST_IVector &map)
-{
-    (void) frames;
-
-
-#if 1
-    // fast version but not very neat 
-
-#else
-    // neat version but about 3 times slower
-    EST_Wave res;
-    res = sig;
-    res.rescale(0.5);
-
-#endif
-}
-*/
-
-
-/*void us_lpc_synthesis(EST_Utterance &utt)
-{
-    EST_Relation *source_lab, *target_lab;
-    EST_IVector map;
-    EST_WaveVector *frames;
-    EST_Track *source_coef, *target_coef;
-    EST_Wave *sig;
-    EST_FVector gain;
-
-
-//    frames = framevector(utt.relation("Frames", 1)->head()->f("frame"));
-    frames = framevector(utt.relation("SourceCoef", 1)->head()->f("frame"));
-    source_coef = track(utt.relation("SourceCoef", 1)->head()->f("coefs"));
-    target_coef = track(utt.relation("TargetCoef", 1)->head()->f("coefs"));
-
-//    source_lab = utt.relation("SourceSegments", 1);
-    target_lab = utt.relation("Segment", 1);
-
-    make_segment_single_mapping(*target_lab, *source_coef,
-				*target_coef, map);
-
-    sig = new EST_Wave;
-
-    td_synthesis(*source_coef, *frames, *target_coef, *sig, map);
-
-    lpc_synthesis(*source_coef, *target_coef, *frames, *sig, map);
-
-//    sig->rescale(get_c_float(siod_get_lval("us_gain", "No gain defined")));
-    add_wave_to_utterance(utt, *sig, "Wave");
-
-    debug_options(*source_lab, *(utt.relation("Segment")),
-		  *source_coef, *target_coef, *frames);    
 
 }
 */

@@ -3,32 +3,32 @@
 
 SABLE mode
 #
-0.8558 100 Homographs
-0.9823 100 are
-1.2836 100 words
-1.4570 100 that
-1.6161 100 are
-1.9631 100 written
-2.0312 100 the
-2.4420 100 same
-2.8720 100 but
-3.0766 100 have
-3.4921 100 different
-4.5027 100 pronunciations
-5.0391 100 such
-5.2246 100 as
-5.5777 100 lyves
-5.7682 100 and
-6.2388 100 lives
-6.8025 100 You
-7.1210 100 say
-7.2417 100 e
-7.5896 100 thur
-8.0204 100 while
-8.1375 100 I
-8.4541 100 say
-8.5711 100 i
-8.9414 100 thur
+0.9754 100 Homographs
+1.0879 100 are
+1.3103 100 words
+1.5045 100 that
+1.6452 100 are
+1.9263 100 written
+1.9977 100 the
+2.4583 100 same
+2.9092 100 but
+3.1237 100 have
+3.6219 100 different
+4.7578 100 pronunciations
+5.2959 100 such
+5.4988 100 as
+5.8839 100 lyves
+6.0835 100 and
+6.6079 100 lives
+7.2277 100 You
+7.5635 100 say
+7.6999 100 e
+7.8483 100 thur
+8.3035 100 while
+8.4901 100 I
+8.8239 100 say
+8.9466 100 i
+9.1119 100 thur
 #
 0.2600 100 We
 0.3873 100 can
@@ -39,26 +39,26 @@ SABLE mode
 0.3768 100 and
 1.3958 100 slowly
 #
-0.3786 100 And
-0.5518 100 then
-0.7178 100 at
-1.0569 100 normal
-1.5069 100 speed
+0.3967 100 And
+0.5812 100 then
+0.7590 100 at
+1.2333 100 normal
+1.7070 100 speed
 
 
 OGI's mark up mode
 #
-0.3859 100 This
-0.5179 100 is
-0.6091 100 an
-1.2670 100 example
+0.3960 100 This
+0.5348 100 is
+0.6286 100 an
+1.2732 100 example
 #
 #
-0.4778 100 This
-0.6340 100 is
-0.7126 100 a
-1.1356 100 slow
-1.9714 100 example
+0.4680 100 This
+0.6242 100 is
+0.7027 100 a
+1.1258 100 slow
+1.9616 100 example
 #
 #
 0.7113 100 This
@@ -288,3 +288,127 @@ An email mode
 0.4741 100 bye
 0.6674 100 for
 1.0077 100 now
+
+
+A singing mode
+"durs"
+(0.6)
+note is "G3"
+"G3"
+note "G3" freq 97.998856
+"freqs"
+(97.9989)
+"durs"
+(0.6)
+note is "A3"
+"A3"
+note "A3" freq 110.000000
+"freqs"
+(110)
+"durs"
+(0.6)
+note is "B3"
+"B3"
+note "B3" freq 123.470825
+"freqs"
+(123.471)
+"durs"
+(0.6)
+note is "C4"
+"C4"
+note "C4" freq 130.812790
+"freqs"
+(130.813)
+"durs"
+(0.6)
+note is "D4"
+"D4"
+note "D4" freq 146.832382
+"freqs"
+(146.832)
+"durs"
+(0.6)
+note is "E4"
+"E4"
+note "E4" freq 164.813782
+"freqs"
+(164.814)
+"durs"
+(0.6)
+note is "F#4"
+"F#4"
+note "F#4" freq 184.997208
+"freqs"
+(184.997)
+"durs"
+(0.6)
+note is "G4"
+"G4"
+note "G4" freq 195.997711
+"freqs"
+(195.998)
+Want to adjust syl by 0.090000
+Want to adjust syl by 0.000000
+Want to adjust syl by 0.040000
+Want to adjust syl by 0.050000
+Want to adjust syl by 0.040000
+Want to adjust syl by 0.030000
+Want to adjust syl by 0.050000
+Want to adjust syl by 0.090000
+Vowlen: 0.134000 conslen: 0.048000 totlen: 0.182000
+Offset: 0.000000
+Syldur: 0.600000
+restlen 0
+Vowlen: 0.132000 conslen: 0.053000 totlen: 0.185000
+Offset: 0.040000
+Syldur: 0.560000
+restlen 0
+Vowlen: 0.097000 conslen: 0.069000 totlen: 0.166000
+Offset: 0.010000
+Syldur: 0.590000
+restlen 0
+Vowlen: 0.094000 conslen: 0.095000 totlen: 0.189000
+Offset: -0.010000
+Syldur: 0.610000
+restlen 0
+Vowlen: 0.134000 conslen: 0.102000 totlen: 0.236000
+Offset: -0.010000
+Syldur: 0.610000
+restlen 0
+Vowlen: 0.094000 conslen: 0.066000 totlen: 0.160000
+Offset: 0.020000
+Syldur: 0.580000
+restlen 0
+Vowlen: 0.097000 conslen: 0.070000 totlen: 0.167000
+Offset: 0.040000
+Syldur: 0.560000
+restlen 0
+Vowlen: 0.134000 conslen: 0.048000 totlen: 0.182000
+Offset: -0.090000
+Syldur: 0.690000
+restlen 0
+segment: d end: 0.048000
+segment: ow end: 0.600000
+segment: r end: 0.653000
+segment: ey end: 1.160000
+segment: m end: 1.229000
+segment: iy end: 1.750000
+segment: f end: 1.845000
+segment: aa end: 2.360000
+segment: s end: 2.462000
+segment: ow end: 2.970000
+segment: l end: 3.036000
+segment: aa end: 3.550000
+segment: t end: 3.620000
+segment: iy end: 4.110000
+segment: d end: 4.158000
+segment: ow end: 4.800000
+#
+0.6000 100 doe
+1.1600 100 ray
+1.7500 100 me
+2.3600 100 fah
+2.9700 100 sew
+3.5500 100 lah
+4.1100 100 tee
+4.8000 100 doe

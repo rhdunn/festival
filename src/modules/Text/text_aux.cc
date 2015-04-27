@@ -51,7 +51,7 @@ EST_Item *add_token(EST_Utterance *u,EST_Token &t)
 	item->set("punc",t.punctuation());
     item->set("whitespace",t.whitespace());
     item->set("prepunctuation",t.prepunctuation());
-	
+
     return item;
 }
     

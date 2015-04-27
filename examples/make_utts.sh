@@ -72,7 +72,7 @@ the utterance or points in the utterance.")
              The directory which contains subdirectories containing
              label files for each relation, default is festival/relations/
   -style <string>
-             What style of utternaces, classic or unisyn
+             What style of utterances, classic or unisyn
   -tilt_events 
              IntEvent files are tilt event so uses special information
              in the syllink feature to link to syllables.

@@ -41,11 +41,8 @@
 #include "us_synthesis.h"
 #include "Phone.h"
 
-
-
 //static void add_end_silences(EST_Relation &segment);
 //static void add_end_silences(EST_Relation &segment, EST_Relation &target);
-
 
 void pitchmarks_to_f0(EST_Track &pm, EST_Track &fz, float shift)
 {
@@ -57,10 +54,71 @@ void pitchmarks_to_f0(EST_Track &pm, EST_Track &fz, float shift)
 
     for (i = 0; i < fz.num_frames() -1 ; ++i)
     {
-	period = get_time_frame_size(pm, pm.index_below(fz.t(i)));
+        period = get_time_frame_size(pm, pm.index_below(fz.t(i)));
 	fz.a(i) = 1.0 /period;
     }
 }
+
+void f0_to_pitchmarks(EST_Track &fz, EST_Track &pm, int num_channels,
+		      float default_f0, float target_end)
+{
+    int i;
+    float max = 0.0;
+    float fz_end;
+
+    // Its impossible to guess the length of the pitchmark array before 
+    // hand. Here we find the upper limit and resize at the end
+    for (i = 0; i < fz.num_frames(); ++i)
+    {
+	if (fz.a_no_check(i) < 0)
+	    fz.a_no_check(i) = 0;
+	if (fz.a_no_check(i) > 500)
+	    fz.a_no_check(i) = fz.a_no_check(i-1);
+	if (fz.a_no_check(i) > max)
+	    max = fz.a_no_check(i);
+    }
+
+    // Coefficients will also be placed in here, so its best allocate
+    // space for their channels now
+    fz_end = fz.end();
+    pm.resize(int(max * (Gof(fz_end, target_end))) + 10, num_channels);
+
+
+    int fz_len = fz.length();
+    float t1 = 0.0; //first pitchmark convention
+    float t2;
+
+    float f1 = fz.a_no_check(0); //arbitrary init 
+    float f2; 
+    
+    double area = 0.5; // init value
+    int pm_i = 0;
+    int pm_len = pm.length();
+    for( int i=0; i<fz_len; i++ ){
+      t2 = fz.t( i );
+      f2 = fz.a_no_check( i );
+
+      float slope = (f2-f1)/(t2-t1);
+      area += (t2 - t1) * 0.5 * (f1 + f2);
+      while( (area >= 1.0) && (pm_i < pm_len) ){
+	area -= 1.0;
+	float discriminant = f2*f2 - 2.0 * area * slope;
+	if (discriminant < 0.0) discriminant = 0.0;
+	pm.t(pm_i++) = t2 - 2.0 * area / (f2 + sqrt (discriminant));
+      }
+      t1 = t2;
+      f1 = f2;
+    }
+
+    float default_shift = 1.0 / default_f0;
+    if (target_end > fz_end)
+      for (; t1 < target_end; ++pm_i)
+	t1 = pm.t(pm_i) = t1 + default_shift;
+    
+    pm.resize(pm_i-1, num_channels);
+}
+
+
 
 /* Convert an F0 contour into a set of pitchmarks. This is done by the
 obvious iterative function.
@@ -71,7 +129,7 @@ specified, more default pitchmarks are placed after the end of the
 last f0 value until time target_end has been reached.
 */
 
-void f0_to_pitchmarks(EST_Track &fz, EST_Track &pm, int num_channels,
+void f0_to_pitchmarks_orig(EST_Track &fz, EST_Track &pm, int num_channels,
 		      float default_f0, float target_end)
 {
     int i;
@@ -190,6 +248,7 @@ void us_F0targets_to_pitchmarks(EST_Utterance &utt,
     item->set_val("coefs",est_val(target_coef));
 
 }
+
 void targets_to_pitchmarks(EST_Relation &targ, EST_Track &pitchmarks, 
 			   int num_channels,float end)
 {

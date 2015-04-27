@@ -55,7 +55,8 @@ include $(EST)/config/config
 # ALSO_INCLUDE += UniSyn_phonology UniSyn_selection
 ## Cluster unit selection code as described in "Building Voices in
 ## Festival", again experimental and suitable for research purposes only.
-ALSO_INCLUDE += clunits
+ALSO_INCLUDE += clunits hts_engine MultiSyn
+
 ## Old diphone code that will be delete, left in only for some
 ## compatibility
 # ALSO_INCLUDE += diphone

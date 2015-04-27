@@ -191,4 +191,10 @@ void festival_UniSyn_diphone_init(void)
     init_subr_1("us_diphone_init", us_diphone_init,
     "(us_diphone_init DIPHONE_NAME)\n\
     Initialise UniSyn diphone synthesizer with database DIPHONE_NAME.");
+
+    init_subr_1("diphone_present", us_check_diphone_presence,
+    "(diphone_present? STR)\n\
+  Checks whether the given STRing corresponds to any diphone in the\n\
+  current database.");
+    
 }

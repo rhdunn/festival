@@ -78,6 +78,12 @@
 #include "festival.h"
 #include "clunits.h"
 
+static EST_String static_unit_prev_move = "unit_prev_move";
+static EST_String static_unit_this_move = "unit_this_move";
+static EST_String static_jscore = "local_join_cost";
+static EST_String static_tscore = "local_target_cost";
+static EST_String static_cscore = "cummulative_unit_score";
+
 static void setup_clunits_params();
 static EST_VTCandidate *TS_candlist(EST_Item *s,EST_Features &f);
 static EST_VTPath *TS_npath(EST_VTPath *p,EST_VTCandidate *c,EST_Features &f);
@@ -138,8 +144,11 @@ static LISP clunits_select(LISP utt)
 	    cerr << "CLUNIT: failed to find path\n";
 	    return utt;
 	}
-	v.copy_feature("unit_this_move");
-	v.copy_feature("unit_prev_move");
+	v.copy_feature(static_unit_this_move);
+	v.copy_feature(static_unit_prev_move);
+	v.copy_feature(static_jscore);
+	v.copy_feature(static_tscore);
+	v.copy_feature(static_cscore);
     }
 
     return utt;
@@ -532,9 +541,6 @@ static EST_VTPath *TS_npath(EST_VTPath *p,EST_VTCandidate *c,EST_Features &f)
     EST_VTPath *np = new EST_VTPath;
     CLunit *u0, *u1;
     float u0_move=0.0, u1_move=0.0;
-    static EST_String static_unit_prev_move = "unit_prev_move";
-    static EST_String static_unit_this_move = "unit_this_move";
-    static EST_String static_lscore = "lscore";
     (void)f;
 
     np->c = c;
@@ -569,11 +575,13 @@ static EST_VTPath *TS_npath(EST_VTPath *p,EST_VTCandidate *c,EST_Features &f)
     if (clunits_log_scores && (cost != 0))
 	cost = log(cost);
 
-//    np->f.set(static_lscore,c->score+cost);
+    np->f.set(static_jscore,cost);
+    np->f.set(static_tscore,c->score);
     if (p==0)
 	np->score = (c->score+cost);
     else
 	np->score = (c->score+cost) + p->score;
+    np->f.set(static_cscore,np->score);
 
     if (clunits_debug > 1)
 	printf("joining cost %f\n",np->score);

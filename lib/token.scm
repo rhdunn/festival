@@ -60,7 +60,7 @@ the builtin translation rules are used, if this is set the builtin
 rules are not used unless explicitly called. [see Token to word rules]"
  (cond
   ((string-matches name "[A-Z]*[\\$#\\\\Y£][0-9,]+\\(\\.[0-9]+\\)?")
-   ;; Some for of money (pounds or type of dollars)
+   ;; Some form of money (pounds or type of dollars)
    (let (amount type currency)
      (cond
       ((string-matches name ".*\\$.*")
@@ -187,20 +187,41 @@ rules are not used unless explicitly called. [see Token to word rules]"
 	 (set! sep "."))
      (set! hours (string-before ttime sep))
      (set! mins (string-after ttime sep))
-     (if (string-matches ttime "am")
+     (if (string-matches ttime ".*am")
 	 (set! sep "am")
 	 (set! sep "pm"))
      (set! mins (string-before mins sep))
      (append
       (builtin_english_token_to_words token hours)
-      (builtin_english_token_to_words token mins)
-      (list sep))))
+      (cond
+       ((string-equal mins "00")
+	nil)
+       ((string-matches mins "0.")
+	(cons
+	 "oh"
+	 (builtin_english_token_to_words token (string-after mins "0"))))
+       (t
+	(builtin_english_token_to_words token mins)))
+      (if (string-equal sep "am")
+	  (builtin_english_token_to_words token "A.M")
+	  (builtin_english_token_to_words token "P.M")))))
   ((string-matches name "[0-9]?[0-9]:[0-9][0-9]")  ;; time
    (append
      (builtin_english_token_to_words 
       token (remove_leading_zeros (string-before name ":")))
-     (builtin_english_token_to_words 
-      token (remove_leading_zeros (string-after name ":")))))
+     (cond
+      ((string-equal "00" (string-after name ":"))
+	 nil)
+      ((string-matches (string-after name ":") "0.")
+	(cons
+	 "oh"
+	 (builtin_english_token_to_words 
+	  token 
+	  (remove_leading_zeros (string-after name ":")))))
+      (t
+	 (builtin_english_token_to_words 
+	  token 
+	  (string-after name ":"))))))
   ((string-matches name "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]")  ;; exact time
    (append
     (builtin_english_token_to_words 

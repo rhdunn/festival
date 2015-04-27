@@ -103,13 +103,13 @@
 Heuristic guess if we are still in the name (i.e. pre-address)
 this is desgined to stop Mr W Smith becoming West."
   (cond
-   ((addr_preceeding_number token)
-    ;; any preceeding token with a digit
+   ((addr_preceding_number token)
+    ;; any preceding token with a digit
     nil)
    (t
     t)))
 
-(define (addr_preceeding_number tok)
+(define (addr_preceding_number tok)
   (cond
    ((null tok) nil)
    ((string-matches (item.name tok) ".*[0-9].*")

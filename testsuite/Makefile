@@ -34,7 +34,7 @@ TOP=..
 DIRNAME=testsuite
 ALL_DIRS = data correct
 
-TEST_SCRIPTS = fest text voice modes parse scherr
+TEST_SCRIPTS = fest text voice htsvox modes parse scherr
 TEST_MODULES = # not sure we'll need these
 SCRIPTS = $(TEST_SCRIPTS:%=%.sh) testinstall.sh
 FILES = Makefile \

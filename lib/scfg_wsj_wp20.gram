@@ -38,7 +38,7 @@
 ;;;  bank using the inside-outside algorithm seeded with the bracketing from
 ;;;  the treebank.  The implementation is the scfg_ suite in the
 ;;   speech tools and is based on the paper "Inside-Outside 
-;;;  Reestimation from partially bracked corpora", F Pereira and 
+;;;  Reestimation from partially bracketed corpora", F Pereira and 
 ;;;  Y. Schabes. pp 128-135, 30th ACL, Newark, Delaware 1992.
 ;;;
 ;;;  This grammar with 19 nonterminals was trained for 174 passes 

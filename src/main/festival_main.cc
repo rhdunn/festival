@@ -95,7 +95,7 @@ static void festival_main(int argc, char **argv)
 	"--script <ifile>\n"+
         "              Used in #! scripts, runs in batch mode on\n"+
 	"              file and passes all other args to Scheme\n"+
-	"--heap <int> {500000}\n"+
+	"--heap <int> {1000000}\n"+
         "              Set size of Lisp heap, should not normally need\n"+
         "              to be changed from its default\n"+
 	"-v            Display version number and exit\n"+
@@ -214,6 +214,7 @@ static void festival_script_mode(int argc, char **argv)
     // the remainder are set in the variable argv so the script
     // itself may do what ever it wants
     LISP args;
+    const char *siodheapsize;
     int i;
 
     if (argc < 2)
@@ -223,7 +224,11 @@ static void festival_script_mode(int argc, char **argv)
     }
 
     // initialize without loading init files
-    festival_initialize(FALSE,FESTIVAL_HEAP_SIZE);
+    siodheapsize = getenv("SIODHEADSIZE");
+    if (siodheapsize)
+	festival_initialize(FALSE,atoi(siodheapsize));
+    else
+	festival_initialize(FALSE,FESTIVAL_HEAP_SIZE);
     
     for (args=NIL,i=3; i < argc; i++)
 	args = cons(rintern(argv[i]),args);

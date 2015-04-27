@@ -534,7 +534,8 @@ for the onset of a syllable, based on least sonorant portion.")
   "SylStructure.lisp_num_postvocalic_c
 Finds the number of postvocalic consonants in a syllable.")
 (define (num_postvocalic_c syl)
-  "Finds the number of postvocalic consonants in a syllable."
+  "(num_postvocalic_c syl)
+Finds the number of postvocalic consonants in a syllable."
   (let (segs (npc 0))
     (set! segs (item.daughters (item.daughtern (item.daughtern syl))))
     (mapcar
@@ -609,7 +610,8 @@ the return value will be preceded by a 1 - e.g. 1V1")
     peak_anchor_type))
 
 (define (get_anchor_value sylSyl seg_num)
-  "Gets the c/v value of the segment within a syllable."
+  "(get_anchor_value sylSyl seg_num)
+Gets the c/v value of the segment within a syllable."
   (let ((syl (item.relation sylSyl "SylStructure"))
 	(seg_val "none") segs (ccnt -1) (vcnt -1) (vpis 0))
     (set! segs (mt_segs_from_syl sylSyl))
@@ -684,7 +686,7 @@ Part of the workings of peak_segment_anchor."
     seg_anchor))
 
 (define (segs_to_peak sylSyl pk_pos)
-  "segs_to_peak sylSyl pk_pos
+  "(segs_to_peak sylSyl pk_pos)
 Determines the number of segments from the start of a syllable
 to an intonation peak"
   (let ((syl (item.relation sylSyl "SylStructure"))

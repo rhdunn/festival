@@ -56,7 +56,7 @@ Output only the bracketing and the bottom level pos and words."
 (defvar scfg_eos_tree eou_tree
   "scfg_eos_tree
 In MultiProbParse this CART tree is used to define end of sentence
-within an utternace.  It is applied to the token relation.  
+within an utterance.  It is applied to the token relation.  
 By default it is set to eou_tree.")
        
 (provide 'scfg)

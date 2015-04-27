@@ -36,7 +36,7 @@
 ###########################################################################
 TOP=..
 DIRNAME=lib
-BUILD_DIRS=etc
+BUILD_DIRS=etc multisyn
 ALL_DIRS=$(BUILD_DIRS)
 
 PHONESETS = mrpa_phones.scm mrpa_allophones.scm radio_phones.scm \
@@ -44,7 +44,7 @@ PHONESETS = mrpa_phones.scm mrpa_allophones.scm radio_phones.scm \
             cmusphinx2_phones.scm
 DURSTATS = mrpa_durs.scm klatt_durs.scm gswdurtreeZ.scm f2bdurtreeZ.scm
 INTSTATS = tobi.scm f2bf0lr.scm tobi_rules.scm \
-           tilt.scm apml.scm apml_f2bf0lr.scm
+           tilt.scm apml.scm apml_f2bf0lr.scm apml_kaldurtreeZ.scm
 DBS = 
 LTSRULES = engmorph.scm engmorphsyn.scm lts.scm lts_build.scm
 BRKMODELS = sec.ts20.quad.ngrambin sec.B.hept.ngrambin
@@ -56,7 +56,8 @@ GENERAL =  init.scm synthesis.scm module_description.scm \
           voices.scm tts.scm festdoc.scm languages.scm token.scm \
           mbrola.scm display.scm postlex.scm tokenpos.scm \
           festtest.scm cslush.scm cart_aux.scm pauses.scm \
-          scfg.scm mettree.scm java.scm clunits.scm clunits_build.scm
+          scfg.scm mettree.scm java.scm clunits.scm clunits_build.scm \
+          hts.scm siteinit.scm
 OTHERS = Sable.v0_2.dtd sable-latin.ent festival.el scfg_wsj_wp20.gram \
 	speech.properties Singing.v0_1.dtd
 

@@ -20,7 +20,7 @@ This file documents the @code{Festival} Speech Synthesis System a general
 text to speech system for making your computer talk and developing
 new synthesis techniques.
 
-Copyright (C) 1996-2002 University of Edinburgh
+Copyright (C) 1996-2004 University of Edinburgh
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -53,7 +53,7 @@ by the authors.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1996-2002 University of Edinburgh, all rights
+Copyright @copyright{} 1996-2004 University of Edinburgh, all rights
 reserved.
 
 Permission is granted to make and distribute verbatim copies of
@@ -192,7 +192,7 @@ The current copyright on the core system is
           The Festival Speech Synthesis System: version 1.4.3
                 Centre for Speech Technology Research                  
                      University of Edinburgh, UK                       
-                      Copyright (c) 1996-2002                            
+                      Copyright (c) 1996-2004                            
                         All Rights Reserved.                           
                                                                        
   Permission is hereby granted, free of charge, to use and distribute 
@@ -359,7 +359,7 @@ and the XML parser.
 @item Simmule Turner and Rich Salz:
 command line editor (editline)
 @item Borja Etxebarria:
-Help with the Spanish synsthesis
+Help with the Spanish synthesis
 @item Briony Williams:
 Welsh synthesis
 @item Jacques H. de Villiers: @file{jacques@@cse.ogi.edu} from CSLU
@@ -649,11 +649,11 @@ In addition to Festival specific sources you will also need
 @table @emph
 @item A UNIX machine
 Currently we have compiled and tested the system under Solaris (2.5(.1),
-2.6, 2.7 and 2.8), SunOS (4.1.3), FreeBSD 3.x, 4.x Linux (Redhat 4.1,
+2.6, 2.7 and 2.8), SunOS (4.1.3), FreeBSD (3.x, 4.x), Linux (Redhat 4.1,
 5.0, 5.1, 5.2, 6.[012], 7.[01], 8.0 and other Linux distributions), and it
-should work under OSF (Dec Alphas) SGI (Irix), HPs (HPUX).  But any
+should work under OSF (Dec Alphas), SGI (Irix), HPs (HPUX).  But any
 standard UNIX machine should be acceptable.  We have now successfully
-ported this version to Windows NT nad Windows 95 (using the Cygnus GNU
+ported this version to Windows NT and Windows 95 (using the Cygnus GNU
 win32 environment).  This is still a young port but seems to work.
 @item A C++ compiler
 @cindex GNU g++
@@ -667,7 +667,7 @@ The currently tested systems are
 @itemize @bullet
 @item Sun Sparc Solaris 2.5, 2.5.1, 2.6, 2.7, 2.9:
 GCC 2.95.1, GCC 3.2
-@item FreeBSD for Intel 3.x and 4.x
+@item FreeBSD for Intel 3.x and 4.x:
 GCC 2.95.1, GCC 3.0
 @item Linux for Intel (RedHat 4.1/5.0/5.1/5.2/6.0/7.x/8.0):
 GCC 2.7.2, GCC 2.7.2/egcs-1.0.2, egcs 1.1.1, egcs-1.1.2, GCC 2.95.[123],
@@ -761,13 +761,13 @@ type
 @example
 gmake
 @end example
-and the system will configure itself and conpile, (note you
+and the system will configure itself and compile, (note you
 need to have compiled the Edinburgh Speech Tools
 @file{speech_tools-1.2.2} first.
 
 @cindex @file{config/config}
-In some case hand configure is require.  All of the configuration
-choise are held in the file @file{config/config}
+In some case hand configuration is required.  All of the configuration
+choices are kept in the file @file{config/config}.
 
 @cindex OTHER_DIRS
 For the most part Festival configuration inherits the configuration from
@@ -790,7 +790,7 @@ automounter (e.g. amd) it is recommend to explicitly set the variable
 not reliable when a directory may have multiple names.
 
 There is a simple test suite with Festival but it requires the three
-basic voices and their respective lexicons install before it will work.
+basic voices and their respective lexicons installed before it will work.
 Thus you need to install
 @example
 festlex_CMU.tar.gz
@@ -805,7 +805,7 @@ If these are installed you can test the installation with
 gmake test
 @end example
 
-To simply make it run with a male US Ebglish voiuce it is 
+To simply make it run with a male US English voice it is 
 sufficient to install just
 @example
 festlex_CMU.tar.gz
@@ -2233,7 +2233,7 @@ Move the <MARKER MARK="mouse" /> mouse to the top.
 @item BREAK
 Specifies a boundary at some @code{LEVEL}.  Strength may be values
 @code{Large}, @code{Medium}, @code{Small} or a number.  Note that
-this this tag is an emtpy tag and must include the closing part
+this this tag is an empty tag and must include the closing part
 within itsefl specification.
 @example
 <BREAK LEVEL="LARGE"/>
@@ -2290,7 +2290,7 @@ The address is <RATE SPEED="-40%"> 10 Main Street </RATE>.
 @end example
 @item VOLUME
 Allows the specification of volume.  Note in festival this
-causes an utetrance break before and after this tag.
+causes an utterance break before and after this tag.
 @example
 Please speak more <VOLUME LEVEL="loud">loudly</VOLUME>, except
 when I ask you to speak <VOLUME LEVEL="quiet">in a quiet voice</VOLUME>.
@@ -2819,17 +2819,17 @@ a word and returns all matching entries irrespective of part of speech.
 
 @cindex pre_hooks
 @cindex post_hooks
-You can optionall intercept the words as they are lookup up, and after
+You can optionally intercept the words as they are looked up, and after
 they have been found through @code{pre_hooks} and @code{post_hooks} for
 each lexicon.  This allows a function or list of functions to be applied
-to an word and feature sbefore lookup or to the resulting entry after
+to a word and feature before lookup or to the resulting entry after
 lookup.  The following example shows how to add voice specific entries
 to a general lexicon without affecting other voices that use that
 lexicon.
 
 For example suppose we were trying to use a Scottish English voice with
-the US English (cmu) lexicon.  A number of entgries will be
-inapporpriate but we can redefine some entries thus
+the US English (cmu) lexicon.  A number of entries will be
+inappropriate but we can redefine some entries thus
 @lisp
 (set! cmu_us_awb::lexicon_addenda
       '(
@@ -2841,7 +2841,7 @@ inapporpriate but we can redefine some entries thus
 	("fair" n (((f ey r) 1)))
 	("chair" n (((ch ey r) 1)))))
 @end lisp
-We can the define a function that chesk to see if the word looked
+We can then define a function that checks to see if the word looked
 up is in the speaker specific exception list and use that entry
 instead.
 @lisp
@@ -2854,9 +2854,9 @@ Speaker specific lexicon addeda."
 	ne
 	entry)))
 @end lisp
-And then for the particualr voice set up we need to
-add both a selection part @emph{and} a reset part.  Thuis following
-the FestVox vonventions for voice set up.
+And then for the particular voice set up we need to
+add both a selection part @emph{and} a reset part.  Thus following
+the FestVox conventions for voice set up.
 @lisp
 (define (cmu_us_awb::select_lexicon)
 
@@ -2885,7 +2885,7 @@ the FestVox vonventions for voice set up.
 The above isn't the most efficient way as the word is looked up first
 then it is checked with the speaker specific list.
 
-The @code{pre_hooks} function are called with two arguments, the
+The @code{pre_hooks} functions are called with two arguments, the
 word and features, they should return a pair of word and features.
 
 @node Letter to sound rules, Building letter to sound rules, Lookup process, Lexicons
@@ -3558,11 +3558,11 @@ represents some chunk of text that is to be rendered as speech.  In
 general you may think of it as a sentence but in many cases it wont
 actually conform to the standard linguistic syntactic form of a
 sentence.  In general the process of text to speech is to take an
-utterance which contaisn a simple string of characters and convert it
+utterance which contains a simple string of characters and convert it
 step by step, filling out the utterance structure with more information
 until a waveform is built that says what the text contains.
 
-The processes involved in convertion are, in general, as follows
+The processes involved in conversion are, in general, as follows
 @table @emph
 @item Tokenization
 Converting the string of characters into a list of tokens.  Typically
@@ -3609,7 +3609,7 @@ and phones, though may also be used to represent less concrete objects
 like noun phrases, and nodes in metrical trees.  An item contains a set
 of features, (name and value).  Relations are typically simple lists of
 items or trees of items.  For example the the @code{Word} relation is a
-simple list of items each of which represent a word in the utternace.
+simple list of items each of which represent a word in the utterance.
 Those words will also be in other relations, such as the
 @emph{SylStructure} relation where the word will be the top of a tree
 structure containing its syllables and segments.
@@ -3659,7 +3659,7 @@ a list of segments (phones).  Each member (except silences) will be leaf
 nodes in the @code{SylStructure} relation.  These may also be in the
 @code{Target} relation linking them to F0 target points.
 @item IntEvent
-a list of intonation events (accents and bounaries).  These are related
+a list of intonation events (accents and boundaries).  These are related
 to syllables through the @code{Intonation} relation as leafs on that
 relation.  Thus their parent in the @code{Intonation} relation is the
 syllable these events are attached to.
@@ -3999,7 +3999,7 @@ or a LISP description of an item, which consist of a list containing
 a name and a set of feature vale pairs.  It @code{ITEM} is @code{nil}
 or inspecified an new empty item is added.  If @code{ITEM} is already
 in this relation it is dereferenced from its current position (and
-an emtpy item re-inserted).
+an empty item re-inserted).
 @item (item.insert ITEM1 ITEM2 DIRECTION)
 Insert @code{ITEM2} into @code{ITEM1}'s relation in the direction
 specified by @code{DIRECTION}.  @code{DIRECTION} may take the
@@ -4043,7 +4043,7 @@ the Syntax relation the call would be something like
 @item (item.exchange_trees ITEM1 ITEM2)
 Exchange @code{ITEM1} and @code{ITEM2} and their descendants in
 @code{ITEM2}'s relation.  If @code{ITEM1} is within @code{ITEM2}'s
-descendents or vice versa @code{nil} is returns and no exchange takes
+descendants or vice versa @code{nil} is returns and no exchange takes
 place.  If @code{ITEM1} is not in @code{ITEM2}'s relation, no
 exchange takes place.
 @end table
@@ -5112,10 +5112,10 @@ the PSOLA case).
 The directory containing the signal files (residual for LPC, full waveforms
 for PSOLA).
 @item coef_ext
-The extention for coefficient files, typically @code{".lpc"} for LPC
+The extension for coefficient files, typically @code{".lpc"} for LPC
 file and @code{".pm"} for pitchmark files.
 @item sig_ext
-The extention for signal files, typically @code{".res"} for LPC residual
+The extension for signal files, typically @code{".res"} for LPC residual
 files and @code{".wav"} for waveform files.
 @item default_diphone
 @cindex default diphone
@@ -5357,7 +5357,7 @@ thousand plus 2.  This may or may not be appropriate and if you are
 particularly worried about the database size it is worth experimenting.
 
 The program @file{lpc_analysis}, found in @file{speech_tools/bin},
-can be used to generate the lpc coefficients and residual.  Note
+can be used to generate the LPC coefficients and residual.  Note
 these should be reflection coefficients so they may be quantised
 (as they are in group files).
 
@@ -5846,8 +5846,8 @@ set up audio output as
 @end lisp
 
 @cindex audio devices
-Where the audio method supports it, you can specify alternative audio
-device for machine that have more than one audio device.
+Where the audio method supports it, you can specify an alternative audio
+device for machines that have more than one audio device.
 @lisp
 (Parameter.set 'Audio_Device "/dev/dsp2")
 @end lisp
@@ -6644,7 +6644,7 @@ are interpreted as regular expressions by certain Scheme
 and C++ functions.  Most characters in a regular expression are
 treated as literals and match only that character but a number
 of others have special meaning.  Some characters may be escaped
-with preceeding backslashes to change them from operators to literals
+with preceding backslashes to change them from operators to literals
 (or sometime literals to operators).
 
 @table @code
@@ -6667,7 +6667,7 @@ of parenthesized expression.
 a ranges matches an of the values in the brackets.  The range 
 operator "-" allows specification of ranges e.g. @code{a-z} for all
 lower case characters.  If the first character of the range is 
-@code{^} then it matches anything character except those specificed
+@code{^} then it matches anything character except those specified
 in the range.  If you wish @code{-} to be in the range you must
 put that first.
 @item \\(...\\)
@@ -6678,8 +6678,8 @@ matches either X or Y.  X or Y may be single characters, ranges
 or parenthesized expressions.
 @end table
 Note that actuall only one backslash is needed before a character to
-escape it but becuase these expressions are most often contained with
-Scheme or C++ strings, the escpae mechanaism for those strings requires
+escape it but because these expressions are most often contained with
+Scheme or C++ strings, the escape mechanaism for those strings requires
 that backslash itself be escaped, hence you will most often be
 required to type two backslashes.
 
@@ -6699,7 +6699,7 @@ matches any string starting with a capital letter
 matches any string of digits
 @item -?[0-9]+\\(\\.[0-9]+\\)?
 matches any positive or negative real number.  Note the optional
-preceeding minus sign and the optional part contain the point and
+preceding minus sign and the optional part contain the point and
 following numbers.  The point itself must be escaped as dot on its
 own matches any character.
 @item [^aeiouAEIOU]+
@@ -7638,14 +7638,14 @@ system without changing anything in the standard distribution.
 @subsection Example 4: adding new LISP objects
 
 @cindex adding new LISP objects
-This third examples shows you how to add a new Object to Scheme
-and add wraparounds to allow manipulation within the the Scheme
+This third example shows you how to add a new Object to Scheme
+and add wraparounds to allow manipulation within the Scheme
 (and C++) domain.
 
 Like example 2 we are assuming this is done in a new directory.
 Suppose you have a new object called @code{Widget} that can 
 transduce a string into some other string (with some optional
-continuous parameter.   Thus, here we create a new file @file{widget.cc}
+continuous parameter).  Thus, here we create a new file @file{widget.cc}
 like this
 
 @lisp
@@ -7661,10 +7661,10 @@ SIOD_REGISTER_CLASS(widget,Widget)
 The first names given to these functions should be a short mnenomic name
 for the object that will be used in the defining of a set
 of access and construction functions.  It of course must be unique
-within the whole systems.  The second name is the name of the object
+within the whole system.  The second name is the name of the object
 itself.
 
-To understand its usage we can add a few simple widget maniplutation
+To understand its usage we can add a few simple widget manipulation
 functions
 @lisp
 LISP widget_load(LISP filename)
@@ -7685,11 +7685,11 @@ LISP widget_load(LISP filename)
 Note that the function @code{siod} constructs a LISP object from 
 a @code{widget}, the class register macro defines that for you.
 Also note that when giving an object to a @code{LISP} object it then
-owns the object and is responsibile for deleting it when garbage
+owns the object and is responsible for deleting it when garbage
 collection occurs on that @code{LISP} object.  Care should be
 taken that you don't put the same object within different @code{LISP}
 objects.  The macros @code{VAL_RESGISTER_CLASS_NODEL} should be
-called if you do not want your give object to be deleted by the LISP
+called if you do not want your given object to be deleted by the LISP
 system (this may cause leaks).
 
 If you want refer to these functions in other files within your
@@ -7701,7 +7701,7 @@ SIOD_REGISTER_CLASS_DCLS(widget,Widget)
 in a common @file{.h} file
 
 The following defines a function that takes a LISP object containing
-a widget, aplies some method and returns a string.
+a widget, applies some method and returns a string.
 @lisp
 LISP widget_apply(LISP lwidget, LISP string, LISP param)
 @{
@@ -7715,7 +7715,7 @@ LISP widget_apply(LISP lwidget, LISP string, LISP param)
     return strintern(answer);
 @}
 @end lisp   
-The function @code{widget}, defined by the regitration macros, takes
+The function @code{widget}, defined by the registration macros, takes
 a @code{LISP} object and returns a pointer to the @code{widget} inside
 it.  If the @code{LISP} object does not contain a @code{widget} an
 error will be thrown.
@@ -7734,14 +7734,14 @@ void festival_widget_init()
 @}
 @end lisp
 
-In yout @file{Makefile} for this directory you'll need to add
+In your @file{Makefile} for this directory you'll need to add
 the include directory where @file{widget.h} is, if it is not 
-contained within the directory itself.  This done through
+contained within the directory itself.  This is done through
 the make variable @code{LOCAL_INCLUDES} as
 @lisp
 LOCAL_INCLUDES = -I/usr/local/widget/include
 @end lisp
-And for the linker you 'll need to identify where your widget library
+And for the linker you'll need to identify where your widget library
 is.  In your @file{festival/config/config} file at the end add
 @lisp
 COMPILERLIBS += -L/usr/local/widget/lib -lwidget
@@ -7937,13 +7937,18 @@ in a chroot environment is more secure.
 
 For example suppose we wish to allow access to all machines in the CSTR
 domain except for @code{holmes.cstr.ed.ac.uk} and
-@code{adam.cstr.ed.ac.uk}.  This may be done by the following two
-commands
+@code{adam.cstr.ed.ac.uk}.  This may be done by adding the following two
+commands to a file e.g. @code{server.scm}
 @lisp
 (set! server_deny_list '("holmes\\.cstr\\.ed\\.ac\\.uk" 
                          "adam\\.cstr\\.ed\\.ac\\.uk"))
 (set! server_access_list '("[^\\.]*\\.cstr\\.ed\\.ac\\.uk"))
 @end lisp
+and them running the command
+@lisp
+festival PATH_TO/server.scm --server
+@end lisp
+
 This is not complete though as when DNS is not working @code{holmes} and
 @code{adam} will still be able to access the server (but if our DNS
 isn't working we probably have more serious problems).  However the
@@ -8064,16 +8069,16 @@ A PERL festival client is also available in
 @cindex client/server protocol
 @cindex server/client protocol
 The client talks to the server using s-expression (Lisp).  The server
-will reply with and number of different chunks until either OK, is
-returned or ER (on error).  The communicatotion is synchronous, each
+will reply with a number of different chunks until either OK is
+returned or ER (on error).  The communication is synchronous, each
 client request can generate a number of waveform (WV) replies and/or
-Lisp replies (LP) and terminated with an OK (or ER).  Lisp is used as it
-has its own inherent syntax that Festival can already parse.
+Lisp replies (LP) and will be terminated with an OK (or ER).  Lisp is
+used as it has its own inherent syntax that Festival can already
+parse.
 
-The following pseudo-code will help defined the protocol
+The following pseudo-code will help define the protocol
 as well as show typical use
 @lisp
-
    fprintf(serverfd,"%s\n",s-expression);
    do
       ack = read three character acknowledgemnt
@@ -8086,8 +8091,8 @@ as well as show typical use
    while ack != "OK\n"
 @end lisp
 The server can send a waveform in an utterance to the client through the
-function @code{utt.send.wave.client};  The server can send a lisp
-expression to the client through the function
+function @code{utt.send.wave.client}.  The server can send a lisp
+expression to the client through the function @emph{TO BE DONE}.
 
 
 @node C/C++ API, C only API, Server/client API, API
@@ -8115,7 +8120,7 @@ are.
 @item void festival_initialize(int load_init_files,int heapsize);
 This must be called before any other festival functions may be called.
 It sets up the synthesizer system.  The first argument if true,
-causes the system set up files to be loaded (which is normallly
+causes the system set up files to be loaded (which is normally
 what is necessary), the second argument is the initial size of the
 Scheme heap, this should normally be 210000 unless you envisage
 processing very large Lisp structures.
@@ -8313,7 +8318,7 @@ part of speech and print it to standard output.
 As an interesting example a @file{singing-mode} is included.  This
 offers an XML based mode for specifying songs, both notes and duration.
 This work was done as a student project by Dominic Mazzoni.  A 
-number of examples wr provided in @file{examples/songs}.  This
+number of examples are provided in @file{examples/songs}.  This
 may be run as
 @lisp
 festival> (tts "doremi.xml" 'singing)
@@ -8336,7 +8341,7 @@ Each note can be given a note and a beat value
 </SINGING>
 @end example
 You can construct multi-part songs by synthesizing each part
-and generating waveforms, them combining them.  For example
+and generating waveforms, then combining them.  For example
 @example
 text2wave -mode singing america1.xml -o america1.wav
 text2wave -mode singing america2.xml -o america2.wav
@@ -8345,15 +8350,15 @@ text2wave -mode singing america4.xml -o america4.wav
 ch_wave -o america.wav -pc longest america?.wav
 @end example
 The voice used to sing is the current voice.  Note that the number of
-syllables in the words must match that at run time, which means thios
-doesn't always work cross dialect (UK voices sometimes wont work without
-tweaking.
+syllables in the words must match that at run time, which means this
+doesn't always work cross dialect (UK voices sometimes won't work without
+tweaking).
 
 @cindex flinger
 This technique is basically simple, though is definitely effective.
-However for a more serious singing synthesizer we recommend you look at
-Flinger @url{http://cslu.cse.ogi.edu/tts/flinger/}, addresses the issues
-of synthesizing the human singing voice in more detail.
+However for a more serious singing synthesizer we recommend you look
+at Flinger @url{http://cslu.cse.ogi.edu/tts/flinger/}, which addresses
+the issues of synthesizing the human singing voice in more detail.
 
 @node Problems, References , Examples , Top
 @chapter Problems

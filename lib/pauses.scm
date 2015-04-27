@@ -63,7 +63,7 @@ Predict pause insertion."
 		((equal? w lastword)
 		 (insert_pause utt w)))))
 	   words)
-	  ;; The embarassing bit.  Remove any words labelled as punc or fpunc
+	  ;; The embarrassing bit.  Remove any words labelled as punc or fpunc
 	  (mapcar
 	   (lambda (w)
 	     (let ((pos (item.feat w "pos")))
@@ -134,7 +134,7 @@ Predict pause insertion in a Unisyn utterance structure."
 		((equal? w lastword)
 		 (us_insert_pause utt w)))))
 	   words)
-	  ;; The embarassing bit.  Remove any words labelled as punc or fpunc
+	  ;; The embarrassing bit.  Remove any words labelled as punc or fpunc
 	  (mapcar
 	   (lambda (w)
 	     (let ((pos (item.feat w "pos")))
@@ -153,7 +153,7 @@ Predict pause insertion in a Unisyn utterance structure."
   utt))
 
 (define (us_insert_pause utt word)
-"(us)insert_pause UTT WORDITEM)
+"(us_insert_pause UTT WORDITEM)
 Insert a silence segment after the last segment in WORDITEM in UTT."
   (let ((lastseg (us_find_last_seg word))
 	(silence "pau"))

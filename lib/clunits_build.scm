@@ -52,7 +52,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (do_all)
-  (let ((utterances))
+  (let ()
 
     (format t "Loading utterances and sorting types\n")
     (set! utterances (acost:db_utts_load clunits_params))
@@ -175,7 +175,7 @@ with less than unittype_prune_threshold (typically 3)."
 
 (define (acost:name_units unittypes)
   "(acost:name_units unittypes)
-Names each unit with a unique id and number the occurences of each type."
+Names each unit with a unique id and number the occurrences of each type."
   (let ((idnum 0) (tynum 0))
     (mapcar
      (lambda (s)
@@ -226,7 +226,11 @@ Dump features for all items of type utype."
      (lambda (s)
        (mapcar 
 	(lambda (f)
-	  (format fd "%s " (item.feat s f)))
+	  (set! fval (unwind-protect (item.feat s f) "0"))
+	  (if (or (string-equal "" fval)
+		  (string-equal " " fval))
+	      (format fd "%l " fval)
+	      (format fd "%s " fval)))
 	feats)
        (format fd "\n"))
      uitems)
@@ -248,7 +252,7 @@ Dump features for all items of type utype."
 (define (build_tree unittype clunits_params)
 "Build tree with Wagon for this unittype."
   (let ((command 
-	 (format nil "%s -desc %s -data %s -balance %s -distmatrix %s -stop %s -output %s %s"
+	 (format nil "%s -desc %s -data '%s' -balance %s -distmatrix '%s' -stop %s -output '%s' %s"
 		 (get_param 'wagon_progname clunits_params "wagon")
 		 (if (probe_file
 		      (string-append
@@ -313,6 +317,8 @@ Dump features for all items of type utype."
 	   (set! tree (cluster_tree_prune tree cluster_prune_limit)))
        (if (> cluster_merge 0)
 	   (set! tree (tree_merge_leafs tree cluster_merge)))
+       (if (boundp 'temp_tree_convert)
+	   (set! tree (temp_tree_convert)))
        (pprintf (list unit tree) fd))
      unittypes)
     (format fd "))\n")

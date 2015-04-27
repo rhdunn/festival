@@ -287,8 +287,8 @@ static void add_residual(int insize, int outsize, int position,
 }
 void ref2lpc(const float *rfc, float *lpc, int order)
 {
-    // Here we use Christopher Longet Higgin's alrgorihm converted to 
-    // an equivalent by awb.  Its doesn't have hte reverse order or
+    // Here we use Christopher Longet Higgin's algorithm converted to 
+    // an equivalent by awb. It doesn't have hte reverse order or
     // negation requirement.
     float a,b;
     int n,k;

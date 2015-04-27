@@ -278,7 +278,6 @@
   ;; figure out the offset of the first phone
   (set! phone1 (item.daughter1 (item.relation syl 'SylStructure)))
   (set! offset (get_duration_offset (item.feat phone1 "name")))
-  (format t "offset: %f\n" offset) 
  (if (< syldur totlen)
 	  (set! offset (* offset (/ syldur totlen))))
   (set! prevsyl (item.prev (item.relation syl 'Syllable)))

@@ -39,6 +39,32 @@
 ;;;  These modules should predict intonation events/labels
 ;;;  based on information in the phrase and word streams
 
+; to detect prespecified accents (feature "accent" in 'Word relation)
+; AS 5/29/00
+
+(define (item.feat.present item feat)
+  (and item
+       (assoc feat (item.features item))))
+
+(define (tobi_accent_prespecified utt)
+  (let ((tobi_found nil)
+	(words (utt.relation.items utt 'Word)))
+    
+    (while (and words (not tobi_found))
+; feature "accent" might be prespecified on words or tokens, AS 05/29/00
+	   (if (item.feat.present (car words) 'accent)
+	       (set! tobi_found t)
+; if Token relation exists, check tokens as well
+               (if (not (null (item.parent (item.relation (car words) 'Token))))
+                   (if (item.feat.present (item.parent (item.relation (car words) 'Token)) 'accent)
+                       (set! tobi_found t)
+                       (set! words (cdr words)))
+                   (set! words (cdr words)))))
+    tobi_found))
+
+(set! int_accent_cart_tree_no_accent
+'((NONE)))
+
 (define (Intonation utt)
 "(Intonation utt)                                
 Select between different intonation modules depending on the Parameter
@@ -48,6 +74,19 @@ really bad method with a simple downward sloping F0.  This is the first
 of a two-stage intonation prediction process.  This adds accent-like
 features to syllables, the second, Int_Targets generates the F0 contour
 itself. [see Intonation]"
+
+; AS 5/29/00: Hack to avoid prediction of further accent labels
+; on utterance chunks that have already been annotated with
+; accent labels
+; use CART that doesn't assign any labels when using Intonation_Tree
+
+(if (tobi_accent_prespecified utt)
+    (progn
+     (set! int_accent_cart_tree_save int_accent_cart_tree)  
+     (set! int_accent_cart_tree int_accent_cart_tree_no_accent)
+     (Intonation_Tree utt)
+     (set! int_accent_cart_tree int_accent_cart_tree_save))
+
   (let ((rval (apply_method 'Int_Method utt)))
     (Parameter.get 'Int_Method)
     (cond   
@@ -55,11 +94,12 @@ itself. [see Intonation]"
      ((eq 'Simple (Parameter.get 'Int_Method))
       (Intonation_Simple utt))
      ((eq 'ToBI (Parameter.get 'Int_Method))
+      (format t "Using Intonation_Tree")
       (Intonation_Tree utt))
      ((eq 'General (Parameter.get 'Int_Method))
       (Intonation_Simple utt))  ;; yes this is a duplication
      (t
-      (Intonation_Default utt)))))
+      (Intonation_Default utt))))))
 
 
 ;;;  These modules should create an actual F0 contour based on the

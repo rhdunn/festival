@@ -37,5 +37,5 @@
  ##                                                                       ##
  ###########################################################################
 
-include $(EST)/config/systems/ix86c_SunOS5.mak
+include $(EST)/config/systems/ix86_SunOS5.mak
 

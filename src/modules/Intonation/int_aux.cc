@@ -137,6 +137,7 @@ LISP FT_Intonation_Simple_Utt(LISP args);
 LISP FT_Int_Targets_Simple_Utt(LISP args);
 LISP FT_Intonation_Tree_Utt(LISP args);
 LISP FT_Int_Targets_LR_Utt(LISP args);
+LISP FT_Int_Targets_LR_5_Utt(LISP args);
 LISP FT_Int_Targets_General_Utt(LISP utt);
 LISP FT_Int_Targets_Relation_Utt(LISP utt, LISP relname);
 
@@ -196,6 +197,13 @@ void festival_Intonation_init(void)
   when the Parameter Int_Method is ToBI. [see Tree intonation]");
     festival_def_utt_module("Int_Targets_LR",FT_Int_Targets_LR_Utt,
     "(Int_Targets_LR UTT)\n\
+  Predict Target F0 points using linear regression from factors such as\n\
+  accent, tone, stress, position in phrase etc.  This utterance module is\n\
+  called through the module Int_Targets when the Parameter Int_Method is\n\
+  set to ToBI, even though this technique is not restricted to the ToBI\n\
+  labelling system. [see Tree intonation]");
+    festival_def_utt_module("Int_Targets_5_LR",FT_Int_Targets_LR_5_Utt,
+    "(Int_Targets_5_LR UTT)\n\
   Predict Target F0 points using linear regression from factors such as\n\
   accent, tone, stress, position in phrase etc.  This utterance module is\n\
   called through the module Int_Targets when the Parameter Int_Method is\n\

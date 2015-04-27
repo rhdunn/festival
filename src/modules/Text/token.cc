@@ -230,7 +230,7 @@ static LISP builtin_word_it(EST_Item *token, EST_String tok)
 	else
 	    return cons(strintern(tok),NIL);
     }
-    else if ((token_pos = ffeature(token,"token_pos")) == "ordinal")
+    else if ((token_pos = (EST_String)ffeature(token,"token_pos")) == "ordinal")
 	return say_num_as_ordinal(tok);
     else if (token_pos == "year")
 	return say_num_as_year(tok);
@@ -384,7 +384,7 @@ static LISP say_as_letters(const EST_String &word)
 	if (name.matches(make_regex("[0-9]")))
 	    CAR(l) = car(say_as_digits(get_c_string(car(l))));
 //	else if (name.matches(make_regex("[^a-zA-Z]")))
-//	    // Not sure, probabably a bug to get here
+//	    // Not sure, probably a bug to get here
 //	    CAR(l) = cons(make_param_str("name","symbol"),
 //			  cons(make_param_lisp("pos",let_pos),NIL));
 	else

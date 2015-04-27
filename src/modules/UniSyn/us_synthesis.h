@@ -48,6 +48,8 @@ typedef EST_TVector <EST_Wave> EST_WaveVector;
 VAL_REGISTER_TYPE_DCLS(wavevector,EST_WaveVector)
 VAL_REGISTER_TYPE_DCLS(ivector,EST_IVector)
 
+SIOD_REGISTER_TYPE_DCLS( wavevector, EST_WaveVector)
+
 void add_wave_to_utterance(EST_Utterance &u, EST_Wave &sig, 
 			const EST_String &name);
 

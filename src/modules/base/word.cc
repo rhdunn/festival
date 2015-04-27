@@ -60,14 +60,14 @@ LISP FT_Classic_Word_Utt(LISP utt)
     u->create_relation("Syllable");
     u->create_relation("Segment");
     SylStructure = u->create_relation("SylStructure");
-    
+
     for (w=u->relation("Word")->first(); w != 0; w = next(w))
     {
 	lpos = NIL;
-	pos = ffeature(w,"hg_pos");
+	pos = (EST_String)ffeature(w,"hg_pos");
                         // explicit homograph pos disambiguation
 	if (pos == "0")
-	    pos = ffeature(w,"pos");
+	    pos = (EST_String)ffeature(w,"pos");
 	if (pos != "0")
 	    lpos = rintern(pos);
 
@@ -93,6 +93,95 @@ LISP FT_Classic_Word_Utt(LISP utt)
     return utt;
 }
 
+LISP FT_Unilex_Word_Utt(LISP utt)
+{
+  // This tries to be a bit cleverer than Classic_Word in dealing with full and reduced forms of words.
+  // Look up words in lexicon and create syllable and segment streams
+    EST_Utterance *u = get_c_utt(utt);
+    EST_Item *w;
+    LISP entry,entry2,s,p,s2,p2,lpos,lexpos;
+    EST_String pos, vowel_form,sname,s2name;
+    EST_Item *syl,*seg;
+    EST_Relation *SylStructure;
+
+    *cdebug << "Word module\n";
+
+    u->create_relation("Syllable");
+    u->create_relation("Segment");
+    SylStructure = u->create_relation("SylStructure");
+    
+    for (w=u->relation("Word")->first(); w != 0; w = next(w))
+    {
+	lpos = NIL;
+	pos = string(ffeature(w,"hg_pos"));
+                        // explicit homograph pos disambiguation
+	if (pos == "0")
+	    pos = string(ffeature(w,"pos"));
+	if (pos != "0")
+	    lpos = rintern(pos);
+
+	//  Check if there is an explicitly given pronunciation before
+	//  going to the lexicon
+	if ((entry = specified_word_pronunciation(w,lpos)) == NIL)
+	    entry = lex_lookup_word(w->name(),lpos);
+	lexpos = car(cdr(entry));
+	// deal with full/reduced specification in pos as a list.
+	entry2 = NIL;
+	if (! atomp(lexpos))
+	  {
+	    if ( (vowel_form = get_c_string(car(cdr(lexpos)))) == "full")
+	      {
+		entry2 = lex_lookup_word(w->name(),cons(rintern("reduced"),NIL));
+		if (lpos == NIL)
+		  w->set("pos",get_c_string(car(lexpos)));
+	      }
+	  }
+	else if (lpos == NIL)
+	  w->set("pos",get_c_string(lexpos));
+	SylStructure->append(w);
+	if (entry2) // compare full and reduced form entries
+	  for (s=car(cdr(cdr(entry))),s2=car(cdr(cdr(entry2))) ; s != NIL; s=cdr(s))
+	    {
+	      syl = add_syllable(u,get_c_int(car(cdr(car(s)))));
+	      append_daughter(w,"SylStructure",syl);
+	      for (p=car(car(s)),p2=car(car(s2)); p != NIL; p=cdr(p))
+		{
+		  seg = add_segment(u,get_c_string(car(p)));
+		  append_daughter(syl,"SylStructure",seg);
+
+		  if(p2 != NIL)
+		    {
+		      sname = get_c_string(car(p));
+		      s2name = get_c_string(car(p2));
+		      if (sname != s2name)
+			{
+			  seg->set("reducable",1);
+			  seg->set("fullform",sname);
+			  seg->set("reducedform",s2name);
+			}
+		      p2=cdr(p2);
+		    }
+		}
+	      if(s2 != NIL)
+		s2 = cdr(s2);
+	  }
+	else
+	  for (s=car(cdr(cdr(entry))); s != NIL; s=cdr(s))
+	    {
+	      syl = add_syllable(u,get_c_int(car(cdr(car(s)))));
+	      append_daughter(w,"SylStructure",syl);
+	      for (p=car(car(s)); p != NIL; p=cdr(p))
+		{
+		  seg = add_segment(u,get_c_string(car(p)));
+		  append_daughter(syl,"SylStructure",seg);
+		}
+	    }	
+    }
+
+    return utt;
+}
+
+
 static LISP specified_word_pronunciation(EST_Item *w, LISP lpos)
 {
     //  If there is a phoneme feature on w or the Token related to 
@@ -100,8 +189,8 @@ static LISP specified_word_pronunciation(EST_Item *w, LISP lpos)
     //  from which a list can be read.
     EST_String p;
 
-    if (((p = ffeature(w,"phonemes")) != "0") ||
-	((p = ffeature(w,"R:Token.parent.phonemes")) != "0"))
+    if (((p = (EST_String)ffeature(w,"phonemes")) != "0") ||
+	((p = (EST_String)ffeature(w,"R:Token.parent.phonemes")) != "0"))
     {
 	LISP phones = read_from_lstring(strintern(p));
 

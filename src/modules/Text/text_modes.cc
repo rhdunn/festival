@@ -152,7 +152,7 @@ void um_apply_filter(const EST_String &filtername,
     }
     else
     {
-	command = filtername + " " + infile + " > " + outfile;
+	command = filtername + " '" + infile + "' > " + outfile;
 	system(command);  // should test if this is successful or not
     }
 }

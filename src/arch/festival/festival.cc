@@ -210,12 +210,12 @@ static void festival_banner(void)
 	EST_Litem *t;
 	cout << STRINGIZE(FTNAME) << " " << 
 	    festival_version << endl;
-	cout << "Copyright (C) University of Edinburgh, 1996-2003. " <<
+	cout << "Copyright (C) University of Edinburgh, 1996-2004. " <<
 	    "All rights reserved." << endl;
-	cout << "For details type `(festival_warranty)'" << endl;
 	if (sub_copyrights.length() > 0)
 	    for (t = sub_copyrights.head(); t != 0; t = next(t))
 		cout << sub_copyrights.item(t);
+	cout << "For details type `(festival_warranty)'" << endl;
     }
 }
 
@@ -419,7 +419,7 @@ static void festival_lisp_funcs(void)
  "(lr_predict ITEM LRMODEL)\n\
   Apply the linear regression model LRMODEL to ITEM in.  This\n\
   returns float value by summing the product of the coeffients and values\n\
-  returned by the specificed features in ITEM. [see Linear regression]");
+  returned by the specified features in ITEM. [see Linear regression]");
     init_subr_1("Gen_Viterbi",Gen_Viterbi,
  "(Gen_Viterbi UTT)\n\
   Applies viterbi search algorithm based on the parameters in\n\

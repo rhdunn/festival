@@ -64,7 +64,7 @@ LISP FT_PParse_Utt(LISP utt)
 LISP FT_MultiParse_Utt(LISP utt)
 {
     // You give them a parser and they just want more ... 
-    // Because in some modes utterance may contain mutiple sentences
+    // Because in some modes utterance may contain multiple sentences
     // and the grammars we have only have only deal in more
     // traditional sentences this tries to split the utterance into
     // sentences and parse them individualls and add them to 
@@ -101,7 +101,7 @@ LISP FT_MultiParse_Utt(LISP utt)
 void MultiParse(EST_Utterance &u)
 {
     // You give them a parser and they just want more ... 
-    // Because in some modes utterance may contain mutiple sentences
+    // Because in some modes utterance may contain multiple sentences
     // and the grammars we have only have only deal in more
     // traditional sentences this tries to split the utterance into
     // sentences and parse them individualls and add them to 
