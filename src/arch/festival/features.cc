@@ -72,10 +72,10 @@
 /* this allows arbitrary new features without recompilation              */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include "EST_unix.h"
-#include <string.h>
+#include <cstring>
 #include "festival.h"
 #include "festivalP.h"
 

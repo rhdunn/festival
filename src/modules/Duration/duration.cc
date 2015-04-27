@@ -37,7 +37,7 @@
 /* Duration averages and default and tree                                */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "durationP.h"
 
@@ -137,6 +137,7 @@ LISP FT_Duration_Tree_ZScores_Utt(LISP utt)
     float end=0.0, dur,stretch;
     LISP tree,dur_info,ph_info;
     float pdur;
+    float ave, std;
 
     *cdebug << "Duration Tree ZScores module\n";
 
@@ -151,8 +152,14 @@ LISP FT_Duration_Tree_ZScores_Utt(LISP utt)
 	if (ph_info == NIL)
 	{
 	    cerr << "Phoneme: " << s->name() << " has no duration info\n";
-	    festival_error();
+            ave = 0.080;
+            std = 0.020;
 	}
+        else
+        {
+            ave = PH_AVE(ph_info);
+            std = PH_STD(ph_info);
+        }
 	if ((pdur > 3) || (pdur < -3))
 	{
 	    cwarn << "Duration tree extreme for " << s->name() << 
@@ -160,7 +167,7 @@ LISP FT_Duration_Tree_ZScores_Utt(LISP utt)
 	    pdur = ((pdur < 0) ? -3 : 3);
 	}
 	s->set("dur_factor",pdur);
-	dur = PH_AVE(ph_info) + (pdur*PH_STD(ph_info));
+	dur = ave + (pdur*std);
 	dur *= stretch;
 	if (dur < 0.010)
 	    dur = 0.010;  // just in case it goes wrong

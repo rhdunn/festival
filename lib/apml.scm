@@ -66,7 +66,7 @@ Synthesis an apml string."
 (define (apml_file_synth filename)
   "(apml_file_synth filename)
 Synthesis an apml file."
-  (let ((utt (Utterance Concept nil)))
+  (let ((utt (Utterance Tokens nil)))
     (utt.load utt filename)
     (utt.synth utt)))
 
@@ -100,7 +100,7 @@ Synthesis an apml file."
 
 ;; feature functions for phrasing
 (define (apml_punc word)
-  (item.feat word 'punc))
+  (item.feat (item.relation.parent word 'Token) 'punc))
 
 (define (apml_last_word word)
   (if (item.next word)
@@ -113,13 +113,13 @@ Synthesis an apml file."
 
 ;; feature functions for pauses
 (define (apml_is_pause word)
-  (if (item.relation word 'Pause)
+  (if (item.relation (item.relation.parent word 'Token) 'Pause)
       t
       nil))
 
 (define (apml_pause word)
   (if (item.relation word 'Pause)
-	(item.feat (item.relation.parent word 'Pause) "sec")
+	(item.feat (item.relation.parent (item.relation.parent word 'Token) 'Pause) "sec")
       0))
 
 (define (Apml_Pauses utt)
@@ -201,17 +201,17 @@ Predict pause insertion for apml."
 
 ;; feature functions.
 (define (apml_accent syl)
-  (let ((word (item.relation.parent syl 'SylStructure)))
+  (let ((token (item.relation.parent (item.relation.parent syl 'SylStructure) 'Token)))
     (if (and (eq (item.feat syl 'stress) 1)
-	     (item.relation.parent word 'Emphasis))
-	(item.feat (item.relation.parent word 'Emphasis) 'x-pitchaccent)
+	     (item.relation.parent token 'Emphasis))
+	(item.feat (item.relation.parent token 'Emphasis) 'x-pitchaccent)
 	0)))
 	     
 (define (apml_boundary syl)
-  (let ((word (item.relation.parent syl 'SylStructure)))
+  (let ((token (item.relation.parent (item.relation.parent syl 'SylStructure) 'Token)))
     (if (and (> (item.feat syl 'syl_break) 0)
-	     (item.relation.parent word 'Boundary))
-	(item.feat (item.relation.parent word 'Boundary) 'type)
+	     (item.relation.parent token 'Boundary))
+	(item.feat (item.relation.parent token 'Boundary) 'type)
 	0)))
 
 (define (apml_LHLH syl)
@@ -258,7 +258,7 @@ Number of boundaries in this performative to the left of this word."
   (let ((w (item.prev word))
 	(c 0))
     (while (and w (apml_same_p w word))
-	   (if (item.relation.parent w 'Boundary)
+	   (if (item.relation.parent (item.relation.parent w 'Token) 'Boundary)
 	       (set! c (+ c 1)))
 	   (set! w (item.prev w)))
     c))
@@ -269,7 +269,7 @@ Number of boundaries in this performative to the right of this word."
   (let ((w word)
 	(c 0))
     (while (and w (apml_same_p w word))
-	   (if (item.relation.parent w 'Boundary)
+	   (if (item.relation.parent (item.relation.parent w 'Token) 'Boundary)
 	       (set! c (+ c 1)))
 	   (set! w (item.next w)))
     c))
@@ -277,8 +277,8 @@ Number of boundaries in this performative to the right of this word."
 (define (apml_same_p w1 w2)
 "(apml_same_p w1 w2)
  Are these two words in the same performative?"
-(let ((p1 (item.relation.parent w1 'SemStructure))
-      (p2 (item.relation.parent w1 'SemStructure)))
+(let ((p1 (item.relation.parent (item.relation.parent w1 'Token) 'SemStructure))
+      (p2 (item.relation.parent (item.relation.parent w1 'Token) 'SemStructure)))
   (if (and (item.parent p1) (item.parent p2))  ; not true if theme/rheme omitted.
       (equal? (item.parent p1) (item.parent p2))
       (equal? p1 p2))))
@@ -403,15 +403,15 @@ Pretty print APML semantic structure."
   t)
 
 (define (apml_pww_accent item)
-  (let ((p (item.relation.parent item 'Emphasis)))
+  (let ((p (item.relation.parent (item.relation.parent item 'Token) 'Emphasis)))
     (if p (apml_ppw_list (item.features p)))))
 
 (define (apml_pww_boundary item)
-  (let ((p (item.relation.parent item 'Boundary)))
+  (let ((p (item.relation.parent (item.relation.parent item 'Token) 'Boundary)))
     (if p (apml_ppw_list (item.features p)))))
 
 (define (apml_pww_pause item)
-  (let ((p (item.relation.parent item 'Pause)))
+  (let ((p (item.relation.parent (item.relation.parent item 'Token) 'Pause)))
     (if p (apml_ppw_list (item.features p)))))
 
 (define (apml_ppw_list l)
@@ -487,19 +487,21 @@ Set up the current voice for apml use."
       (Parameter.set 'Phrase_Method 'cart_tree)
       (set! phrase_cart_tree apml_phrase_tree)
       ;; Pauses.
-      (set! duration_cart_tree apml_kal_duration_cart_tree)
-      (set! duration_ph_info apml_kal_durs)
-      (Parameter.set 'Pause_Method Apml_Pauses)
+      ;;(set! duration_cart_tree apml_kal_duration_cart_tree)
+      ;;(set! duration_ph_info apml_kal_durs)
+      ;;(Parameter.set 'Pause_Method Apml_Pauses)
       ;; Lexicon.
-      (if (not (member_string "apmlcmu" (lex.list)))
-	  (load (path-append lexdir "apmlcmu/apmlcmulex.scm")))
-      (lex.select "apmlcmu")
+      ;;;; We now assume the lexicon you have already set is suitable,
+      ;;;; You probably want to ensure this is "apmlcmu" or "unilex"
+      ;;(if (not (member_string "apmlcmu" (lex.list)))
+	;;  (load (path-append lexdir "apmlcmu/apmlcmulex.scm")))
+      ;;(lex.select "apmlcmu")
       ;; Add other lex entries here:
-      (lex.add.entry '("minerals" nil (((m ih n) 1) ((er) 0) ((ax l z) 0))))
-      (lex.add.entry '("fibre" nil (((f ay b) 1) ((er) 0))))
-      (lex.add.entry '("dont" v (((d ow n t) 1))))
-      (lex.add.entry '("pectoris" nil (((p eh k) 2) ((t ao r) 1) ((ih s) 0))))
-      (lex.add.entry '("sideeffects" nil (((s ay d) 1) ((ax f) 0) ((eh k t s) 2))))
+      ;;(lex.add.entry '("minerals" nil (((m ih n) 1) ((er) 0) ((ax l z) 0))))
+      ;;(lex.add.entry '("fibre" nil (((f ay b) 1) ((er) 0))))
+      ;;(lex.add.entry '("dont" v (((d ow n t) 1))))
+      ;;(lex.add.entry '("pectoris" nil (((p eh k) 2) ((t ao r) 1) ((ih s) 0))))
+      ;;(lex.add.entry '("sideeffects" nil (((s ay d) 1) ((ax f) 0) ((eh k t s) 2))))
       
       ;; Intonation events.
       (set! int_accent_cart_tree apml_accent_cart)

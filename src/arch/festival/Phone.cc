@@ -38,7 +38,7 @@
 /* by arbitrary features (and mapping)                                   */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
 #include "festival.h"
 #include "festivalP.h"

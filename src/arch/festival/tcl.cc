@@ -49,8 +49,8 @@
  *  interpreter to implement a client/server architecture.
  *---------------------------------------------------------------------------
  */
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include "festival.h"
 #include "festivalP.h"
 

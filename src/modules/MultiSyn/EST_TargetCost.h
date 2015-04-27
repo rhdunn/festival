@@ -83,6 +83,9 @@ class EST_TargetCost {
   virtual float operator()( const EST_Item* targp, const EST_Item* candp ) const
     { return defScore; }
 
+  // Allow flatpacking
+  virtual const bool is_flatpack() const {return false;}
+
  protected: 
   float defScore;
   // Temp variables for use while calculating cost (here for speed)
@@ -104,11 +107,13 @@ class EST_TargetCost {
     { weight_sum += w ; return w; }
   
   // General cost functions that derived classes may want to use.
+  float apml_accent_cost() const;
   float stress_cost() const;
   float position_in_syllable_cost() const;
   float position_in_word_cost() const;
   float position_in_phrase_cost() const;
   float partofspeech_cost() const;
+  float punctuation_cost() const;
   float left_context_cost() const;
   float right_context_cost() const;
   float bad_duration_cost() const;
@@ -125,6 +130,32 @@ class EST_DefaultTargetCost : public EST_TargetCost {
   float operator()(const EST_Item* targ, const EST_Item* cand) const;
 
 };
+
+/*
+ *  DERIVED CLASS: EST_APMLTargetCost
+ */
+class EST_APMLTargetCost : public EST_TargetCost {
+
+ public:
+  float operator()(const EST_Item* targ, const EST_Item* cand) const;
+
+};
+
+/*
+ *  DERIVED CLASS: EST_SingingTargetCost
+ */
+class EST_SingingTargetCost : public EST_TargetCost {
+
+ public:
+  float operator()(const EST_Item* targ, const EST_Item* cand) const;
+
+ protected:
+  float pitch_cost() const;
+  float duration_cost() const;
+
+};
+
+
 
 
 

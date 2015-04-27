@@ -37,7 +37,7 @@
 /* Basic lexicon utilities                                               */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 #include "lexiconP.h"

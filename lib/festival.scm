@@ -167,6 +167,11 @@ Returns a the last item in this relation."
 	   (set! i (item.next i)))
     i))
 
+(define (item.feat.present item feat)
+  "(item.feat.present item feat)
+nil if feat doesn't existing in this item, non-nil otherwise."
+  (and item (assoc_string feat (item.features item))))
+
 (define (item.relation.append_daughter parent relname daughter)
 "(item.relation.append_daughter parent relname daughter)
 Make add daughter to parent as a new daughter in relname."

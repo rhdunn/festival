@@ -319,42 +319,97 @@ A CART tree for vowel reduction.  This is hand-written.")
 "postlex_mrpa_r_cart_tree
 For remove final R when not between vowels.")
 
+
+;; Changed this to actually work... (Rob 09/12/04)
+;; Changed this to delete the syllable when schwa is unneccesary (awb 19/07/04)
 (define (postlex_apos_s_check utt)
   "(postlex_apos_s_check UTT)
 Deal with possesive s for English (American and British).  Delete
-schwa of 's if previous is not a fricative or affricative, and
+schwa of 's if previous is not an alveolar or palatal fricative or affricative, and
 change voiced to unvoiced s if previous is not voiced."
   (mapcar
-   (lambda (seg)
+   (lambda (syl)
+     ; word is 's
      (if (string-equal "'s" (item.feat 
-			     seg "R:SylStructure.parent.parent.name"))
-	 (if (string-equal "a" (item.feat seg 'ph_vlng))
-	     (if (and (member_string (item.feat seg 'p.ph_ctype) 
-				     '(f a))
-		      (not (member_string
-			    (item.feat seg "p.ph_cplace") 
-			    '(d b g))))
-		 t;; don't delete schwa
-		 (item.delete seg))
-	     (if (string-equal "-" (item.feat seg "p.ph_cvox"))
-		 (item.set_name seg "s")))));; from "z"
-   (utt.relation.items utt 'Segment))
+			     syl "R:SylStructure.parent.name"))
+         (begin
+           ;; de-voice if last phone of previous word is unvoiced
+           (if (string-equal 
+                "-"
+                (item.feat syl "p.R:SylStructure.daughtern.ph_cvox"))
+               (item.set_name 
+                (item.relation.daughtern syl 'SylStructure)
+                "s"))  ;; change it from "z" to "s"
+	   ; if the previous seg is a aveolar or palatal, 
+           ; fricative or affricate don't delete schwa otherwise delete it
+           (if (and 
+                (member_string 
+                 (item.feat syl "p.R:SylStructure.daughtern.ph_ctype") '(f a))
+                (member_string 
+                 (item.feat syl "p.R:SylStructure.daughtern.ph_cplace") '(a p)))
+               (begin
+                 t)
+               (begin
+                 ;; delete the schwa
+                 (item.delete (item.relation.daughter1 syl 'SylStructure))
+                 ;; attach orphaned s/z to previous word
+                 (item.relation.append_daughter
+                  (item.prev syl)
+                  'SylStructure
+                  (item.relation.daughtern syl 'SylStructure))
+                 ;; delete the now empty syllable
+                 (item.delete syl))))))
+   ;; never happens to if 's is first in an utterance
+   (cdr (utt.relation.items utt 'Syllable)))
   utt)
 
-(define (postlex_the_vs_thee utt) ; probably generalised by the rule below.
+;; Changed this to work the other way round, too.  Volker 10/08/06
+(define (postlex_the_vs_thee utt)
 "(postlex_the_vs_thee utt)
-Unnreduce the schwa in \"the\" when a vowel follows."
-(let ((replacement (cadr (car (caar (cdr (cdar (lex.lookup_all 'thee)))))))
-      schwa)
+Unnreduce the schwa in \"the\" when a vowel follows.
+Reduce the vowel in \"the\" when no vowel follows (this 
+requires a lexicon entry for \"the\" with feature \"reduced\",
+otherwise there will be no reduction)."
+(let ((fullform (cadr (car (caar (cdr (cdar (lex.lookup_all 'thee)))))))
+      (reducedform (cadr(car(caar(cddr(lex.lookup 'the '(reduced)))))))
+       seg)
+
   (mapcar
    (lambda (word)
      (if (string-equal "the" (downcase (item.feat word "name")))
          (begin
-           (set! schwa (item.relation (item.daughtern (item.relation.daughtern word 'SylStructure)) 'Segment))
-           (if (string-equal "+" (item.feat (item.next schwa) 'ph_vc))
-               (item.set_feat schwa 'name replacement)))))
+           (set! seg (item.relation (item.daughtern (item.relation.daughtern word
+'SylStructure)) 'Segment))
+           (if (string-equal "+" (item.feat (item.next seg) 'ph_vc))
+               (item.set_feat seg 'name fullform)
+               (item.set_feat seg 'name reducedform)))))
    (utt.relation.items utt 'Word)))
 utt)
+
+;;  For Multisyn voices only.  Volker 14/08/06
+(define (postlex_a utt)
+"(postlex_a utt)
+If POS of \"a\" is \"nn\" and segment feature \"reducable\", set it to 0.
+This is a bugfix, but still requires the target cost function to add a 
+penalty if a candidate is reducable but the target is not.  expro_target_cost
+does that."
+(let(seg)
+  (mapcar
+    (lambda(word)
+       (format t "%s\t%s\n" (item.feat word 'name)(item.feat word 'pos))
+       (if(and(string-equal "a" (downcase (item.feat word "name")))
+              (string-equal "nn" (item.feat word "pos")))
+          (begin
+             (set! seg (item.relation (item.daughtern (item.relation.daughtern word
+'SylStructure)) 'Segment))
+             (format t "should not be reducable\n")
+             (if (eq 1 (parse-number (item.feat seg 'reducable)))
+                (item.set_feat seg 'reducable 0))))
+    )
+    (utt.relation.items utt 'Word)))
+utt)
+
+
 
 (define (postlex_unilex_vowel_reduction utt)
 "(postlex_unilex_vowel_reduction utt)
@@ -370,6 +425,9 @@ Perform vowel reduction based on unilex specification of what can be reduced."
    (utt.relation.items utt 'Segment)))
 utt)
 
+
+
+
 (define (seg_word_final seg)
 "(seg_word_final seg)
 Is this segment word final?"
@@ -382,6 +440,61 @@ Is this segment word final?"
 	     (string-equal (item.feat seg "name") silence))
 	nil
 	t)))
+
+
+
+;; imported from postlex_intervoc_r.scm   Volker 14/08/06
+(define (postlex_intervoc_r utt)
+"(postlex_intervoc_r UTT)
+
+Remove any word-final /r/ which is phrase-final or not going 
+to be inter-vocalic i.e. the following words does not start 
+with a vowel. 
+
+NOTE: in older versions of unilex-rpx.out for Festival, there 
+is no word-final /r/.
+
+"
+(let (word next_word last_phone following_phone)
+   (set! word  (utt.relation.first utt 'Word))
+
+   (while word
+      (set! next_word (item.next word))
+      (set! last_phone (item.daughtern
+                          (item.daughtern(item.relation word 'SylStructure))))
+      (if next_word
+         (begin
+
+            (set! following_phone (item.daughter1
+                                     (item.daughter1
+                                        (item.relation next_word 'SylStructure))))
+            ; last_phone and following_phone should always be defined at this point,
+            ; but since the upgrade to Fedora and characters no longer being in ISO
+            ; but in UTF8, the pound sterling is no longer treated correctly. 
+            ; Probably (Token utt) should be fixed.
+
+            (if (and following_phone  last_phone)
+               (begin
+                  ;(format t "%s\t%s %s %s %s\n" (item.name word)
+                  ;                     (item.name last_phone)
+                  ;                     (item.name following_phone)
+                  ;                     (item.feat following_phone 'ph_vc)
+                  ;                     (item.feat word 'pbreak))
+                  (if(and(equal? "r" (item.name last_phone))
+                         (or(not(equal? "NB" (item.feat word 'pbreak)))
+                            (equal? "-" (item.feat following_phone 'ph_vc))))
+                     (begin
+                        (format t "\t\t\t/r/ in \"%s %s\"  deleted\n"
+                                  (item.name word)(item.name next_word))
+                        (item.delete last_phone))))))
+            (if(and last_phone (equal? "r" (item.name last_phone)))
+               (begin
+                  (format t "\t\t\tutt-final /r/ deleted\n")
+                  (item.delete last_phone)))
+         )
+
+      (set! word (item.next word)))))
+
 
 
 (provide 'postlex)

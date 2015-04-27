@@ -45,7 +45,7 @@
 /* when you don't have the language specific version.                    */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "text.h"
 

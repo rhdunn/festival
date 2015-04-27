@@ -43,7 +43,7 @@
 #include "EST_error.h"
 #include "safety.h"
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 EST_JoinCostCache::EST_JoinCostCache( unsigned int id )
   : numInstances(0),
@@ -138,9 +138,10 @@ bool EST_JoinCostCache::computeAndCache( const EST_TList<EST_Item*> &list,
   float llimit = 0.0+1/(float)(qleveln);
   
   unsigned int i=0;
+  EST_warning("EST_JoinCostCache::computeAndCache");
   for( EST_Litem *it=list.head(); it; it=next(it), ++i ){
     
-    unsigned int j=1;    
+    unsigned int j=i+1;    
     for( EST_Litem *jt=next(it); jt; jt=next(jt), ++j ){
       float cost = jc( list(it), list(jt) );
       

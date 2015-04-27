@@ -81,8 +81,6 @@ Join the preselected and gotten units into a waveform."
        (utt.relation.items utt 'Unit)
        (utt.relation.items utt 'Segment))
       (us_unit_concat utt)
-      (if (boundp 'awb_hack1)
-	  (awb_hack1 utt))
       (if (not (member 'f0 (utt.relationnames utt)))
 	  (targets_to_f0 utt))
       (if (utt.relation.last utt 'Segment)

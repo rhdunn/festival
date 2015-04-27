@@ -36,9 +36,9 @@
 /*  Some basic functions for dealing with the web and urls               */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "festival.h"
 #include "festivalP.h"
 #include "EST_String.h"

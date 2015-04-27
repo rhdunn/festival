@@ -38,7 +38,7 @@
 /* standard CSTR diphone dbs                                             */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "diphone.h"
 

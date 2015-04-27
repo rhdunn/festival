@@ -38,12 +38,12 @@
 /* so things that link with these don't need the whole system            */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cerrno>
 #include <sys/types.h>
-#include <string.h>
-#include <time.h>
+#include <cstring>
+#include <ctime>
 #include "EST_unix.h"
 #include "EST_socket.h"
 #include "festival.h"

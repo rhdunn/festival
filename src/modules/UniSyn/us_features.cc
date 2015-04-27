@@ -38,7 +38,7 @@
 /*                                                                       */
 /*=======================================================================*/
 
-#include <math.h>
+#include <cmath>
 #include "festival.h"
 #include "EST_error.h"
 #include "us_features.h"

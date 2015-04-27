@@ -467,7 +467,7 @@ SABLE mode token specific analysis."
   "(sable_init_func)
 Initialisation for SABLE mode"
   (sable_init_globals)
-  (voice_rab_diphone)
+  (voice_kal_diphone)
   (set! sable_previous_elements xxml_elements)
   (set! xxml_elements sable_elements)
   (set! sable_previous_token_to_words english_token_to_words)

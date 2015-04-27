@@ -83,9 +83,9 @@ class CLDB {
     CLfile *get_fileitem(const EST_String &name)
 	{ return (CLfile *)fileindex.lookup(name); }
     void load_coefs_sig(EST_Item *unit);
-    CLfile *CLDB::get_file_coefs_sig(const EST_String &fileid);
+    CLfile *get_file_coefs_sig(const EST_String &fileid);
     void load_join_coefs(CLunit *unit);
-    CLfile *CLDB::get_file_join_coefs(const EST_String &fileid);
+    CLfile *get_file_join_coefs(const EST_String &fileid);
 };
 
 

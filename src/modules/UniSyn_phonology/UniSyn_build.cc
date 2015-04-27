@@ -38,10 +38,10 @@
 /*                                                                       */
 /*=======================================================================*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <fstream.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <fstream>
 #include "festival.h"
 
 #include "../UniSyn/us_features.h"

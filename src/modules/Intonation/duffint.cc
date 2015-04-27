@@ -37,7 +37,7 @@
 /* Duff intonation                                                       */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "intonation.h"
 

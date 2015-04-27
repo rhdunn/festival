@@ -38,18 +38,32 @@
 /* Top level file for synthesizer                                        */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
+
+using namespace std;
+
 #include "festival.h"
 
 static void festival_main(int argc, char **argv);
 static int festival_check_script_mode(int argc, char **argv);
 static void festival_script_mode(int argc, char **argv);
 
+void awb_free_diph_index();
+
+extern "C" {
+    void mtrace();
+    void muntrace();
+}
 int main(int argc, char **argv)
 {
 
+/*    putenv("MALLOC_TRACE=mallfile");
+      mtrace(); */
     festival_main(argc,argv);
 
+/*    awb_free_diph_index();
+
+muntrace(); */
     return 0;
 }
 
@@ -224,7 +238,7 @@ static void festival_script_mode(int argc, char **argv)
     }
 
     // initialize without loading init files
-    siodheapsize = getenv("SIODHEADSIZE");
+    siodheapsize = getenv("SIODHEAPSIZE");
     if (siodheapsize)
 	festival_initialize(FALSE,atoi(siodheapsize));
     else

@@ -94,6 +94,7 @@ SYSTEMS =					\
 	unknown_DebianGNULinux.mak		\
 	unknown_Linux.mak			\
 	unknown_RedHatLinux.mak			\
+	power_macintosh_Darwin.mak		\
 	unknown_unknown.mak
 
 FILES = Makefile default.mak $(SYSTEMS) 

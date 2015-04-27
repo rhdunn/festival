@@ -37,7 +37,7 @@
 /*               EST_Utterance access functions (from Lisp)              */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
 #include "festival.h"
 #include "festivalP.h"

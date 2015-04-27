@@ -40,11 +40,11 @@
 /*                                    2003/06/11 by Heiga Zen        */
 /*  ---------------------------------------------------------------  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <cmath>
 #include "festival.h"
 
 #include "defaults.h"
@@ -396,10 +396,6 @@ void pdf2speech( FILE *rawfp, FILE *lf0fp, FILE *mcepfp,
       if (rawfp!=NULL)
          vocoder(f0, mceppst->par[mcepframe], mceppst->order, rawfp, gp, vs);
    }
-   
-   if (mcepfp != NULL) fclose(mcepfp);
-   if (lf0fp  != NULL) fclose(lf0fp);
-   if (rawfp  != NULL) fclose(rawfp);
 
    FreePStream(mceppst);
    FreePStream(lf0pst);

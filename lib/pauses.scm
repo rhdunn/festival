@@ -78,7 +78,24 @@ Predict pause insertion."
 		     (item.relation.remove w 'Word)
 		     ;; can't refer to w as we've just deleted it
 		     (item.relation.remove wp 'Phrase)))))
-	   words)))
+	   words)
+          ;; 12/01/2006 V.Strom: Even more embarrasing: Delete all silences
+          ;; that are followed by a silence.  These silence sequences 
+          ;; emerge if 'punc of phrase-final words consists of more than one 
+          ;; character, e.g. period+quote.  That in turn causes problems in 
+          ;; build_utts: the 2nd silence ends up with no features but its name, 
+          ;; because there is no corresponding 2nd silence in the phone 
+          ;; segmentation to align with.
+          ;; This schould be fixed in the functions below, but it is easier for
+          ;; me to clean up at the end:
+          (set! sil (car (car (cdr (car (PhoneSet.description '(silences)))))))
+          (set! seg (item.next(utt.relation.first utt 'Segment)))
+          (while seg
+             ;; (format t "%l %l\n" (item.name seg) (item.name (item.prev seg)))
+             (if(and(string-equal sil (item.name seg))
+                    (string-equal sil (item.name (item.prev seg))))
+                (item.delete (item.prev seg)))
+             (set! seg (item.next seg)))))
   utt))
 
 (define (insert_pause utt word)

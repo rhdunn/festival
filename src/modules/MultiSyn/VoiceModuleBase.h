@@ -52,6 +52,7 @@
 #include "EST_TKVL.h"
 #include "siod_defs.h"
 
+#include "EST_FlatTargetCost.h"
 
 
 class EST_Utterance;
@@ -61,7 +62,7 @@ class VoiceModuleBase {
 public:
   VoiceModuleBase( VoiceBase *parent = 0 ): _parentVoice(parent) {};
   virtual ~VoiceModuleBase() {};
-  virtual void initialise( ) = 0;
+  virtual void initialise(const EST_TargetCost *tc, bool ignore_bad_tag=false) = 0;
   virtual unsigned int numModuleUnits() const = 0;
   virtual unsigned int numUnitTypes() const = 0;
   virtual unsigned int numAvailableCandidates( const EST_String &unit ) const =0;

@@ -66,9 +66,8 @@ USDiphIndex::USDiphIndex() : dihash(1500)
 USDiphIndex::~USDiphIndex() 
 { 
     gc_unprotect(&params);
+    
 }
-
-
 
 void us_check_db()
 {
@@ -77,6 +76,15 @@ void us_check_db()
     diph_index->ts.restart();
 }
 
+void awb_free_diph_index()
+{
+    /* chaising memory leaks */
+    if (diph_index != 0)
+    {
+        delete diph_index;
+        diph_index = 0;
+    }
+}
 
 /*static EST_String get_diphone_name(EST_Item *item,const EST_String dir)
 {
@@ -506,7 +514,7 @@ int find_diphone_index(const EST_Item &d)
 	    EST_error("");
 	}
 	else
-	    cout << "UniSyn: using default diphone " << default_diphone << 
+	    cerr << "UniSyn: using default diphone " << default_diphone << 
 		" for " << diname << endl;
 	return index;
     }

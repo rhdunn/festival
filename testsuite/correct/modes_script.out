@@ -297,7 +297,7 @@ note is "G3"
 "G3"
 note "G3" freq 97.998856
 "freqs"
-(97.9989)
+(97.998859)
 "durs"
 (0.6)
 note is "A3"
@@ -311,42 +311,42 @@ note is "B3"
 "B3"
 note "B3" freq 123.470825
 "freqs"
-(123.471)
+(123.47083)
 "durs"
 (0.6)
 note is "C4"
 "C4"
 note "C4" freq 130.812790
 "freqs"
-(130.813)
+(130.81278)
 "durs"
 (0.6)
 note is "D4"
 "D4"
 note "D4" freq 146.832382
 "freqs"
-(146.832)
+(146.83238)
 "durs"
 (0.6)
 note is "E4"
 "E4"
 note "E4" freq 164.813782
 "freqs"
-(164.814)
+(164.81378)
 "durs"
 (0.6)
 note is "F#4"
 "F#4"
 note "F#4" freq 184.997208
 "freqs"
-(184.997)
+(184.99721)
 "durs"
 (0.6)
 note is "G4"
 "G4"
 note "G4" freq 195.997711
 "freqs"
-(195.998)
+(195.99772)
 Want to adjust syl by 0.090000
 Want to adjust syl by 0.000000
 Want to adjust syl by 0.040000

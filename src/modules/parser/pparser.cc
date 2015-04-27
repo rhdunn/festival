@@ -37,7 +37,7 @@
 /*  Probabilistic parser for (S)CFG                                      */
 /*                                                                       */
 /*=======================================================================*/
-#include <math.h>
+#include <cmath>
 #include "festival.h"
 #include "parser.h"
 #include "EST_SCFG_Chart.h"

@@ -43,12 +43,12 @@
 /* The logging, access control, file transfer stuff are all new          */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cerrno>
 #include <sys/types.h>
-#include <string.h>
-#include <time.h>
+#include <cstring>
+#include <ctime>
 #include "EST_unix.h"
 #include "EST_socket.h"
 #include "festival.h"
@@ -186,7 +186,7 @@ int festival_start_server(int port)
 	    num_clients--;
 	}
 
-	while (waitpid(0,&statusp,WNOHANG) != 0)
+	while ((num_clients > 0) &&  (waitpid(0,&statusp,WNOHANG) != 0))
 	    num_clients--;
 #endif
 
@@ -213,7 +213,7 @@ static int client_access_check(int fd,int client)
     clienthost = gethostbyaddr((char *)&peer.sin_addr,
 			       sizeof(peer.sin_addr),AF_INET);
     client_hostnum = inet_ntoa(peer.sin_addr);
-    if (streq(client_hostnum,"0.0.0.0"))               // its me !
+    if (streq(client_hostnum,"0.0.0.0") || streq(client_hostnum,"127.0.0.1")) // its me !
 	client_hostname = "localhost";
     else if (clienthost == 0)	                       // failed to get a name
 	client_hostname = client_hostnum;

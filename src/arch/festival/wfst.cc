@@ -36,7 +36,7 @@
 /*  Access to WFST classes                                               */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "festivalP.h"
 

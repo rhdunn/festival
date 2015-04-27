@@ -38,7 +38,7 @@
 /*                                                                       */
 /*=======================================================================*/
 
-#include <math.h>
+#include <cmath>
 #include "festival.h"
 //#include "development/EST_FeatureData.h"
 #include "../UniSyn/us_features.h"

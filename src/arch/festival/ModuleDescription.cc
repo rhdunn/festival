@@ -38,7 +38,7 @@
  /*                                                                       */
  /*************************************************************************/
 
-#include <iostream.h>
+#include <iostream>
 #include "siod.h"
 #include "ModuleDescription.h"
 

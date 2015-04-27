@@ -36,7 +36,7 @@
 /*  Generic Viterbi search specifications through scheme                 */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 

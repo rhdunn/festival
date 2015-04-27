@@ -73,7 +73,7 @@
 /*  moved to CMU                                                         */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdlib.h>
+#include <cstdlib>
 #include "EST_math.h"
 #include "festival.h"
 #include "clunits.h"

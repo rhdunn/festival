@@ -62,9 +62,11 @@ prints words with their POS"
 (define (output-pos utt)
 "Output the word/pos for each word in utt"
  (mapcar
-  (lambda (pair)
-    (format t "%l/%l\n" (car pair) (car (cdr pair))))
-  (utt.features utt 'Word '(name pos))))
+  (lambda (word)
+    (format t "%l/%l\n" 
+            (item.feat word "name")
+            (item.feat word "pos")))
+  (utt.relation.items utt 'Word)))
 
 ;;;
 ;;; Redefine what happens to utterances during text to speech 

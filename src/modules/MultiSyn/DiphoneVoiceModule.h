@@ -44,6 +44,7 @@
 #define __DIPHONEVOICEMODULE_H__
 
 #include "VoiceModuleBase.h"
+#include "EST_DiphoneCoverage.h"
 #include "siod_defs.h"
 #include "EST_Val_defs.h"
 #include "EST_String.h"
@@ -51,6 +52,8 @@
 #include "EST_viterbi.h"
 
 #include "EST_types.h" // for EST_StrList
+
+#include "EST_FlatTargetCost.h"
 
 class EST_Utterance;
 class EST_Relation;
@@ -60,8 +63,10 @@ class EST_Features;
 class EST_Track;
 class EST_Wave;
 class EST_Item;
-class EST_TargetCost;
 
+// return standard join point time for this segment
+// (one half of a diphone)
+float getJoinTime( const EST_Item *seg );
 
 //template<class T> class EST_TStringHash;
 #include "EST_THash.h"
@@ -72,16 +77,30 @@ typedef EST_TList<EST_Item*> ItemList;
 SIOD_REGISTER_CLASS_DCLS(du_voicemodule,DiphoneVoiceModule)
 VAL_REGISTER_CLASS_DCLS(du_voicemodule,DiphoneVoiceModule)
 
-// following is only necessary to put a candidate's voice module
-// parent in candidate->name (which is EST_Val)
-// i.e. yet another temporary hack
-class DiphoneVoiceModulePtr {
+// following is necessary to make some of a candidate's information
+// available in a faster way that EST_Item feature lookups (critically
+// the join cost coefficients EST_FVectors for example)
+// i.e. yet another temporary hack... (would be better if EST_viterbi
+// code allowed other things apart from just EST_Item* in order to 
+// perform the search)
+class DiphoneCandidate {
 public:
-  DiphoneVoiceModulePtr( const DiphoneVoiceModule *p ) : ptr( p ) {};
-  const DiphoneVoiceModule *ptr;
+  DiphoneCandidate( const EST_Item *phone1,
+		    const DiphoneVoiceModule *p,
+		    const EST_FVector *left,
+		    const EST_FVector *right ) 
+    : ph1(phone1), dvm( p ), l_coef(left), r_coef(right),
+    ph1_jccid(-1), ph1_jccindex(-1), ph2_jccid(-1), ph2_jccindex(-1){};
+
+  const EST_Item *ph1;
+  const DiphoneVoiceModule *dvm;
+  const EST_FVector *l_coef;
+  const EST_FVector *r_coef;
+  int ph1_jccid, ph1_jccindex;
+  int ph2_jccid, ph2_jccindex;
 };
 
-VAL_REGISTER_CLASS_DCLS(diphonevoicemoduleptr,DiphoneVoiceModulePtr)
+VAL_REGISTER_CLASS_DCLS(diphonecandidate,DiphoneCandidate)
 
 class DiphoneVoiceModule : public VoiceModuleBase {
 public:
@@ -98,7 +117,7 @@ public:
 
   virtual ~DiphoneVoiceModule();
 
-  virtual void initialise();
+  virtual void initialise(const EST_TargetCost *tc, bool ignore_bad_tag=false );
   virtual unsigned int numModuleUnits() const;
   virtual unsigned int numUnitTypes() const;
   virtual unsigned int numAvailableCandidates( const EST_String &unit ) const;
@@ -118,30 +137,39 @@ public:
   bool getUtterance( EST_Utterance **utt, 
 		     const EST_String &feat_name,
 		     const EST_Val &value ) const;
+  void getDiphoneCoverageStats(EST_DiphoneCoverage *dc) const;
 
 //   int DiphoneVoiceModule::getCandidateList( const EST_Item& target, 
 // 					    const EST_TargetCost& tc,
 // 					    EST_VTCandidate *head,
 // 					    EST_VTCandidate *tail ) const;
 
+
+
   int getCandidateList( const EST_Item& target, 
-			const EST_TargetCost& tc,
+			const EST_TargetCost *tc,
+			const TCDataHash *tcdh,
+			const float tc_weight,
 			EST_VTCandidate **head,
 			EST_VTCandidate **tail ) const;
 
   // append all instances of a certain phone present in the utterances
   // in this voice.  Returns the number added 
   int getPhoneList( const EST_String &phone, ItemList &list ); 
-  
+
 private:
   // don't allow copying of Voices (for now?)
   DiphoneVoiceModule( const DiphoneVoiceModule& );
   DiphoneVoiceModule& operator=( const DiphoneVoiceModule& );
 
+  // Flatpack
+  void flatPack( EST_Relation *segs, const EST_TargetCost *tc) const;
+
   void addCoefficients( EST_Relation *segs, const EST_Track& coefs );
-  void addToCatalogue( const EST_Utterance *utt, int *num_ignored ); 
+  void addToCatalogue( const EST_Utterance *utt, int *num_ignored, bool ignore_bad=false ); 
   void getDiphone( const EST_Item *phone1, 
-		   EST_Track* coef, EST_Wave* sig, int* midframe ) const;
+		   EST_Track* coef, EST_Wave* sig, int* midframe,
+		   bool extendLeft=0, bool extendRight=0 ) const;
   
   friend class DiphoneUnitVoice;
   
@@ -157,6 +185,8 @@ private:
   EST_String wave_ext;
 
   unsigned int wav_srate; //sample rate of voice waveform data
+
+  TCDataHash *tcdatahash;
 
   EST_TList<EST_Utterance *> *utt_dbase;
   EST_TStringHash<ItemList*> *catalogue;

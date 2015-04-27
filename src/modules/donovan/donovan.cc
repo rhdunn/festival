@@ -44,8 +44,8 @@
 /* Note the FreeSpeech code is GNU Copyright not like the above          */
 /*                                                                       */
 /*=======================================================================*/
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "festival.h"
 #include "donovan.h"
 

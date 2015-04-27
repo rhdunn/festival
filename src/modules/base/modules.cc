@@ -37,7 +37,7 @@
 /* Some basic initialization functions for modules                       */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "lexicon.h"
 #include "modules.h"

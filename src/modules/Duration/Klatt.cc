@@ -52,7 +52,7 @@ a percentage, here the system retursn a floating point value
 which I think is neater.
 */
 
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "durationP.h"
 

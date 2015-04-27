@@ -40,7 +40,7 @@
 /*    -- and gradually it is ...                                         */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "festival.h"
 #include "modules.h"
 

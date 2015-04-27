@@ -42,10 +42,10 @@
 /* vol 2 pp 348-351, Paris 1989                                          */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
 #include "festival.h"
 #include "diphone.h"
 

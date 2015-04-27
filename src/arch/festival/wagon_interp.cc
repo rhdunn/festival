@@ -37,9 +37,9 @@
 /* A simple interpreter for CART trees as produced by Wagon              */
 /*                                                                       */
 /*=======================================================================*/
-#include <stdio.h>
+#include <cstdio>
 #include "EST_unix.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "festival.h"
 
 #define ques_oper_str(X) (get_c_string(car(cdr(X))))
