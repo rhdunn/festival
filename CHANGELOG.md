@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.1-1] - 2015-04-27 Maintenance
+
+  * Build improvements from [1.4.1-1](#1.4.1-1).
+
+## [2.1] - 2010-10-05 Release
+
+  * Support for various new GCC compilers
+  * Improved support for hts, clustergen, clunits and multisyn voices
+  * lots of wee bugs fixed
+
 ## [2.0.95-1] - 2015-04-27 Maintenance
 
   * Build improvements from [1.4.1-1](#1.4.1-1).
