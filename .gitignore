@@ -1,4 +1,9 @@
 .*.swp
 
+config.*
+install-sh
+missing
+mkinstalldirs
+
 autom4te.cache/
 configure
