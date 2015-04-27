@@ -45,6 +45,7 @@ examples/durmeanstd
 examples/latest
 examples/make_utts
 examples/powmeanstd
+examples/run-festival-script
 examples/saytime
 examples/scfg_parse_text
 examples/text2pos
