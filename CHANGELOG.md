@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.2-1] - 2015-04-27 Maintenance
+
+  * Remove the derivable autoconf and automake files: config.{guess,sub},
+    configure, install-sh, missing and mkinstalldirs.
+  * Remove configure.in as this was added as configure.ac in [1.4.1-1](#1.4.1-1).
+
 ## [1.4.2] - 2001-06-21 Release
 
   * Various new gcc's support
