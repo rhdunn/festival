@@ -76,7 +76,7 @@ test:
 %.html: %.md _layouts/webpage.html
 	kramdown --template _layouts/webpage.html $< > $@
 
-docs: CHANGELOG.html
+docs: CHANGELOG.html README.html
 
 include $(EST)/config/rules/top_level.mak
 include $(EST)/config/rules/install.mak

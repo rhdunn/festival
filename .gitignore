@@ -1,6 +1,7 @@
 .*.swp
 
 CHANGELOG.html
+README.html
 
 *.o
 *.a
@@ -10,6 +11,7 @@ install-sh
 missing
 mkinstalldirs
 NEWS
+README
 
 autom4te.cache/
 configure

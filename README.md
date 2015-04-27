@@ -1,11 +1,9 @@
+# The Festival Speech Synthesis System
 
-              The Festival Speech Synthesis System
-               version 1.4.1 RELEASE November 1999
- 
-This directory contains the Festival Speech Synthesis System,
-developed at CSTR, University of Edinburgh by Alan W Black, Richard
-Caley and Paul Taylor and others (see ACKNOWLEDGEMENTS file for full
-list).
+This directory contains the
+[Festival Speech Synthesis System](http://www.cstr.ed.ac.uk/projects/festival.html),
+developed at CSTR, University of Edinburgh by
+[Alan W Black, Richard Caley and Paul Taylor and others](ACKNOWLEDGMENTS).
 
 Festival offers a general framework for building speech synthesis
 systems as well as including examples of various modules.  As a whole
@@ -19,20 +17,19 @@ for low level architecture and has a Scheme (SIOD) based command
 interpreter for control.  Documentation is given in the FSF texinfo
 format which can generate, a printed manual, info files and HTML.
 
-NOTE: Festival is a young system and constantly being developed,
+__NOTE:__ Festival is a young system and constantly being developed,
 this release is not a final polished system and although it has
 been checked on many systems, it should still be consider BETA
 quality code.
 
-COPYING
+## Copying
 
 Festival is free.  Previous versions were restricted to non-commercial
-use but we have now relaxed those conditions.  The licence is an X11
-style licence thus it can be incorporated in commercial products
-and free source products without restriction.  See COPYING for the
-actual details.
+use but we have now relaxed those conditions.  The [licence](COPYING)
+is an X11 style licence thus it can be incorporated in commercial products
+and free source products without restriction.
 
-INSTALL
+## Install
 
 Festival should run on any standard Unix platform.  It has already run
 on Solaris, SunOS, Linux and FreeBSD.  It requires a C++ compiler (GCC
@@ -42,22 +39,4 @@ using either Cygnus GNUWIN32 and Visual C++ is included, this is stil
 new but many people are successfully using it.
 
 A detailed description of installation and requirements for the whole
-system is given in the file INSTALL read that for details.
-
-NEWS
-
-Keep abreast of Festival News by regularly checking the Festival homepage
-   http://www.cstr.ed.ac.uk/projects/festival.html
-
-See NEWS file for full details.  Since our last release (1.4.0 June 99),
-this is a minor release to fix known bugs and few small enhancements.
-
-New in Festival 1.4.1
-   SSFF (for emulabel) track support
-   AIX support
-   Java fixes
-   various minor bug fixes
-   WFST with proper quoting
-   Wagon sample counts
-   gcc-2.95.1 support
-
+system is given in the file [INSTALL](INSTALL) read that for details.

@@ -11,6 +11,7 @@ if [ ! -e "${AUTOMAKE_DIR}" -o ! -e "${AUTOMAKE_DIR}/install-sh" ] ; then
 fi
 
 ln -sf CHANGELOG.md NEWS
+ln -sf README.md README
 
 ln -sf ${AUTOMAKE_DIR}/config.guess .
 ln -sf ${AUTOMAKE_DIR}/config.sub .
