@@ -30,6 +30,9 @@ lib/fringe.scm
 lib/siod.scm
 lib/web.scm
 
+lib/dicts/
+lib/voices/
+
 src/modules/init_modules.cc
 
 doc/*.1
