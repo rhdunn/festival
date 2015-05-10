@@ -1,6 +1,6 @@
 ===============================================================================
-                      The festopt_hts_engine version 1.01
-                           release December 25, 2010
+                      The festopt_hts_engine version 1.02
+                             release July 7, 2011
 
 
 The festopt_hts_engine is a HMM-based speech synthesis module. It has been
@@ -20,12 +20,12 @@ permit persons to whom this work is furnished to do so) subject to the
 conditions in the following license:
 
 /* ----------------------------------------------------------------- */
-/*           The HMM-Based Speech Synthesis System (HTS)             */
-/*           festopt_hts_engine developed by HTS Working Group       */
+/*           The HMM-Based Speech Synthesis Module for Festival      */
+/*           "festopt_hts_engine" developed by HTS Working Group     */
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2010  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2011  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -113,6 +113,7 @@ Synthesis System. Current members are
  Keiichiro Oura      http://www.sp.nitech.ac.jp/~uratec/
  (Design and Development, Main Maintainer)
  Kei Hashimoto       http://www.sp.nitech.ac.jp/~bonanza/
+ Sayaka Shiota       http://www.sp.nitech.ac.jp/~sayaka/
  Heiga Zen
  Junichi Yamagishi   http://homepages.inf.ed.ac.uk/jyamagis/
  Tomoki Toda         http://spalab.naist.jp/~tomoki/index_e.html

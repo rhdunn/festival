@@ -182,7 +182,8 @@ DVECTOR synthesis_body(DMATRIX mcep,	// input mel-cep sequence
     DVECTOR syn = NODATA;
     int i,j;
 
-    framel = (int)(framem * fs / 1000.0);
+    framel = (int)(framem * (float)fs / 1000.0);
+    framel = 80; /* floats don't do what you want */
     init_vocoder(fs, framel, mcep->col - 1, &vs);
 
     if (str != NULL)
@@ -221,7 +222,6 @@ DVECTOR synthesis_body(DMATRIX mcep,	// input mel-cep sequence
                 mcep->col - 1, 
                 alpha, beta, &vs,
                 xd->data, &pos);
-
     }
     syn = xdvcut(xd, 0, pos);
 

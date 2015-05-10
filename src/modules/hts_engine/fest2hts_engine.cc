@@ -1,10 +1,10 @@
 /* ----------------------------------------------------------------- */
-/*           The HMM-Based Speech Synthesis System (HTS)             */
-/*           festopt_hts_engine developed by HTS Working Group       */
+/*           The HMM-Based Speech Synthesis Module for Festival      */
+/*           "festopt_hts_engine" developed by HTS Working Group     */
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2010  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2011  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -50,15 +50,10 @@
 #include "festival.h"
 
 /* header of hts_engine API */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "HTS_engine.h"
-#ifdef __cplusplus
-}
-#endif
+
 /* Getfp: wrapper for fopen */
-    static FILE *Getfp(const char *name, const char *opt)
+static FILE *Getfp(const char *name, const char *opt)
 {
    FILE *fp = fopen(name, opt);
 
@@ -95,6 +90,7 @@ static LISP HTS_Synthesize_Utt(LISP utt)
    double alpha;
    int stage;
    double beta;
+   double speech_speed;
    double uv_threshold;
 
    /* get params */
@@ -154,6 +150,7 @@ static LISP HTS_Synthesize_Utt(LISP utt)
    alpha = (double) get_param_float("-a", hts_engine_params, 0.42);
    stage = (int) get_param_float("-g", hts_engine_params, 0.0);
    beta = (double) get_param_float("-b", hts_engine_params, 0.0);
+   speech_speed = (double) get_param_float("-r", hts_engine_params, 1.0);
    uv_threshold = (double) get_param_float("-u", hts_engine_params, 0.5);
 
    /* initialize */
@@ -179,6 +176,8 @@ static LISP HTS_Synthesize_Utt(LISP utt)
    /* generate speech */
    if (u->relation("Segment")->first()) {       /* only if there segments */
       HTS_Engine_load_label_from_fp(&engine, labfp);
+      if (speech_speed != 1.0)
+         HTS_Label_set_speech_speed(&engine.label, speech_speed);
       HTS_Engine_create_sstream(&engine);
       HTS_Engine_create_pstream(&engine);
       HTS_Engine_create_gstream(&engine);
@@ -223,13 +222,14 @@ static LISP HTS_Synthesize_Utt(LISP utt)
 
    /* Load back in the segment times */
    EST_Relation *r = new EST_Relation;
-   EST_Item *s,*o;
-   
-   r->load(get_param_str("-od", hts_output_params, "tmp.lab"),"htk");
+   EST_Item *s, *o;
 
-   for(o = r->first(), s = u->relation("Segment")->first() ; (o != NULL) && (s != NULL) ; o = o->next(), s = s->next() )
+   r->load(get_param_str("-od", hts_output_params, "tmp.lab"), "htk");
+
+   for (o = r->first(), s = u->relation("Segment")->first();
+        (o != NULL) && (s != NULL); o = o->next(), s = s->next())
       if (o->S("name").before("+").after("-").matches(s->S("name")))
-         s->set("end",o->F("end")); 
+         s->set("end", o->F("end"));
       else
          cerr << "HTS_Synthesize_Utt: Output segment mismatch";
 
