@@ -53,7 +53,7 @@ LISP me_mlsa(LISP ltrack, LISP strtrack) {
 void festival_clustergen_init(void)
 {
     proclaim_module("clustergen_engine",
-                    "Copyright (C) CMU 2005-2010\n");
+                    "Copyright (C) Carnegie Mellon University 2005-2014\n");
 
     init_subr_3("mlsa_resynthesis", mlsa_resynthesis,
                 "(mlsa_resynthesis TRACK STRTRACK FILTERTRACK)\n\

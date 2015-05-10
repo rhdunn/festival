@@ -656,7 +656,7 @@ static double find_b_faprob(EST_VTPath *p,int n,int *state)
     int i,j;
     EST_VTPath *d;
     double prob;
-    double atime, wtime, wstddev=0, z;
+    double atime, wtime, wstddev=0, z=0.0;
     static int ATOTH_BREAK=2;
     static int ATOTH_NBREAK=1;
 
