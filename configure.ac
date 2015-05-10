@@ -31,7 +31,7 @@ dnl THIS SOFTWARE.                                                       ##
 dnl                                                                      ##
 dnl########################################################################
 AC_PREREQ([2.69])
-AC_INIT([festival], [2.3-1], [festival-talk@festvox.org])
+AC_INIT([festival], [2.4-1], [festival-talk@festvox.org])
 AC_CONFIG_SRCDIR([src/include/festival.h])
 #AC_CONFIG_HEADERS([config.h])
 
