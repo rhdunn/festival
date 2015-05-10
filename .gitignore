@@ -52,4 +52,5 @@ examples/run-festival-script
 examples/saytime
 examples/scfg_parse_text
 examples/text2pos
+examples/text2utt
 examples/text2wave
