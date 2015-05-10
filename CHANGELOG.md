@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.3] - 2013-10-16 Release
+
+  * updates to hts (`hts_engine` 1.07) and clustergen
+
 ## [2.1.1-1] - 2015-05-10 Maintenance
 
   * Build improvements from [1.4.1-1](#1.4.1-1) and [2.1-1](#2.1-1).
